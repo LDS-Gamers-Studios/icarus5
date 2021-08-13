@@ -1,1 +1,1 @@
-Each file in here is for pieces of code that are used in multiple places in `commands`.
+Each file in here is for pieces of code that are used in multiple places in `modules`.

@@ -10,7 +10,7 @@ const client = new AugurClient(config, {
     },
     partials: ["CHANNEL", "MESSAGE", "REACTION"]
   },
-  commands: "./commands",
+  commands: "./modules",
   errorHandler: u.errorHandler,
   parse: u.parse
 });
