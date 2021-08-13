@@ -1,0 +1,57 @@
+{
+  "name": "gospel",
+  "description": "Search gospel topics.",
+  "options": [
+    {
+      "type": 1,
+      "name": "verse",
+      "description": "Gets book headings, chapter headings, or verses.",
+      "options": [
+        {
+          "type": 3,
+          "name": "book",
+          "description": "The name of the book. `1 Nephi` , `Mosiah` , etc.",
+          "required": true
+        },
+        {
+          "type": 4,
+          "name": "chapter",
+          "description": "The chapter in the book."
+        },
+        {
+          "type": 3,
+          "name": "verses",
+          "description": "Formats: `3`, `3-5`, `3-6,8,10-14`, etc. using commas, dashes, and numbers."
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "comefollowme",
+      "description": "Get the current Come Follow Me lesson."
+    },
+    {
+      "type": 1,
+      "name": "news",
+      "description": "Gets LDS news.",
+      "options": [
+        {
+          "type": 3,
+          "name": "source",
+          "description": "The news source.",
+          "choices": [
+            {
+              "name": "Newsroom",
+              "value": "newsroom"
+            },
+            {
+              "name": "Tabernacle Choir",
+              "value": "choir"
+            }
+          ],
+          "required": true
+        }
+      ]
+    }
+  ]
+}
