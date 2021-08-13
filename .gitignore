@@ -1,0 +1,16 @@
+node_modules
+storage/*
+tmp
+config/*
+!config/*-example.json
+!config/snowflakes.json
+test.js
+*-.js
+*-.json
+data/*
+!data/*-reference.json
+!data/birthday.json
+!data/nameParts.json
+site/*
+
+.vs/

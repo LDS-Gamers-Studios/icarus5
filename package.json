@@ -1,0 +1,25 @@
+{
+  "name": "icarus5",
+  "version": "5.0.0",
+  "description": "Custom Discord bot for the LDSG community",
+  "main": "icarus.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gaiwecoor/icarus5.git"
+  },
+  "author": "Kevin \"Gaiwecoor\" Dixon",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Gaiwecoor/icarus5/issues"
+  },
+  "homepage": "https://github.com/Gaiwecoor/icarus5#readme",
+  "dependencies": {
+    "augurbot": "^3.0.0",
+    "axios": "^0.21.1",
+    "discord.js": "^13.0.1",
+    "mongoose": "^5.13.7"
+  }
+}

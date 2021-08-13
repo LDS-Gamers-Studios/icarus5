@@ -1,0 +1,27 @@
+{
+  "adminId": ["111232201848295424", "96335658997526528", "96354827579174912"],
+  "applicationId": "",
+  "color": [248, 154, 34],
+  "db": {
+    "model": "utils/dbModels.js",
+    "db": "",
+		"settings": {
+      "useNewUrlParser": true,
+			"user": "",
+			"pass": ""
+		}
+  },
+  "error": {
+    "url": ""
+  },
+  "events": [
+    "interactionCreate",
+    "messageCreate",
+    "messageUpdate",
+    "ready"
+  ],
+  "ldsg": "96335850576556032",
+  "ownerId": "111232201848295424",
+  "prefix": "!",,
+  "token": ""
+}

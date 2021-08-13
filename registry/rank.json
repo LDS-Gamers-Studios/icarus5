@@ -1,0 +1,37 @@
+{
+  "name": "rank",
+  "description": "Interact with the XP system",
+  "options": [
+    {
+      "type": 1,
+      "name": "view",
+      "description": "View the rank of a user",
+      "options": [
+        {
+          "name": "user",
+          "description": "The user you want to get the rank of.",
+          "type": 6,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "leaderboard",
+      "description": "Shows the current leaderboard",
+      "type": 1
+    },
+    {
+      "type": 1,
+      "name": "track",
+      "description": "Weather or not you want to track XP.",
+      "options": [
+        {
+          "type": 5,
+          "name": "choice",
+          "description": "Weather or not you want to track XP. ",
+          "required": true
+        }
+      ]
+    }
+  ]
+}
