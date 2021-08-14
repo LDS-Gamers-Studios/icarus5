@@ -9,17 +9,17 @@ const utils = {
    * @param {Discord.Message} msg The Discord message to check for bot spam.
    */
   botSpam: function (msg) {
-    if (msg.guild?.id != config.ldsg || // Not in server
-      msg.channel.id == config.channel.botspam || // Not in bot-lobby
-      msg.channel.id == "209046676781006849" || // Not in Gai's channel
-      msg.channel.parentID == "363020585988653057") { // Not in the moderation category
+    if (msg.guild?.id === config.ldsg && // Not in server
+      msg.channel.id !== config.channel.botspam && // In bot-lobby
+      msg.channel.id !== config.channel.gai && // In Gai's channel
+      msg.channel.parentID !== config.categories.moderation) { // In the moderation category
 
+      msg.reply(`I've placed your results in <#${config.channels.botspam}> to keep things nice and tidy in here. Hurry before they get cold!`)
+        .then(Utils.clean);
+      return msg.guild.channels.cache.get(config.channels.botspam);
+    } else {
       return msg.channel;
     }
-
-    msg.reply(`I've placed your results in <#${config.channels.botspam}> to keep things nice and tidy in here. Hurry before they get cold!`)
-      .then(Utils.clean);
-    return msg.guild.channels.cache.get(config.channels.botspam);
   },
   /**
    * After the given amount of time, attempts to delete the message.

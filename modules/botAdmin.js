@@ -9,12 +9,8 @@ const Module = new Augur.Module()
   process: async function(msg) {
     try {
       await msg.react("🛏");
-      if (msg.client.shard) {
-        msg.client.shard.broadcastEval("this.destroy().then(() => process.exit())");
-      } else {
-        await msg.client.destroy();
-        process.exit();
-      }
+      await msg.client.destroy();
+      process.exit();
     } catch(e) { u.errorHandler(e, msg); }
   },
   permissions: (msg) => Module.config.adminId.includes(msg.author.id)
@@ -102,6 +98,7 @@ const Module = new Augur.Module()
     let snowflakes = require("../config/snowflakes.json");
     Module.config.channels = snowflakes.channels;
     Module.config.roles = snowflakes.roles;
+    Module.config.categories = snowflakes.categories;
   }
 })
 .setUnload(() => true);
