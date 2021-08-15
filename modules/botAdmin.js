@@ -98,7 +98,6 @@ const Module = new Augur.Module()
     let snowflakes = require("../config/snowflakes.json");
     Module.config.channels = snowflakes.channels;
     Module.config.roles = snowflakes.roles;
-    Module.config.categories = snowflakes.categories;
   }
 })
 .setUnload(() => true);

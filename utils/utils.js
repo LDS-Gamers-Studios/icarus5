@@ -10,9 +10,9 @@ const utils = {
    */
   botSpam: function (msg) {
     if (msg.guild?.id === config.ldsg && // Not in server
-      msg.channel.id !== config.channel.botspam && // In bot-lobby
-      msg.channel.id !== config.channel.gai && // In Gai's channel
-      msg.channel.parentID !== config.categories.moderation) { // In the moderation category
+      msg.channel.id !== config.channels.botspam && // In bot-lobby
+      msg.channel.id !== config.channels.gai && // In Gai's channel
+      msg.channel.parentID !== config.channels.moderation) { // In the moderation category
 
       msg.reply(`I've placed your results in <#${config.channels.botspam}> to keep things nice and tidy in here. Hurry before they get cold!`)
         .then(Utils.clean);
