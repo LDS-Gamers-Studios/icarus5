@@ -19,7 +19,7 @@ const Module = new Augur.Module()
   category: "Bot Admin",
   description: "Check bot ping.",
   hidden: true,
-  permissions: (msg) => (msg.author.id == Module.config.ownerId) || msg.member?.roles.cache.some(r => [Module.config.roles.mod, Module.config.roles.management, Module.config.roles.team].includes(r.id)),
+  permissions: (msg) => (msg.author.id === Module.config.ownerId) || msg.member?.roles.cache.some(r => [Module.config.roles.mod, Module.config.roles.management, Module.config.roles.team].includes(r.id)),
   process: async (msg) => {
     let sent = await msg.channel.reply({content: 'Pinging...', allowedMentions: {repliedUser: false}});
     sent.edit({content: `Pong! Took ${sent.createdTimestamp - (msg.editedTimestamp ? msg.editedTimestamp : msg.createdTimestamp)}ms`, allowedMentions: {repliedUser: false}});
@@ -76,7 +76,7 @@ const Module = new Augur.Module()
   process: (msg, ...files) => {
     u.clean(msg);
     let path = require("path");
-    if (files.length == 0) files = fs.readdirSync(path.resolve(__dirname)).filter(file => file.endsWith(".js"));
+    if (files.length === 0) files = fs.readdirSync(path.resolve(__dirname)).filter(file => file.endsWith(".js"));
 
     for (const file of files) {
       try {
@@ -93,11 +93,13 @@ const Module = new Augur.Module()
 .setInit(async (reload) => {
   try {
     if (!reload) {
-      u.errorLog.send({embeds: [ u.embed().setDescription("Bot is ready!") ]});
+      u.errorLog.send({ embeds: [u.embed().setDescription("Bot is ready!")] });
     }
     let snowflakes = require("../config/snowflakes.json");
     Module.config.channels = snowflakes.channels;
     Module.config.roles = snowflakes.roles;
+  } catch (e) {
+    u.errorHandler(e, "Error in botAdmin.setInit.");
   }
 })
 .setUnload(() => true);

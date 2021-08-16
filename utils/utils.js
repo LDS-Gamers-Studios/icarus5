@@ -9,10 +9,10 @@ const utils = {
    * @param {Discord.Message} msg The Discord message to check for bot spam.
    */
   botSpam: function (msg) {
-    if (msg.guild?.id === config.ldsg && // Not in server
-      msg.channel.id !== config.channels.botspam && // In bot-lobby
-      msg.channel.id !== config.channels.gai && // In Gai's channel
-      msg.channel.parentID !== config.channels.moderation) { // In the moderation category
+    if (msg.guild?.id === config.ldsg && // Is in server
+      msg.channel.id !== config.channels.botspam && // Isn't in bot-lobby
+      msg.channel.id !== config.channels.bottesting && // Isn't in Bot Testing
+      msg.channel.parentID !== config.channels.moderation) { // Isn't in the moderation category
 
       msg.reply(`I've placed your results in <#${config.channels.botspam}> to keep things nice and tidy in here. Hurry before they get cold!`)
         .then(Utils.clean);
@@ -58,10 +58,10 @@ const utils = {
    * Handles a command exception/error. Most likely called from a catch.
    * Reports the error and lets the user know.
    * @param {Error} error The error to report.
-   * @param {Discord.Message} message
+   * @param {any} message Any Discord.Message, Discord.Interaction, or text string.
    */
   errorHandler: function(error, message = null) {
-    if (!error || (error.name == "AbortError")) return;
+    if (!error || (error.name === "AbortError")) return;
 
     console.error(Date());
 
@@ -80,13 +80,13 @@ const utils = {
       let loc = (message.guild ? `${message.guild.name} > ${message.channel.name}` : "DM");
       console.error(`Interaction by ${message.user.username} in ${loc}`);
 
-      interaction.reply("I've run into an error. I've let my devs know.").then(async () => {
+      message.reply("I've run into an error. I've let my devs know.").then(async () => {
         await utils.wait(20000);
-        interaction.deleteReply();
+        message.deleteReply();
       });
       embed.addField("User", message.user.username, true)
         .addField("Location", loc, true)
-        .addField("Interaction", interaction.commandId || interaction.customId || "`undefined`", true);
+        .addField("Message", message.commandId || message.customId || "`undefined`", true);
     } else if (typeof message === "string") {
       console.error(message);
       embed.addField("Message", message);
@@ -123,7 +123,7 @@ const utils = {
       let [command, ...params] = trimmed.split(" ");
       if (command) {
         let suffix = params.join(" ");
-        if (suffix.toLowerCase() == "help") {  // Allow `!command help` syntax
+        if (suffix.toLowerCase() === "help") {  // Allow `!command help` syntax
           let t = command.toLowerCase();
           command = "help";
           suffix = t;
