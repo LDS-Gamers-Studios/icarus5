@@ -93,7 +93,7 @@ const Module = new Augur.Module()
 .setInit(async (reload) => {
   try {
     if (!reload) {
-      u.errorLog.send({ embeds: [u.embed().setDescription("Bot is ready!")] });
+      u.errorLog.send({embeds: [ u.embed().setDescription("Bot is ready!") ]  });
     }
     let snowflakes = require("../config/snowflakes.json");
     Module.config.channels = snowflakes.channels;

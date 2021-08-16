@@ -86,7 +86,7 @@ const utils = {
       });
       embed.addField("User", message.user.username, true)
         .addField("Location", loc, true)
-        .addField("Message", message.commandId || message.customId || "`undefined`", true);
+        .addField("Interaction", message.commandId || message.customId || "`undefined`", true);
     } else if (typeof message === "string") {
       console.error(message);
       embed.addField("Message", message);
