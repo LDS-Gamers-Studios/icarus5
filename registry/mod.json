@@ -1,0 +1,267 @@
+{
+  "name": "mod",
+  "description": "Modding Actions Within LDSG",
+  "default_permission": false,
+  "type": 1,
+  "options": [
+    {
+      "name": "ban",
+      "description": "Ban a user",
+      "type": 1,
+      "options": [
+        {
+          "name": "user",
+          "description": "The user to ban",
+          "type": 6,
+          "required": true
+        },
+        {
+          "name": "reason",
+          "description": "Why they are being banned",
+          "type": 3,
+          "required": true
+        },
+        {
+          "name": "clean",
+          "description": "Days of messages to remove (default 1)",
+          "type": 4,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "kick",
+      "description": "Kick a user",
+      "type": 1,
+      "options": [
+        {
+          "name": "user",
+          "description": "The user to kick",
+          "type": 6,
+          "required": true
+        },
+        {
+          "name": "reason",
+          "description": "Why they are being kicked",
+          "type": 3,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "mute",
+      "description": "Mute a user",
+      "type": 1,
+      "options": [
+        {
+          "name": "user",
+          "description": "The user to mute",
+          "type": 6,
+          "required": true
+        },
+        {
+          "name": "reason",
+          "description": "The reason for the mute",
+          "type": 3,
+          "required": false
+        },
+        {
+          "name": "unmute",
+          "description": "Whether to apply a mute to the user (default `true`)",
+          "type": 5,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "note",
+      "description": "Make a note about a user",
+      "type": 1,
+      "options": [
+        {
+          "name": "user",
+          "description": "The user to note",
+          "type": 6,
+          "required": true
+        },
+        {
+          "name": "note",
+          "description": "The note",
+          "type": 3,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "office",
+      "description": "Send a user to the office",
+      "type": 1,
+      "options": [
+        {
+          "name": "user",
+          "description": "The user to send to the office",
+          "type": 6,
+          "required": true
+        },
+        {
+          "name": "reason",
+          "description": "The reason for sending them there",
+          "type": 3,
+          "required": false
+        },
+        {
+          "name": "apply",
+          "description": "Whether to let the user back on the playground (default `true`)",
+          "type": 5,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "purge",
+      "description": "Purge the last X messages in the channel",
+      "type": 1,
+      "options": [
+        {
+          "name": "number",
+          "description": "The number to purge",
+          "type": 4,
+          "required": true
+        },
+        {
+          "name": "reason",
+          "description": "The purpose of the purge",
+          "type": 3,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "rename",
+      "description": "Renames a user, if their name is inappropriate",
+      "type": 1,
+      "options": [
+        {
+          "name": "user",
+          "description": "The user to rename",
+          "type": 6,
+          "required": true
+        },
+        {
+          "name": "name",
+          "description": "The new name to apply",
+          "type": 3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "slowmode",
+      "description": "Set a temporary slow mode on the channel",
+      "type": 1,
+      "options": [
+        {
+          "name": "duration",
+          "description": "Duration of the slow mode in minutes (default: `10`)",
+          "type": 4,
+          "required": false
+        },
+        {
+          "name": "timer",
+          "description": "Time between messages in seconds (default: `15`)",
+          "type": 4,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "trust",
+      "description": "Trust a user",
+      "type": 2,
+      "options": [
+        {
+          "name": "initial",
+          "description": "Trust a user for images and links",
+          "type": 1,
+          "options": [
+            {
+              "name": "user",
+              "description": "The user to trust",
+              "type": 6,
+              "required": true
+            },
+            {
+              "name": "apply",
+              "description": "Whether to apply the role (default: `true`)",
+              "type": 5,
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "plus",
+          "description": "Trust a user for video streaming",
+          "type": 1,
+          "options": [
+            {
+              "name": "user",
+              "description": "The user to trust+",
+              "type": 6,
+              "required": true
+            },
+            {
+              "name": "apply",
+              "description": "Whether to apply the role (default: `true`)",
+              "type": 5,
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "watch",
+          "description": "Keep an eye on someone",
+          "type": 1,
+          "options": [
+            {
+              "name": "user",
+              "description": "The user to watch",
+              "type": 6,
+              "required": true
+            },
+            {
+              "name": "apply",
+              "description": "Whether to watch the user (default `true`)",
+              "type": 5,
+              "required": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "warn",
+      "description": "Give a user a warning",
+      "type": 1,
+      "options": [
+        {
+          "name": "user",
+          "description": "The user to warn",
+          "type": 6,
+          "required": true
+        },
+        {
+          "name": "reason",
+          "description": "The reason for the warning",
+          "type": 3,
+          "required": true
+        },
+        {
+          "name": value,
+          "description": "The value of the warning (default: `1`)",
+          "type": 4,
+          "required": false
+        }
+      ]
+    }
+  ]
+}
