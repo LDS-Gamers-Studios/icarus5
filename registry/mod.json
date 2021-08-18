@@ -175,66 +175,51 @@
       ]
     },
     {
-      "name": "trust",
-      "description": "Trust a user",
-      "type": 2,
+      "name": "summary",
+      "description": "Get a brief summary of a user's history",
+      "type": 1,
       "options": [
         {
-          "name": "initial",
-          "description": "Trust a user for images and links",
-          "type": 1,
-          "options": [
-            {
-              "name": "user",
-              "description": "The user to trust",
-              "type": 6,
-              "required": true
-            },
-            {
-              "name": "apply",
-              "description": "Whether to apply the role (default: `true`)",
-              "type": 5,
-              "required": false
-            }
-          ]
+          "name": "user",
+          "description": "The user to view",
+          "type": 6,
+          "required": true
         },
         {
-          "name": "plus",
-          "description": "Trust a user for video streaming",
-          "type": 1,
-          "options": [
-            {
-              "name": "user",
-              "description": "The user to trust+",
-              "type": 6,
-              "required": true
-            },
-            {
-              "name": "apply",
-              "description": "Whether to apply the role (default: `true`)",
-              "type": 5,
-              "required": false
-            }
-          ]
+          "name": "history",
+          "description": "The number of days' history (default `28`)",
+          "type": 4,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "trust",
+      "description": "Trust a user",
+      "type": 1,
+      "options": [
+        {
+          "name": "type",
+          "description": "Type of trusting to do",
+          "type": 3,
+          "choices": [
+            {"name": "Initial", "value": "initial"},
+            {"name": "Plus", "value": "plus"},
+            {"name": "Watch", "value": "watch"}
+          ],
+          "required": true
         },
         {
-          "name": "watch",
-          "description": "Keep an eye on someone",
-          "type": 1,
-          "options": [
-            {
-              "name": "user",
-              "description": "The user to watch",
-              "type": 6,
-              "required": true
-            },
-            {
-              "name": "apply",
-              "description": "Whether to watch the user (default `true`)",
-              "type": 5,
-              "required": false
-            }
-          ]
+          "name": "user",
+          "description": "The user to trust",
+          "type": 6,
+          "required": true
+        },
+        {
+          "name": "apply",
+          "description": "Whether to apply the role (default: `true`)",
+          "type": 5,
+          "required": false
         }
       ]
     },
@@ -256,7 +241,7 @@
           "required": true
         },
         {
-          "name": value,
+          "name": "value",
           "description": "The value of the warning (default: `1`)",
           "type": 4,
           "required": false
