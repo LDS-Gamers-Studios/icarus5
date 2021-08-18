@@ -3,9 +3,14 @@ const Augur = require("augurbot"),
 
 const Module = new Augur.Module()
 .addCommand({name: "gotobed",
+  description: "The gotobed command shuts down the bot. This is good for a quick test for things !reload doesn't cover.",
   category: "Bot Admin",
   hidden: true,
   aliases: ["q", "restart"],
+  /**
+   * the gotobed command shuts down the bot, good for a quick test for things !reload won't do for you. It is reccomended that forever.js be used, so that the bot automatically restarts
+   * @param {Discord.Message} msg the Discord message object to be passed into the process
+   */
   process: async function(msg) {
     try {
       await msg.react("🛏");
@@ -17,9 +22,13 @@ const Module = new Augur.Module()
 })
 .addCommand({name: "ping",
   category: "Bot Admin",
-  description: "Check bot ping.",
+  description: "Gets the current total ping time for the bot.",
   hidden: true,
   permissions: (msg) => (msg.author.id === Module.config.ownerId) || msg.member?.roles.cache.some(r => [Module.config.roles.mod, Module.config.roles.management, Module.config.roles.team].includes(r.id)),
+  /**
+   * the ping command gets the current total ping time for the bot.
+   * @param {Discord.Message} msg the Discord message object to be passed into the process
+   */
   process: async (msg) => {
     let sent = await msg.channel.reply({content: 'Pinging...', allowedMentions: {repliedUser: false}});
     sent.edit({content: `Pong! Took ${sent.createdTimestamp - (msg.editedTimestamp ? msg.editedTimestamp : msg.createdTimestamp)}ms`, allowedMentions: {repliedUser: false}});
@@ -30,7 +39,11 @@ const Module = new Augur.Module()
   hidden: true,
   description: "Check the bot's heartbeat",
   permissions: (msg) => (Module.config.ownerId === msg.author.id),
-  process: async function(msg, suffix) {
+  /**
+   * The pulse command get basic information about the bot's current health and uptime. Very useful.
+   * @param {Discord.Message} msg the Discord message object to be passed into the process
+   */
+  process: async function(msg) {
     try {
       let client = msg.client;
 
@@ -73,6 +86,10 @@ const Module = new Augur.Module()
   description: "Reload command files.",
   info: "Use the command without a suffix to reload all command files.\n\nUse the command with the module name (including the `.js`) to reload a specific file.",
   parseParams: true,
+  /**
+   * The reload command is intended to do a softer reboot of a small part of the bot or several parts of the bot, rather than fully stopping and restarting the whole thing. 
+   * @param {Discord.Message} msg the Discord message object to be passed into the process function.
+   */
   process: (msg, ...files) => {
     u.clean(msg);
     let path = require("path");
@@ -87,9 +104,11 @@ const Module = new Augur.Module()
   },
   permissions: (msg) => Module.config.adminId.includes(msg.author.id)
 })
+//When the bot is fully online, fetch all the ldsg members, since it will only autofetch for small servers and we want them all. 
 .addEvent("ready", () => {
   Module.client.guilds.cache.get(Module.config.ldsg).members.fetch();
 })
+//each time this module is loaded, update the module.config snowflakes.
 .setInit(async (reload) => {
   try {
     if (!reload) {
