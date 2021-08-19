@@ -173,7 +173,7 @@ async function bankGameRedeem(interaction) {
     games = await getGameList();
     game = games.find(g => (g.Code == interaction.getString("code", true).toUpperCase());
     if (!game) {
-      interaction.reply({"I couldn't find that game. User `/bank game list` to see available games.", ephemeral: true});
+      interaction.reply({content: "I couldn't find that game. User `/bank game list` to see available games.", ephemeral: true});
       return;
     }
 
