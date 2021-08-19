@@ -10,7 +10,7 @@ const doc = new GoogleSpreadsheet(google.sheets.games),
   ember = "<:ember:512508452619157504>",
 
 var steamGameList;
-function code(n) {
+function generateCode(n) {
   let chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ";
   let newCode = "";
   for (var i = 0; i < n; i++) {
@@ -116,7 +116,7 @@ async function bankBalance(interaction) {
       .setAuthor(member.displayName, member.displayAvatarURL({dynamic: true})
       ).setDescription(`${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`);
       interaction.reply({embed: embed}).then(u.clean);
-  } catch(e) {}
+  } catch(e) { u.errorHandler(e, interaction); }
 }
 
 async function bankGameList(interaction) {
@@ -133,8 +133,47 @@ async function bankGameRedeem(interaction) {
 
 async function bankDiscount(interaction) {
   try {
-    interaction.reply({content: "This command has not yet been implemented.", ephemeral: true});
-  } catch(e) {}
+    let amount = interaction.getInteger("amount", true);
+    let balance = await Module.db.bank.getBalance(msg.author, "gb");
+    if ((amount > balance.balance) || (amount > 0)) {
+      interaction.reply({content: `That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${balance.balance}.`, ephemeral: true});
+      return;
+    }
+    
+    let snipcart = require("../utils/snipcart")(Module.config.api.snipcart);
+    let discountInfo = {
+      name: interaction.user.username + " " + Date().toLocaleString(),
+      combinable: false,
+      maxNumberOfUsages: 1,
+      trigger: "Code",
+      code: generateCode(6),
+      type: "FixedAmount",
+      amount: (amount / 100)
+    };
+    
+    let discount = await snipcart.newDiscount(discountInfo);
+    
+    if (discount.amount && discount.code) {
+      let withdrawal = {
+        currency: "gb",
+        discordId: interaction.user.id,
+        description: "LDSG Store Discount Code",
+        value: (0 - amount),
+        giver: interaction.user.id
+      };
+      let withdraw = await Module.db.bank.addCurrency(withdrawal);
+
+      interaction.reply({content: `You have redeemed ${gb}${amount} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance - amount}.`);
+      let embed = u.embed()
+      .setAuthor(interaction.member.displayName, interaction.member.displayAvatarURL({dynamic: true}))
+      .addField("Amount", `${gb}${amount}\n$${amount / 100}`)
+      .addField("New Balance", `${gb}${balance.balance - amount}`)
+      .setDescription(`**${Util.escapeMarkdown(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
+      interaction.client.channels.cache.get(Module.config.channels.modlogs).send({embeds: embed});
+    } else {
+      interaction.reply({content: "Sorry, something went wrong. Please try again.", ephemeral: true});
+    }
+  } catch(e) { u.errorHandler(e, interaction); }
 }
 
 async function bankAward(interaction) {
