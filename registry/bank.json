@@ -80,7 +80,7 @@
         {
           "type": 4,
           "name": "amount",
-          "description": "How many GB would you like to use? Limit 1000 ($10).",
+          "description": "How many GB would you like to use? Limit 1,000 ($10).",
           "required": true
         }
       ]
