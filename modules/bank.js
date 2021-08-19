@@ -10,6 +10,17 @@ const doc = new GoogleSpreadsheet(google.sheets.games),
   ember = "<:ember:512508452619157504>",
 
 var steamGameList;
+
+async function getGameList() {
+  try {
+    await doc.useServiceAccountAuth(google.creds);
+    await doc.loadInfo();
+    let games = await doc.sheetsByIndex[0].getRows();
+    games = games.filter(g => !g.Recipient).filter(filterUnique);
+    return games;
+  } catch (e) { e.errorHandler(e, "Fetch Game List"); }
+}
+
 function generateCode(n) {
   let chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ";
   let newCode = "";
@@ -121,8 +132,40 @@ async function bankBalance(interaction) {
 
 async function bankGameList(interaction) {
   try {
-    interaction.reply({content: "This command has not yet been implemented.", ephemeral: true});
-  } catch(e) {}
+    games = await getGameList();
+    for (const game of games.filter(g => !g.Code)) {
+      game.Code = generateCode(5);
+      game.save();
+    }
+
+    games = games.sort((a, b) => a["Game Title"].localeCompare(b["Game Title"]));
+    // Filter Rated M, unless the member has the Rated M Role
+    if (!msg.member?.roles.cache.has("281708645161631745"))
+      games = games.filter(g => g.Rating.toUpperCase() != "M");
+
+    // Reply so there's no "interaction failed" error message.
+    interaction.reply({content: `Watch your DMs for a list of games that can be redeemed with ${gb}!`, ephemeral: true});
+    
+    let embed = u.embed()
+    .setTitle("Games Available to Redeem")
+    .setDescription(`Redeem ${gb} for game codes with the \`!gameredeem code\` command.`);
+
+    let i = 0;
+    for (const game of games) {
+      if (((++i) % 25) == 0) {
+        interaction.user.send({embeds: embed}).catch(u.noop);
+        embed = u.embed()
+        .setTitle("Games Available to Redeem")
+        .setDescription(`Redeem ${gb} for game codes with the \`!gameredeem code\` command.`);
+      }
+      
+      let steamApp = null;
+      if (game.System?.toLowerCase() == "steam")
+        steamApp = steamGameList.find(g => g.name.toLowerCase() == game["Game Title"].toLowerCase());
+      embed.addField(`${game["Game Title"]} (${game.System})${(game.Rating ? ` [${game.Rating}]` : "")}`, `${gb}${game.Cost}${(steamApp ? ` [[Steam Store Page]](https://store.steampowered.com/app/${steamApp.appid})` : "")}\n\`!gameredeem ${game.Code}\``);
+    }
+    interaction.user.send({embeds: embed}).catch(u.noop);
+  } catch(e) { u.errorHandler(e, interaction); }
 }
 
 async function bankGameRedeem(interaction) {
@@ -158,7 +201,7 @@ async function bankDiscount(interaction) {
         currency: "gb",
         discordId: interaction.user.id,
         description: "LDSG Store Discount Code",
-        value: (0 - amount),
+        value: -amount,
         giver: interaction.user.id
       };
       let withdraw = await Module.db.bank.addCurrency(withdrawal);
@@ -167,7 +210,7 @@ async function bankDiscount(interaction) {
       let embed = u.embed()
       .setAuthor(interaction.member.displayName, interaction.member.displayAvatarURL({dynamic: true}))
       .addField("Amount", `${gb}${amount}\n$${amount / 100}`)
-      .addField("New Balance", `${gb}${balance.balance - amount}`)
+      .addField("Balance", `${gb}${balance.balance - amount}`)
       .setDescription(`**${Util.escapeMarkdown(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
       interaction.client.channels.cache.get(Module.config.channels.modlogs).send({embeds: embed});
     } else {
