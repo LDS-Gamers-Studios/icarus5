@@ -5,11 +5,11 @@
   "db": {
     "model": "utils/dbModels.js",
     "db": "",
-		"settings": {
+    "settings": {
       "useNewUrlParser": true,
-			"user": "",
-			"pass": ""
-		}
+      "user": "",
+      "pass": ""
+    }
   },
   "error": {
     "url": ""
