@@ -140,7 +140,7 @@ async function bankGameList(interaction) {
 
     games = games.sort((a, b) => a["Game Title"].localeCompare(b["Game Title"]));
     // Filter Rated M, unless the member has the Rated M Role
-    if (!msg.member?.roles.cache.has("281708645161631745"))
+    if (!interaction.member?.roles.cache.has("281708645161631745"))
       games = games.filter(g => g.Rating.toUpperCase() != "M");
 
     // Reply so there's no "interaction failed" error message.
@@ -234,7 +234,7 @@ async function bankGameRedeem(interaction) {
 async function bankDiscount(interaction) {
   try {
     let amount = interaction.getInteger("amount", true);
-    let balance = await Module.db.bank.getBalance(msg.author, "gb");
+    let balance = await Module.db.bank.getBalance(interaction.user.id, "gb");
     if ((amount > balance.balance) || (amount > 0)) {
       interaction.reply({content: `That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${balance.balance}.`, ephemeral: true});
       return;
