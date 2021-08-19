@@ -139,8 +139,58 @@ async function bankDiscount(interaction) {
 
 async function bankAward(interaction) {
   try {
-    interaction.reply({content: "This command has not yet been implemented.", ephemeral: true});
-  } catch(e) {}
+    let giver = interaction.member;
+    let recipient = interaction.getMember("recipient", true);
+    if (recipient.id == giver.id) {
+      interaction.reply({content: `You can't award *yourself* ${ember}, silly.`, ephemeral: true);
+      return;
+    } else if (recipient.id == interaction.client.user.id) {
+      interaction.reply({content: `You can't award *me* ${ember}, silly.`, ephemeral: true);
+      return;
+    }
+    
+    let value = interaction.getInteger("amount", true);
+    if (value === 0) {
+       interaction.reply({content: "You can't award *nothing*.", ephemeral: true);
+       return;
+    }
+    value = value > 10000 ? 10000 : (value < -10000 ? -10000 : value);
+
+    let reason = interaction.getString("reason") || "No particular reason";
+    
+    let award = {
+      currency: "em",
+      discordId: recipient.id,
+      description: `From ${giver.displayName} (House Points): ${reason}`,
+      value,
+      giver: giver.id,
+      hp: true
+    };
+    let receipt = await Module.db.bank.addCurrency(award);
+    let gbBalance = await Module.db.bank.getBalance(recipient.id, "gb");
+    let emBalance = await Module.db.bank.getBalance(recipient.id, "em");
+    let embed = u.embed()
+    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
+    .addField("Reason", reason)
+    .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
+    .setDescription(`${Util.escapeMarkdown(giver.displayName)} just ${value > 0 ?"awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
+    recipient.send({embeds: embed});
+
+    interaction.reply(`${ember}${value} ${value > 0 ?"awarded to" : "docked from"} ${member} for ${reason}`).then(u.clean);
+    
+    let embed = u.embed()
+    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
+    .addField("Reason", reason)
+    .setDescription(`You just gave ${coin}${receipt.value} to ${Util.escapeMarkdown(recipient.displayName)} This counts toward their House's Points.`);
+    giver.send({embeds: embed});
+    
+    let hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
+    let embed = u.embed()
+    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))      
+    .addField("Reason", reason)
+    .setDescription(`**${Util.escapeMarkdown(giver.displayName)}** ${value > 0 ?"awarded" : "docked"} ${Util.escapeMarkdown(recipient.displayName)} ${ember}${value}.`);
+    hoh.send({embeds: embed});
+  } catch(e) { u.errorHandler(e, interaction); }
 }
 
 const Module = new Augur.Module()
