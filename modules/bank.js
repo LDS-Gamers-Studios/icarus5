@@ -2,6 +2,7 @@ const Augur = require("augurbot"),
   config = require("../config/config.json"),
   google = require("../config/google_api.json"),
   u = require("../utils/utils"),
+  {Util} = require("discord.js"),
   {GoogleSpreadsheet} = require("google-spreadsheet");
 
 const doc = new GoogleSpreadsheet(google.sheets.games),
@@ -73,7 +74,7 @@ async function bankGive(interaction) {
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
       .addField("Reason", reason)
       .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-      .setDescription(`${u.escapeText(giver.displayName)} just gave you ${coin}${receipt.value}.`);
+      .setDescription(`${Util.escapeMarkdown(giver.displayName)} just gave you ${coin}${receipt.value}.`);
       recipient.send({embeds: embed});
     }
     interaction.reply(content: `${coin}${value} sent to ${member} for ${reason}`).then(u.clean);
@@ -92,15 +93,15 @@ async function bankGive(interaction) {
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-    .setDescription(`You just gave ${coin}${-receipt.value} to ${u.escapeText(recipient.displayName)}.`);
+    .setDescription(`You just gave ${coin}${-receipt.value} to ${Util.escapeMarkdown(recipient.displayName)}.`);
     giver.send({embeds: embed});
     
-    if ((currency == "em") && (discordId == interaction.client.user.id)) {
+    if ((currency == "em") && toIcarus) {
       let hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
       let embed = u.embed()
       .setAuthor(interaction.client.user.displayName, interaction.client.user.displayAvatarURL({dynamic: true}))      
       .addField("Reason", reason)
-      .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
+      .setDescription(`**${Util.escapeMarkdown(giver.displayName)}** gave me ${coin}${value}.`);
       hoh.send({content: `<@${Module.config.ownerId}>`, embeds: embed});
     }
   } catch(e) { u.errorHandler(e, interaction); }
