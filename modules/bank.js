@@ -1,4 +1,5 @@
 const Augur = require("augurbot"),
+  config = require("../config/config.json"),
   google = require("../config/google_api.json"),
   u = require("../utils/utils"),
   {GoogleSpreadsheet} = require("google-spreadsheet");
@@ -135,6 +136,7 @@ async function bankAward(interaction) {
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "Bank",
+  guildId: config.ldsg
   commandId: "tbd",
   process: async (interaction) => {
     switch(interaction.options.getSubcommand(true)) {
