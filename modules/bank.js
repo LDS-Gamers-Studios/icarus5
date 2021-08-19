@@ -170,8 +170,65 @@ async function bankGameList(interaction) {
 
 async function bankGameRedeem(interaction) {
   try {
-    interaction.reply({content: "This command has not yet been implemented.", ephemeral: true});
-  } catch(e) {}
+    games = await getGameList();
+    game = games.find(g => (g.Code == interaction.getString("code", true).toUpperCase());
+    if (!game) {
+      interaction.reply({"I couldn't find that game. User `/bank game list` to see available games.", ephemeral: true});
+      return;
+    }
+
+    let systems = {
+      steam: {
+        redeem: "https://store.steampowered.com/account/registerkey?key=",
+        img: "https://cdn.discordapp.com/emojis/230374637379256321.png"
+      }
+    };
+
+    let balance = await Module.db.bank.getBalance(interaction.user.id, "gb");
+    if (balance.balance < game.Cost) {
+      interaction.reply({content: `You don't currently have enough Ghost Bucks. Sorry! ${gb}`, ephemeral: true});
+      return;
+    }
+
+    // Reply so there's no "interaction failed" error message.
+    interaction.reply({content: "Watch your DMs for the game you redeemed!", ephemeral: true});
+
+    await Module.db.bank.addCurrency({
+      currency: "gb",
+      discordId: interaction.user.id,
+      description: `${game["Game Title"]} (${game.System}) Game Key`,
+      value: -1 * game.Cost,
+      giver: interaction.user.id
+    });
+
+    let embed = u.embed()
+    .setTitle("Game Code Redemption")
+    .setDescription(`You just redeemed a key for:\n${game["Game Title"]} (${game.System})`)
+    .addField("Cost", gb + game.Cost, true)
+    .addField("Balance", gb + (balance.balance - game.Cost), true)
+    .addField("Game Key", game.Key);
+
+    if (systems[game.System?.toLowerCase()]) {
+      let sys = systems[game.System.toLowerCase()];
+      embed.setURL(sys.redeem + game.Key)
+      .addField("Key Redemption Link", `[Redeem key here](${sys.redeem + game.Key})`)
+      .setThumbnail(sys.img);
+    }
+
+    game.Recipient = interaction.user.username;
+    game.Date = new Date();
+    game.save();
+    interaction.user.send({embed}).catch(e => u.errorHandler(e, interaction));
+
+    let embed = u.embed()
+    .setAuthor(interaction.member.displayName, interaction.member.displayAvatarURL({dynamic: true}))
+    .setDescription(`${interaction.user.username} just redeemed a key for a ${game["Game Title"]} (${game.System}) key.`)
+    .addField("Cost", gb + game.Cost, true)
+    .addField("Balance", gb + (balance.balance - game.Cost), true)
+
+    interaction.client.channels.cache.get(Module.config.channels.modlogs).send({embeds: embed});
+
+  } catch(e) { u.errorHandler(e, interaction); }
 }
 
 async function bankDiscount(interaction) {
