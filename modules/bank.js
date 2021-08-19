@@ -77,7 +77,7 @@ async function bankGive(interaction) {
       .setDescription(`${Util.escapeMarkdown(giver.displayName)} just gave you ${coin}${receipt.value}.`);
       recipient.send({embeds: embed});
     }
-    interaction.reply(content: `${coin}${value} sent to ${member} for ${reason}`).then(u.clean);
+    interaction.reply(`${coin}${value} sent to ${member} for ${reason}`).then(u.clean);
     
     let withdrawal = {
       currency,
@@ -99,7 +99,7 @@ async function bankGive(interaction) {
     if ((currency == "em") && toIcarus) {
       let hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
       let embed = u.embed()
-      .setAuthor(interaction.client.user.displayName, interaction.client.user.displayAvatarURL({dynamic: true}))      
+      .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))      
       .addField("Reason", reason)
       .setDescription(`**${Util.escapeMarkdown(giver.displayName)}** gave me ${coin}${value}.`);
       hoh.send({content: `<@${Module.config.ownerId}>`, embeds: embed});
@@ -151,22 +151,22 @@ const Module = new Augur.Module()
   process: async (interaction) => {
     switch(interaction.options.getSubcommand(true)) {
       case "give":
-        await cBankGive(interaction);
+        await bankGive(interaction);
         break;
       case "balance":
-        await cBankBalance(interaction);
+        await bankBalance(interaction);
         break;
       case "list":
-        await cBankGameList(interaction);
+        await bankGameList(interaction);
         break;
       case "redeem":
-        await cBankGameRedeem(interaction);
+        await bankGameRedeem(interaction);
         break;
       case "discount":
-        await cBankDiscount(interaction);
+        await bankDiscount(interaction);
         break;
       case "award":
-        await cBankAward(interaction);
+        await bankAward(interaction);
         break;
     }
   }
