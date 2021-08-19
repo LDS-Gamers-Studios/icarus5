@@ -1,8 +1,11 @@
+//This file is a place for all the publicly visable bot diagnostic commands usable primarily only by the head bot dev.
+
 const Augur = require("augurbot"),
   u = require("../utils/utils");
 
 const Module = new Augur.Module()
 .addCommand({name: "gotobed",
+  description: "The gotobed command shuts down the bot. This is good for a quick test for things !reload doesn't cover.", //It is reccomended to be used in conjunction with forever.js so the bot automatically restarts
   category: "Bot Admin",
   hidden: true,
   aliases: ["q", "restart"],
@@ -17,7 +20,7 @@ const Module = new Augur.Module()
 })
 .addCommand({name: "ping",
   category: "Bot Admin",
-  description: "Check bot ping.",
+  description: "Gets the current total ping time for the bot.",
   hidden: true,
   permissions: (msg) => (msg.author.id === Module.config.ownerId) || msg.member?.roles.cache.some(r => [Module.config.roles.mod, Module.config.roles.management, Module.config.roles.team].includes(r.id)),
   process: async (msg) => {
@@ -28,9 +31,9 @@ const Module = new Augur.Module()
 .addCommand({name: "pulse",
   category: "Bot Admin",
   hidden: true,
-  description: "Check the bot's heartbeat",
+  description: "The pulse command get basic information about the bot's current health and uptime for each shard (if applicable).",
   permissions: (msg) => (Module.config.ownerId === msg.author.id),
-  process: async function(msg, suffix) {
+  process: async function(msg) {
     try {
       let client = msg.client;
 
@@ -70,7 +73,7 @@ const Module = new Augur.Module()
   category: "Bot Admin",
   hidden: true,
   syntax: "[file1.js] [file2.js]",
-  description: "Reload command files.",
+  description: "This command reloads one or more modules. Good for loading in small fixes.",
   info: "Use the command without a suffix to reload all command files.\n\nUse the command with the module name (including the `.js`) to reload a specific file.",
   parseParams: true,
   process: (msg, ...files) => {
@@ -87,9 +90,11 @@ const Module = new Augur.Module()
   },
   permissions: (msg) => Module.config.adminId.includes(msg.author.id)
 })
+//When the bot is fully online, fetch all the ldsg members, since it will only autofetch for small servers and we want them all. 
 .addEvent("ready", () => {
   Module.client.guilds.cache.get(Module.config.ldsg).members.fetch();
 })
+//each time this module is loaded, update the module.config snowflakes.
 .setInit(async (reload) => {
   try {
     if (!reload) {
