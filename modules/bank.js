@@ -67,7 +67,8 @@ async function bankGive(interaction) {
         giver: giver.id
       };
       let receipt = await Module.db.bank.addCurrency(deposit);
-      let balance = await Module.db.bank.getBalance(recipient.id, currency);
+      let gbBalance = await Module.db.bank.getBalance(recipient.id, "gb");
+      let emBalance = await Module.db.bank.getBalance(recipient.id, "em");
       let embed = u.embed()
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
       .addField("Reason", reason)
@@ -85,11 +86,13 @@ async function bankGive(interaction) {
       giver: giver.id
     };
     let receipt = await Module.db.bank.addCurrency(withdrawal);
+    let gbBalance = await Module.db.bank.getBalance(giver.id, "gb");
+    let emBalance = await Module.db.bank.getBalance(giver.id, "em");
     let embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-    .setDescription(`You just gave ${coin}${receipt.value} to ${u.escapeText(recipient.displayName)}.`);
+    .setDescription(`You just gave ${coin}${-receipt.value} to ${u.escapeText(recipient.displayName)}.`);
     giver.send({embeds: embed});
     
     if ((currency == "em") && (discordId == interaction.client.user.id)) {
