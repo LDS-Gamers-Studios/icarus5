@@ -156,7 +156,7 @@ async function bankAward(interaction) {
     }
     value = value > 10000 ? 10000 : (value < -10000 ? -10000 : value);
 
-    let reason = interaction.getString("reason") || "No particular reason";
+    let reason = interaction.getString("reason") || "Astounding feats of courage, wisdom, and heart";
     
     let award = {
       currency: "em",
