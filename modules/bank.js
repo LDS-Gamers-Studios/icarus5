@@ -109,7 +109,13 @@ async function bankGive(interaction) {
 
 async function bankBalance(interaction) {
   try {
-    interaction.reply({content: "This command has not yet been implemented.", ephemeral: true});
+    let member = interaction.member;
+    let gbBalance = await Module.db.bank.getBalance(member, "gb");
+    let emBalance = await Module.db.bank.getBalance(member, "em");
+    let embed = u.embed()
+      .setAuthor(member.displayName, member.displayAvatarURL({dynamic: true})
+      ).setDescription(`${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`);
+      interaction.reply({embed: embed}).then(u.clean);
   } catch(e) {}
 }
 
