@@ -15,7 +15,7 @@ const utils = {
       msg.channel.parentID !== config.channels.moderation) { // Isn't in the moderation category
 
       msg.reply(`I've placed your results in <#${config.channels.botspam}> to keep things nice and tidy in here. Hurry before they get cold!`)
-        .then(Utils.clean);
+        .then(utils.clean);
       return msg.guild.channels.cache.get(config.channels.botspam);
     } else {
       return msg.channel;

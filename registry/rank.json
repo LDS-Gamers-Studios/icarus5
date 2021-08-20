@@ -23,12 +23,12 @@
     {
       "type": 1,
       "name": "track",
-      "description": "Weather or not you want to track XP.",
+      "description": "Whether or not you want to track XP.",
       "options": [
         {
           "type": 5,
           "name": "choice",
-          "description": "Weather or not you want to track XP. ",
+          "description": "Whether or not you want to track XP. ",
           "required": true
         }
       ]
