@@ -7,7 +7,7 @@ const Augur = require("augurbot"),
 
 const doc = new GoogleSpreadsheet(google.sheets.games),
   gb = "<:gb:493084576470663180>",
-  ember = "<:ember:512508452619157504>",
+  ember = "<:ember:512508452619157504>";
 
 var steamGameList;
 
@@ -39,14 +39,14 @@ async function bankGive(interaction) {
     let giver = interaction.member;
     let recipient = interaction.getMember("recipient", true);
     if (recipient.id == giver.id) {
-      interaction.reply({content: "You can't give to *yourself*, silly.", ephemeral: true);
+      interaction.reply({content: "You can't give to *yourself*, silly.", ephemeral: true});
       return;
     }
     
     let reason = interaction.getString("reason");
     let toIcarus = recipient.id == interaction.client.user.id
     if (toIcarus && !(reason.length > 0)) {
-      interaction.reply({content: "You need to have a reason to give to me!", ephemeral: true);
+      interaction.reply({content: "You need to have a reason to give to me!", ephemeral: true});
       return;
     }
     reason = reason || "No particular reason";
@@ -56,7 +56,7 @@ async function bankGive(interaction) {
 
     let value = interaction.getInteger("amount", true);
     if (value === 0) {
-       interaction.reply({content: "You can't give *nothing*.", ephemeral: true);
+       interaction.reply({content: "You can't give *nothing*.", ephemeral: true});
        return;
     } else if (value < 0) {
       interaction.reply({content: `You can't just *take* ${coin}, silly.`, ephemeral: true});
@@ -88,7 +88,7 @@ async function bankGive(interaction) {
       .setDescription(`${Util.escapeMarkdown(giver.displayName)} just gave you ${coin}${receipt.value}.`);
       recipient.send({embeds: embed});
     }
-    interaction.reply(`${coin}${value} sent to ${member} for ${reason}`).then(u.clean);
+    interaction.reply(`${coin}${value} sent to ${Util.escapeMarkdown(recipient.displayName)} for reason: ${reason}`).then(u.clean);
     
     let withdrawal = {
       currency,
@@ -132,7 +132,7 @@ async function bankBalance(interaction) {
 
 async function bankGameList(interaction) {
   try {
-    games = await getGameList();
+    let games = await getGameList();
     for (const game of games.filter(g => !g.Code)) {
       game.Code = generateCode(5);
       game.save();
@@ -170,8 +170,8 @@ async function bankGameList(interaction) {
 
 async function bankGameRedeem(interaction) {
   try {
-    games = await getGameList();
-    game = games.find(g => (g.Code == interaction.getString("code", true).toUpperCase());
+    let games = await getGameList();
+    let game = games.find(g => (g.Code == interaction.getString("code", true).toUpperCase()));
     if (!game) {
       interaction.reply({content: "I couldn't find that game. User `/bank game list` to see available games.", ephemeral: true});
       return;
@@ -220,7 +220,7 @@ async function bankGameRedeem(interaction) {
     game.save();
     interaction.user.send({embed}).catch(e => u.errorHandler(e, interaction));
 
-    let embed = u.embed()
+    embed = u.embed()
     .setAuthor(interaction.member.displayName, interaction.member.displayAvatarURL({dynamic: true}))
     .setDescription(`${interaction.user.username} just redeemed a key for a ${game["Game Title"]} (${game.System}) key.`)
     .addField("Cost", gb + game.Cost, true)
@@ -263,11 +263,11 @@ async function bankDiscount(interaction) {
       };
       let withdraw = await Module.db.bank.addCurrency(withdrawal);
 
-      interaction.reply({content: `You have redeemed ${gb}${amount} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance - amount}.`);
+      interaction.reply(`You have redeemed ${gb}${withdraw.value} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance - withdraw.value}.`);
       let embed = u.embed()
       .setAuthor(interaction.member.displayName, interaction.member.displayAvatarURL({dynamic: true}))
-      .addField("Amount", `${gb}${amount}\n$${amount / 100}`)
-      .addField("Balance", `${gb}${balance.balance - amount}`)
+      .addField("Amount", `${gb}${withdraw.value}\n$${withdraw.value / 100}`)
+      .addField("Balance", `${gb}${balance.balance - withdraw.value}`)
       .setDescription(`**${Util.escapeMarkdown(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
       interaction.client.channels.cache.get(Module.config.channels.modlogs).send({embeds: embed});
     } else {
@@ -281,16 +281,16 @@ async function bankAward(interaction) {
     let giver = interaction.member;
     let recipient = interaction.getMember("recipient", true);
     if (recipient.id == giver.id) {
-      interaction.reply({content: `You can't award *yourself* ${ember}, silly.`, ephemeral: true);
+      interaction.reply({content: `You can't award *yourself* ${ember}, silly.`, ephemeral: true});
       return;
     } else if (recipient.id == interaction.client.user.id) {
-      interaction.reply({content: `You can't award *me* ${ember}, silly.`, ephemeral: true);
+      interaction.reply({content: `You can't award *me* ${ember}, silly.`, ephemeral: true});
       return;
     }
     
     let value = interaction.getInteger("amount", true);
     if (value === 0) {
-       interaction.reply({content: "You can't award *nothing*.", ephemeral: true);
+       interaction.reply({content: "You can't award *nothing*.", ephemeral: true});
        return;
     }
     value = value > 10000 ? 10000 : (value < -10000 ? -10000 : value);
@@ -315,16 +315,16 @@ async function bankAward(interaction) {
     .setDescription(`${Util.escapeMarkdown(giver.displayName)} just ${value > 0 ?"awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
     recipient.send({embeds: embed});
 
-    interaction.reply(`${ember}${value} ${value > 0 ?"awarded to" : "docked from"} ${member} for ${reason}`).then(u.clean);
+    interaction.reply(`${ember}${value} ${value > 0 ?"awarded to" : "docked from"} ${Util.escapeMarkdown(recipient.displayName)} for ${reason}`).then(u.clean);
     
-    let embed = u.embed()
+    embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
     .addField("Reason", reason)
-    .setDescription(`You just gave ${coin}${receipt.value} to ${Util.escapeMarkdown(recipient.displayName)} This counts toward their House's Points.`);
+    .setDescription(`You just gave ${ember}${receipt.value} to ${Util.escapeMarkdown(recipient.displayName)}. This counts toward their House's Points.`);
     giver.send({embeds: embed});
     
     let hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
-    let embed = u.embed()
+    embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))      
     .addField("Reason", reason)
     .setDescription(`**${Util.escapeMarkdown(giver.displayName)}** ${value > 0 ?"awarded" : "docked"} ${Util.escapeMarkdown(recipient.displayName)} ${ember}${value}.`);
@@ -335,7 +335,7 @@ async function bankAward(interaction) {
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "Bank",
-  guildId: config.ldsg
+  guildId: config.ldsg,
   commandId: "tbd",
   process: async (interaction) => {
     switch(interaction.options.getSubcommand(true)) {
