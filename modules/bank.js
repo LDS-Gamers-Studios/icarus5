@@ -1,5 +1,4 @@
 const Augur = require("augurbot"),
-  config = require("../config/config.json"),
   google = require("../config/google_api.json"),
   u = require("../utils/utils"),
   {Util} = require("discord.js"),
@@ -86,7 +85,7 @@ async function bankGive(interaction) {
       .addField("Reason", reason)
       .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
       .setDescription(`${Util.escapeMarkdown(giver.displayName)} just gave you ${coin}${receipt.value}.`);
-      recipient.send({embeds: embed});
+      recipient.send({embeds: [embed]});
     }
     interaction.reply(`${coin}${value} sent to ${Util.escapeMarkdown(recipient.displayName)} for reason: ${reason}`).then(u.clean);
     
@@ -105,7 +104,7 @@ async function bankGive(interaction) {
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
     .setDescription(`You just gave ${coin}${-receipt.value} to ${Util.escapeMarkdown(recipient.displayName)}.`);
-    giver.send({embeds: embed});
+    giver.send({embeds: [embed]});
     
     if ((currency == "em") && toIcarus) {
       let hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
@@ -113,7 +112,7 @@ async function bankGive(interaction) {
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))      
       .addField("Reason", reason)
       .setDescription(`**${Util.escapeMarkdown(giver.displayName)}** gave me ${coin}${value}.`);
-      hoh.send({content: `<@${Module.config.ownerId}>`, embeds: embed});
+      hoh.send({content: `<@${Module.config.ownerId}>`, embeds: [embed]});
     }
   } catch(e) { u.errorHandler(e, interaction); }
 }
@@ -126,7 +125,7 @@ async function bankBalance(interaction) {
     let embed = u.embed()
       .setAuthor(member.displayName, member.displayAvatarURL({dynamic: true})
       ).setDescription(`${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`);
-      interaction.reply({embed: embed}).then(u.clean);
+      interaction.reply({embeds: [embed]}).then(u.clean);
   } catch(e) { u.errorHandler(e, interaction); }
 }
 
@@ -140,7 +139,7 @@ async function bankGameList(interaction) {
 
     games = games.sort((a, b) => a["Game Title"].localeCompare(b["Game Title"]));
     // Filter Rated M, unless the member has the Rated M Role
-    if (!interaction.member?.roles.cache.has("281708645161631745"))
+    if (!interaction.member?.roles.cache.has(Module.config.roles.rated_m))
       games = games.filter(g => g.Rating.toUpperCase() != "M");
 
     // Reply so there's no "interaction failed" error message.
@@ -153,7 +152,7 @@ async function bankGameList(interaction) {
     let i = 0;
     for (const game of games) {
       if (((++i) % 25) == 0) {
-        interaction.user.send({embeds: embed}).catch(u.noop);
+        interaction.user.send({embeds: [embed]}).catch(u.noop);
         embed = u.embed()
         .setTitle("Games Available to Redeem")
         .setDescription(`Redeem ${gb} for game codes with the \`!gameredeem code\` command.`);
@@ -162,9 +161,9 @@ async function bankGameList(interaction) {
       let steamApp = null;
       if (game.System?.toLowerCase() == "steam")
         steamApp = steamGameList.find(g => g.name.toLowerCase() == game["Game Title"].toLowerCase());
-      embed.addField(`${game["Game Title"]} (${game.System})${(game.Rating ? ` [${game.Rating}]` : "")}`, `${gb}${game.Cost}${(steamApp ? ` [[Steam Store Page]](https://store.steampowered.com/app/${steamApp.appid})` : "")}\n\`!gameredeem ${game.Code}\``);
+      embed.addField(`${game["Game Title"]} (${game.System})${(game.Rating ? ` [${game.Rating}]` : "")}`, `${gb}${game.Cost}${(steamApp ? ` [[Steam Store Page]](https://store.steampowered.com/app/${steamApp.appid})` : "")}\n\`/bank game redeem ${game.Code}\``);
     }
-    interaction.user.send({embeds: embed}).catch(u.noop);
+    interaction.user.send({embeds: [embed]}).catch(u.noop);
   } catch(e) { u.errorHandler(e, interaction); }
 }
 
@@ -226,7 +225,7 @@ async function bankGameRedeem(interaction) {
     .addField("Cost", gb + game.Cost, true)
     .addField("Balance", gb + (balance.balance - game.Cost), true)
 
-    interaction.client.channels.cache.get(Module.config.channels.modlogs).send({embeds: embed});
+    interaction.client.channels.cache.get(Module.config.channels.modlogs).send({embeds: [embed]});
 
   } catch(e) { u.errorHandler(e, interaction); }
 }
@@ -269,7 +268,7 @@ async function bankDiscount(interaction) {
       .addField("Amount", `${gb}${withdraw.value}\n$${withdraw.value / 100}`)
       .addField("Balance", `${gb}${balance.balance - withdraw.value}`)
       .setDescription(`**${Util.escapeMarkdown(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
-      interaction.client.channels.cache.get(Module.config.channels.modlogs).send({embeds: embed});
+      interaction.client.channels.cache.get(Module.config.channels.modlogs).send({embeds: [embed]});
     } else {
       interaction.reply({content: "Sorry, something went wrong. Please try again.", ephemeral: true});
     }
@@ -313,7 +312,7 @@ async function bankAward(interaction) {
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
     .setDescription(`${Util.escapeMarkdown(giver.displayName)} just ${value > 0 ?"awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
-    recipient.send({embeds: embed});
+    recipient.send({embeds: [embed]});
 
     interaction.reply(`${ember}${value} ${value > 0 ?"awarded to" : "docked from"} ${Util.escapeMarkdown(recipient.displayName)} for ${reason}`).then(u.clean);
     
@@ -321,22 +320,22 @@ async function bankAward(interaction) {
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
     .addField("Reason", reason)
     .setDescription(`You just gave ${ember}${receipt.value} to ${Util.escapeMarkdown(recipient.displayName)}. This counts toward their House's Points.`);
-    giver.send({embeds: embed});
+    giver.send({embeds: [embed]});
     
     let hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))      
     .addField("Reason", reason)
     .setDescription(`**${Util.escapeMarkdown(giver.displayName)}** ${value > 0 ?"awarded" : "docked"} ${Util.escapeMarkdown(recipient.displayName)} ${ember}${value}.`);
-    hoh.send({embeds: embed});
+    hoh.send({embeds: [embed]});
   } catch(e) { u.errorHandler(e, interaction); }
 }
 
 const Module = new Augur.Module()
 .addInteractionCommand({
-  name: "Bank",
-  guildId: config.ldsg,
-  commandId: "tbd",
+  name: "bank",
+  guildId: Module.config.ldsg,
+  commandId: undefined,
   process: async (interaction) => {
     switch(interaction.options.getSubcommand(true)) {
       case "give":

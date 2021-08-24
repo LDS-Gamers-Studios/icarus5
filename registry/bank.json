@@ -16,7 +16,7 @@
         {
           "type": 3,
           "name": "currency",
-          "description": "What do you want to give them? Max 1,000 GB or 10,000 Ember.",
+          "description": "What do you want to give them?",
           "choices": [
             {
               "name": "Ghostbucks",
@@ -32,7 +32,7 @@
         {
           "type": 4,
           "name": "amount",
-          "description": "How much do you want to send?",
+          "description": "How much do you want to send? (Max 1,000 GB or 10,000 Ember.)",
           "required": true
         },
         {
