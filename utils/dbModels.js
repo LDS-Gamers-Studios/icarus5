@@ -16,8 +16,8 @@ const models = {
       else return {discordId, currency, balance: 0};
     },
     addCurrency: async function(data) {
-      if (data.discordId.id) data.discordId = data.discordId.id;
-      if (data.giver.id) data.giver = data.giver.id;
+      data.discordId = data.discordId.id ?? data.discordId;
+      data.giver = data.giver.id ?? data.giver;
       let record = new Bank(data);
       return await record.save();
     }
