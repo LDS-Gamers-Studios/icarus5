@@ -92,7 +92,7 @@
       "options": [
         {
           "type": 6,
-          "name": "user",
+          "name": "recipient",
           "description": "Who do you want to award?",
           "required": true
         },
