@@ -1,12 +1,16 @@
 const Augur = require("augurbot"),
-  google = require("../config/google_api.json"),
   u = require("../utils/utils"),
   {Util} = require("discord.js"),
-  {GoogleSpreadsheet} = require("google-spreadsheet");
-
-const doc = new GoogleSpreadsheet(google.sheets.games),
   gb = "<:gb:493084576470663180>",
   ember = "<:ember:512508452619157504>";
+
+const google = require("../config/google_api.json"),
+  {GoogleSpreadsheet} = require("google-spreadsheet"),
+  doc = new GoogleSpreadsheet(google.sheets.games);
+
+const {customAlphabet} = require("nanoid"),
+  chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ",
+  nanoid = customAlphabet(chars, 8);
 
 var steamGameList;
 
@@ -18,15 +22,6 @@ async function getGameList() {
     games = games.filter(g => !g.Recipient).filter(filterUnique);
     return games;
   } catch (e) { e.errorHandler(e, "Fetch Game List"); }
-}
-
-function generateCode(n) {
-  let chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ";
-  let newCode = "";
-  for (var i = 0; i < n; i++) {
-    newCode += u.rand(chars);
-  }
-  return newCode;
 }
 
 function filterUnique(e, i, a) {
@@ -133,7 +128,7 @@ async function bankGameList(interaction) {
   try {
     let games = await getGameList();
     for (const game of games.filter(g => !g.Code)) {
-      game.Code = generateCode(5);
+      game.Code = nanoid();
       game.save();
     }
 
@@ -245,7 +240,7 @@ async function bankDiscount(interaction) {
       combinable: false,
       maxNumberOfUsages: 1,
       trigger: "Code",
-      code: generateCode(6),
+      code: nanoid(),
       type: "FixedAmount",
       amount: (amount / 100)
     };
