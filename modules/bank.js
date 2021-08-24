@@ -217,7 +217,7 @@ async function bankGameRedeem(interaction) {
     game.Recipient = interaction.user.username;
     game.Date = new Date();
     game.save();
-    interaction.user.send({embed}).catch(e => u.errorHandler(e, interaction));
+    interaction.user.send({embeds: [embed]}).catch(e => u.errorHandler(e, interaction));
 
     embed = u.embed()
     .setAuthor(interaction.member.displayName, interaction.member.displayAvatarURL({dynamic: true}))
