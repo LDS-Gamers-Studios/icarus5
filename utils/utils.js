@@ -45,7 +45,7 @@ const utils = {
   Collection: Discord.Collection,
   /**
    * Returns a MessageEmbed with basic values preset, such as color and timestamp.
-   * @param {any} data The data object to pass to the MessageEmbed constructor. 
+   * @param {any} data The data object to pass to the MessageEmbed constructor.
    *   You can override the color and timestamp here as well.
    */
   embed: function(data) {
@@ -80,10 +80,7 @@ const utils = {
       let loc = (message.guild ? `${message.guild.name} > ${message.channel.name}` : "DM");
       console.error(`Interaction by ${message.user.username} in ${loc}`);
 
-      message.reply("I've run into an error. I've let my devs know.").then(async () => {
-        await utils.wait(20000);
-        message.deleteReply();
-      });
+      message.reply({content: "I've run into an error. I've let my devs know.", ephemeral: true}).catch(utils.noop);
       embed.addField("User", message.user.username, true)
         .addField("Location", loc, true)
         .addField("Interaction", message.commandId || message.customId || "`undefined`", true);
@@ -102,11 +99,11 @@ const utils = {
   },
   errorLog,
   /**
-   * This task is extremely complicated. 
+   * This task is extremely complicated.
    * You need to understand it perfectly to use it.
    * It took millenia to perfect, and will take millenia
    * more to understand, even for scholars.
-   * 
+   *
    * It does literally nothing.
    * */
   noop: () => { },
