@@ -17,9 +17,12 @@
   },
   "homepage": "https://github.com/Gaiwecoor/icarus5#readme",
   "dependencies": {
-    "augurbot": "^3.0.0",
+    "augurbot": "github:gaiwecoor/augurbot#dev",
     "axios": "^0.21.1",
-    "discord.js": "^13.0.1",
-    "mongoose": "^5.13.7"
+    "discord.js": "^13.1.0",
+    "google-spreadsheet": "^3.1.15",
+    "mongoose": "^5.13.7",
+    "nanoid": "^3.1.25",
+    "steamapi": "^2.1.3"
   }
 }
