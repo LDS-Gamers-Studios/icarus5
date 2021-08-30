@@ -67,8 +67,8 @@ const utils = {
 
     let embed = utils.embed().setTitle(error.name);
 
-    if ((message instanceof Discord.Message) || (message instanceof Discord.Interaction)) {
-      let loc = (message.guild ? `${message.guild.name} > ${message.channel.name}` : "DM");
+    if (message instanceof Discord.Message) {
+      let loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
       console.error(`${message.author.username} in ${loc}: ${message.cleanContent}`);
 
       message.channel.send("I've run into an error. I've let my devs know.")
@@ -77,11 +77,11 @@ const utils = {
         .addField("Location", loc, true)
         .addField("Command", message.cleanContent || "`undefined`", true);
     } else if (message instanceof Discord.Interaction) {
-      let loc = (message.guild ? `${message.guild.name} > ${message.channel.name}` : "DM");
+      let loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
       console.error(`Interaction by ${message.user.username} in ${loc}`);
 
-      message.reply({content: "I've run into an error. I've let my devs know.", ephemeral: true}).catch(utils.noop);
-      embed.addField("User", message.user.username, true)
+      message[(message.deferred ? "editReply" : "reply")]({content: "I've run into an error. I've let my devs know.", ephemeral: true}).catch(utils.noop);
+      embed.addField("User", message.user?.username, true)
         .addField("Location", loc, true)
         .addField("Interaction", message.commandId || message.customId || "`undefined`", true);
     } else if (typeof message === "string") {
@@ -98,6 +98,11 @@ const utils = {
     errorLog.send({embeds: [embed]});
   },
   errorLog,
+  /**
+   * Fetch partial Discord objects
+   * @param {*} obj The Discord object to fetch.
+   */
+  fetchPartial: async (obj) => { return obj }
   /**
    * This task is extremely complicated.
    * You need to understand it perfectly to use it.
