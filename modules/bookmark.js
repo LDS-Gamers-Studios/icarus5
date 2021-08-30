@@ -5,7 +5,7 @@ const Augur = require("augurbot"),
 
 const Module = new Augur.Module()
 .addInteractionCommand({name: "Bookmark",
-  commandId: undefined,
+  commandId: "881936439674286080",
   process: async (interaction) => {
     try {
       await interaction.deferReply?.({ephemeral: true});
