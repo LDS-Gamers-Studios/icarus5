@@ -36,7 +36,7 @@ async function bankGive(interaction) {
       interaction.reply({content: "You can't give to *yourself*, silly.", ephemeral: true});
       return;
     }
-    
+
     let reason = interaction.getString("reason");
     let toIcarus = recipient.id == interaction.client.user.id
     if (toIcarus && !(reason.length > 0)) {
@@ -57,7 +57,7 @@ async function bankGive(interaction) {
       return;
     }
     value = value > MAX ? MAX : (value < -MAX ? -MAX : value);
-    
+
     let account = await Module.db.bank.getBalance(giver.id, currency);
     if (value > account.balance) {
       interaction.reply({content: `You don't have enough ${coin} to give! You can give up to ${coin}${account.balance}`, ephemeral: true});
@@ -83,7 +83,7 @@ async function bankGive(interaction) {
       recipient.send({embeds: [embed]});
     }
     interaction.reply(`${coin}${value} sent to ${Util.escapeMarkdown(recipient.displayName)} for reason: ${reason}`).then(u.clean);
-    
+
     let withdrawal = {
       currency,
       discordId: giver.id,
@@ -100,11 +100,11 @@ async function bankGive(interaction) {
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
     .setDescription(`You just gave ${coin}${-receipt.value} to ${Util.escapeMarkdown(recipient.displayName)}.`);
     giver.send({embeds: [embed]});
-    
+
     if ((currency == "em") && toIcarus) {
       let hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
       let embed = u.embed()
-      .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))      
+      .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
       .addField("Reason", reason)
       .setDescription(`**${Util.escapeMarkdown(giver.displayName)}** gave me ${coin}${value}.`);
       hoh.send({content: `<@${Module.config.ownerId}>`, embeds: [embed]});
@@ -139,7 +139,7 @@ async function bankGameList(interaction) {
 
     // Reply so there's no "interaction failed" error message.
     interaction.reply({content: `Watch your DMs for a list of games that can be redeemed with ${gb}!`, ephemeral: true});
-    
+
     let embed = u.embed()
     .setTitle("Games Available to Redeem")
     .setDescription(`Redeem ${gb} for game codes with the \`!gameredeem code\` command.`);
@@ -152,7 +152,7 @@ async function bankGameList(interaction) {
         .setTitle("Games Available to Redeem")
         .setDescription(`Redeem ${gb} for game codes with the \`!gameredeem code\` command.`);
       }
-      
+
       let steamApp = null;
       if (game.System?.toLowerCase() == "steam")
         steamApp = steamGameList.find(g => g.name.toLowerCase() == game["Game Title"].toLowerCase());
@@ -233,7 +233,7 @@ async function bankDiscount(interaction) {
       interaction.reply({content: `That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${balance.balance}.`, ephemeral: true});
       return;
     }
-    
+
     let snipcart = require("../utils/snipcart")(Module.config.api.snipcart);
     let discountInfo = {
       name: interaction.user.username + " " + Date().toLocaleString(),
@@ -244,9 +244,9 @@ async function bankDiscount(interaction) {
       type: "FixedAmount",
       amount: (amount / 100)
     };
-    
+
     let discount = await snipcart.newDiscount(discountInfo);
-    
+
     if (discount.amount && discount.code) {
       let withdrawal = {
         currency: "gb",
@@ -282,7 +282,7 @@ async function bankAward(interaction) {
       interaction.reply({content: `You can't award *me* ${ember}, silly.`, ephemeral: true});
       return;
     }
-    
+
     let value = interaction.getInteger("amount", true);
     if (value === 0) {
        interaction.reply({content: "You can't award *nothing*.", ephemeral: true});
@@ -291,7 +291,7 @@ async function bankAward(interaction) {
     value = value > 10000 ? 10000 : (value < -10000 ? -10000 : value);
 
     let reason = interaction.getString("reason") || "Astounding feats of courage, wisdom, and heart";
-    
+
     let award = {
       currency: "em",
       discordId: recipient.id,
@@ -311,16 +311,16 @@ async function bankAward(interaction) {
     recipient.send({embeds: [embed]});
 
     interaction.reply(`${ember}${value} ${value > 0 ?"awarded to" : "docked from"} ${Util.escapeMarkdown(recipient.displayName)} for ${reason}`).then(u.clean);
-    
+
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
     .addField("Reason", reason)
     .setDescription(`You just gave ${ember}${receipt.value} to ${Util.escapeMarkdown(recipient.displayName)}. This counts toward their House's Points.`);
     giver.send({embeds: [embed]});
-    
+
     let hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
     embed = u.embed()
-    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))      
+    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
     .addField("Reason", reason)
     .setDescription(`**${Util.escapeMarkdown(giver.displayName)}** ${value > 0 ?"awarded" : "docked"} ${Util.escapeMarkdown(recipient.displayName)} ${ember}${value}.`);
     hoh.send({embeds: [embed]});
@@ -331,7 +331,7 @@ const Module = new Augur.Module()
 .addInteractionCommand({
   name: "bank",
   guildId: Module.config.ldsg,
-  commandId: undefined,
+  commandId: "882719721068331149",
   process: async (interaction) => {
     switch(interaction.options.getSubcommand(true)) {
       case "give":
