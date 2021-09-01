@@ -9,3 +9,4 @@ When submitting a PR, please include the following questions with the appropriat
 * Are any changes to Interaction fingerprints needed? If so, are they reflected in the appropriate file in /registry?
 * Have I used JSdoc style comments (at least) to properly document all of my functions? 
 * Am I making sure all referenced snowflakes are in the config/snowflake.json file, rather than in my code directly?
+* Are there any new dependencies that need to be installed? If so, are they reflected in package.json?
