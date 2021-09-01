@@ -55,13 +55,13 @@ const utils = {
    * @param {any} data The data object to pass to the MessageEmbed constructor.
    *   You can override the color and timestamp here as well.
    */
-  embed: function(data) {
-    if (data.author instanceof Discord.GuildMember) {
+  embed: function(data = {}) {
+    if (data?.author instanceof Discord.GuildMember) {
       data.author = {
         name: data.author.displayName,
         iconURL: data.author.user.displayAvatarURL()
       };
-    } else if (data.author instanceof Discord.User) {
+    } else if (data?.author instanceof Discord.User) {
       data.author = {
         name: data.author.username,
         iconURL: data.author.displayAvatarURL()
