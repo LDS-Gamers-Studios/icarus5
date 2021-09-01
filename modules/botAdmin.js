@@ -24,8 +24,8 @@ const Module = new Augur.Module()
   hidden: true,
   permissions: (msg) => (msg.author.id === Module.config.ownerId) || msg.member?.roles.cache.some(r => [Module.config.roles.mod, Module.config.roles.management, Module.config.roles.team].includes(r.id)),
   process: async (msg) => {
-    let sent = await msg.channel.send({content: 'Pinging...', allowedMentions: {repliedUser: false}, reply: {messageReference: msg}});
-    sent.edit({content: `Pong! Took ${sent.createdTimestamp - (msg.editedTimestamp ? msg.editedTimestamp : msg.createdTimestamp)}ms`, allowedMentions: {repliedUser: false}, reply: {messageReference: msg}});
+    let sent = await msg.reply({content: 'Pinging...', allowedMentions: {repliedUser: false}});
+    sent.edit({content: `Pong! Took ${sent.createdTimestamp - (msg.editedTimestamp ? msg.editedTimestamp : msg.createdTimestamp)}ms`, allowedMentions: {repliedUser: false}});
   }
 })
 .addCommand({name: "pulse",
