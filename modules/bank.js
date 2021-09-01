@@ -367,3 +367,5 @@ const Module = new Augur.Module()
   } catch(e) { u.errorHandler(e, "Fetch Steam Game List Error"); }
 })
 .setUnload(() => steamGameList);
+
+module.exports = Module;
