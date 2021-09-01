@@ -31,13 +31,13 @@ function filterUnique(e, i, a) {
 async function bankGive(interaction) {
   try {
     let giver = interaction.member;
-    let recipient = interaction.getMember("recipient", true);
+    let recipient = interaction.options.getMember("recipient", true);
     if (recipient.id == giver.id) {
       interaction.reply({content: "You can't give to *yourself*, silly.", ephemeral: true});
       return;
     }
 
-    let reason = interaction.getString("reason");
+    let reason = interaction.options.getString("reason");
     let toIcarus = recipient.id == interaction.client.user.id
     if (toIcarus && !(reason.length > 0)) {
       interaction.reply({content: "You need to have a reason to give to me!", ephemeral: true});
@@ -45,10 +45,10 @@ async function bankGive(interaction) {
     }
     reason = reason || "No particular reason";
 
-    let currency = interaction.getString("currency", true);
+    let currency = interaction.options.getString("currency", true);
     const {coin, MAX} = (currency == "gb" ? {coin: gb, MAX: 1000} : {coin: ember, MAX: 10000});
 
-    let value = interaction.getInteger("amount", true);
+    let value = interaction.options.getInteger("amount", true);
     if (value === 0) {
        interaction.reply({content: "You can't give *nothing*.", ephemeral: true});
        return;
@@ -165,7 +165,7 @@ async function bankGameList(interaction) {
 async function bankGameRedeem(interaction) {
   try {
     let games = await getGameList();
-    let game = games.find(g => (g.Code == interaction.getString("code", true).toUpperCase()));
+    let game = games.find(g => (g.Code == interaction.options.getString("code", true).toUpperCase()));
     if (!game) {
       interaction.reply({content: "I couldn't find that game. User `/bank game list` to see available games.", ephemeral: true});
       return;
@@ -227,7 +227,7 @@ async function bankGameRedeem(interaction) {
 
 async function bankDiscount(interaction) {
   try {
-    let amount = interaction.getInteger("amount", true);
+    let amount = interaction.options.getInteger("amount", true);
     let balance = await Module.db.bank.getBalance(interaction.user.id, "gb");
     if ((amount > balance.balance) || (amount > 0)) {
       interaction.reply({content: `That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${balance.balance}.`, ephemeral: true});
@@ -274,7 +274,7 @@ async function bankDiscount(interaction) {
 async function bankAward(interaction) {
   try {
     let giver = interaction.member;
-    let recipient = interaction.getMember("recipient", true);
+    let recipient = interaction.options.getMember("recipient", true);
     if (recipient.id == giver.id) {
       interaction.reply({content: `You can't award *yourself* ${ember}, silly.`, ephemeral: true});
       return;
@@ -283,14 +283,14 @@ async function bankAward(interaction) {
       return;
     }
 
-    let value = interaction.getInteger("amount", true);
+    let value = interaction.options.getInteger("amount", true);
     if (value === 0) {
        interaction.reply({content: "You can't award *nothing*.", ephemeral: true});
        return;
     }
     value = value > 10000 ? 10000 : (value < -10000 ? -10000 : value);
 
-    let reason = interaction.getString("reason") || "Astounding feats of courage, wisdom, and heart";
+    let reason = interaction.options.getString("reason") || "Astounding feats of courage, wisdom, and heart";
 
     let award = {
       currency: "em",
