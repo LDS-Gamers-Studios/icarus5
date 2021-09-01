@@ -59,7 +59,7 @@ const Module = new Augur.Module()
           color: 0x5865f2,
         })
         .addField("Joined", moment(member.joinedAt).fromNow(), true)
-        .addField("Posts", (user?.posts || 0), inline: true);
+        .addField("Posts", (user?.posts || 0), true);
 
         member.guild.channels.cache.get(Module.config.channels.modlogs).send({embeds: [embed]});
       }
