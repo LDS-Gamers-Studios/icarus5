@@ -2,11 +2,29 @@ const config = require("../config/config.json"),
   moment = require("moment"),
   mongoose = require("mongoose");
 
-const User = require("../models/User.model");
+const Bank = require("../models/Bank.model"),
+  User = require("../models/User.model");
 
 mongoose.connect(config.db.db, config.db.settings);
 
 const models = {
+  bank: {
+    getBalance: async function(discordId, currency) {
+      if (discordId.id) discordId = discordId.id;
+      let record = await Bank.aggregate([
+        { $match: { discordId, currency }},
+        { $group: { _id: null, balance: {$sum: "$value"}}}
+      ]).exec();
+      if (record && (record.length > 0)) return {discordId, currency, balance: record[0].balance};
+      else return {discordId, currency, balance: 0};
+    },
+    addCurrency: async function(data) {
+      data.discordId = data.discordId.id ?? data.discordId;
+      data.giver = data.giver.id ?? data.giver;
+      let record = new Bank(data);
+      return await record.save();
+    }
+  },
   user: {
     /**
      * Fetch a user record from the database.
