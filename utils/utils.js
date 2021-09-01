@@ -120,7 +120,7 @@ const utils = {
    * Fetch partial Discord objects
    * @param {*} obj The Discord object to fetch.
    */
-  fetchPartial: async (obj) => { return obj }
+  fetchPartial: (obj) => { return obj.fetch(); },
   /**
    * This task is extremely complicated.
    * You need to understand it perfectly to use it.
