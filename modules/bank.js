@@ -82,7 +82,7 @@ async function bankGive(interaction) {
       .setDescription(`${u.escapeText(giver.displayName)} just gave you ${coin}${receipt.value}.`);
       recipient.send({embeds: [embed]});
     }
-    interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`).then(u.clean);
+    interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`);
 
     let withdrawal = {
       currency,
@@ -120,7 +120,7 @@ async function bankBalance(interaction) {
     let embed = u.embed()
       .setAuthor(member.displayName, member.user.displayAvatarURL({dynamic: true})
       ).setDescription(`${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`);
-      interaction.reply({embeds: [embed]}).then(u.clean);
+      interaction.reply({embeds: [embed]});
   } catch(e) { u.errorHandler(e, interaction); }
 }
 
@@ -310,7 +310,7 @@ async function bankAward(interaction) {
     .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ?"awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
     recipient.send({embeds: [embed]});
 
-    interaction.reply(`${ember}${value} ${value > 0 ?"awarded to" : "docked from"} ${u.escapeText(recipient.displayName)} for ${reason}`).then(u.clean);
+    interaction.reply(`${ember}${value} ${value > 0 ?"awarded to" : "docked from"} ${u.escapeText(recipient.displayName)} for ${reason}`);
 
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
