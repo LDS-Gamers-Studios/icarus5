@@ -1,7 +1,6 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
   config = require("../config/config.json"),
-  {Util} = require("discord.js"),
   gb = "<:gb:493084576470663180>",
   ember = "<:ember:512508452619157504>";
 
@@ -80,10 +79,10 @@ async function bankGive(interaction) {
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
       .addField("Reason", reason)
       .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-      .setDescription(`${Util.escapeMarkdown(giver.displayName)} just gave you ${coin}${receipt.value}.`);
+      .setDescription(`${u.escapeText(giver.displayName)} just gave you ${coin}${receipt.value}.`);
       recipient.send({embeds: [embed]});
     }
-    interaction.reply(`${coin}${value} sent to ${Util.escapeMarkdown(recipient.displayName)} for reason: ${reason}`).then(u.clean);
+    interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`).then(u.clean);
 
     let withdrawal = {
       currency,
@@ -99,7 +98,7 @@ async function bankGive(interaction) {
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-    .setDescription(`You just gave ${coin}${-receipt.value} to ${Util.escapeMarkdown(recipient.displayName)}.`);
+    .setDescription(`You just gave ${coin}${-receipt.value} to ${u.escapeText(recipient.displayName)}.`);
     giver.send({embeds: [embed]});
 
     if ((currency == "em") && toIcarus) {
@@ -107,7 +106,7 @@ async function bankGive(interaction) {
       let embed = u.embed()
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
       .addField("Reason", reason)
-      .setDescription(`**${Util.escapeMarkdown(giver.displayName)}** gave me ${coin}${value}.`);
+      .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
       hoh.send({content: `<@${Module.config.ownerId}>`, embeds: [embed]});
     }
   } catch(e) { u.errorHandler(e, interaction); }
@@ -119,7 +118,7 @@ async function bankBalance(interaction) {
     let gbBalance = await Module.db.bank.getBalance(member, "gb");
     let emBalance = await Module.db.bank.getBalance(member, "em");
     let embed = u.embed()
-      .setAuthor(member.displayName, member.displayAvatarURL({dynamic: true})
+      .setAuthor(member.displayName, member.user.displayAvatarURL({dynamic: true})
       ).setDescription(`${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`);
       interaction.reply({embeds: [embed]}).then(u.clean);
   } catch(e) { u.errorHandler(e, interaction); }
@@ -216,7 +215,7 @@ async function bankGameRedeem(interaction) {
     interaction.user.send({embeds: [embed]}).catch(e => u.errorHandler(e, interaction));
 
     embed = u.embed()
-    .setAuthor(interaction.member.displayName, interaction.member.displayAvatarURL({dynamic: true}))
+    .setAuthor(interaction.member.displayName, interaction.member.user.displayAvatarURL({dynamic: true}))
     .setDescription(`${interaction.user.username} just redeemed a key for a ${game["Game Title"]} (${game.System}) key.`)
     .addField("Cost", gb + game.Cost, true)
     .addField("Balance", gb + (balance.balance - game.Cost), true)
@@ -261,10 +260,10 @@ async function bankDiscount(interaction) {
       interaction.reply({content: "Watch your DMs for the code you just redeemed!", ephemeral: true});
       interaction.user.send(`You have redeemed ${gb}${withdraw.value} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance - withdraw.value}.`);
       let embed = u.embed()
-      .setAuthor(interaction.member.displayName, interaction.member.displayAvatarURL({dynamic: true}))
+      .setAuthor(interaction.member.displayName, interaction.member.user.displayAvatarURL({dynamic: true}))
       .addField("Amount", `${gb}${withdraw.value}\n$${withdraw.value / 100}`)
       .addField("Balance", `${gb}${balance.balance - withdraw.value}`)
-      .setDescription(`**${Util.escapeMarkdown(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
+      .setDescription(`**${u.escapeText(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
       interaction.client.channels.cache.get(Module.config.channels.modlogs).send({embeds: [embed]});
     } else {
       interaction.reply({content: "Sorry, something went wrong. Please try again.", ephemeral: true});
@@ -308,22 +307,22 @@ async function bankAward(interaction) {
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-    .setDescription(`${Util.escapeMarkdown(giver.displayName)} just ${value > 0 ?"awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
+    .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ?"awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
     recipient.send({embeds: [embed]});
 
-    interaction.reply(`${ember}${value} ${value > 0 ?"awarded to" : "docked from"} ${Util.escapeMarkdown(recipient.displayName)} for ${reason}`).then(u.clean);
+    interaction.reply(`${ember}${value} ${value > 0 ?"awarded to" : "docked from"} ${u.escapeText(recipient.displayName)} for ${reason}`).then(u.clean);
 
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
     .addField("Reason", reason)
-    .setDescription(`You just gave ${ember}${receipt.value} to ${Util.escapeMarkdown(recipient.displayName)}. This counts toward their House's Points.`);
+    .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
     giver.send({embeds: [embed]});
 
     let hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({dynamic: true}))
     .addField("Reason", reason)
-    .setDescription(`**${Util.escapeMarkdown(giver.displayName)}** ${value > 0 ?"awarded" : "docked"} ${Util.escapeMarkdown(recipient.displayName)} ${ember}${value}.`);
+    .setDescription(`**${u.escapeText(giver.displayName)}** ${value > 0 ?"awarded" : "docked"} ${u.escapeText(recipient.displayName)} ${ember}${value}.`);
     hoh.send({embeds: [embed]});
   } catch(e) { u.errorHandler(e, interaction); }
 }
