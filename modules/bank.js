@@ -1,5 +1,6 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
+  config = require("../config/config.json"),
   {Util} = require("discord.js"),
   gb = "<:gb:493084576470663180>",
   ember = "<:ember:512508452619157504>";
@@ -330,7 +331,7 @@ async function bankAward(interaction) {
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "bank",
-  guildId: Module.config.ldsg,
+  guildId: config.ldsg,
   commandId: "882719721068331149",
   process: async (interaction) => {
     switch(interaction.options.getSubcommand(true)) {
