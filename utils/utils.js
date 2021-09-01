@@ -42,7 +42,14 @@ const utils = {
     await utils.wait(t);
     interaction.deleteReply();
   },
+  /**
+   * Shortcut to Discord.Collection. See docs there for reference.
+   */
   Collection: Discord.Collection,
+  /**
+   * Shortcut to Discord.Util.escapeMarkdown. See docs there for reference.
+   */
+  escapeText: Discord.Util.escapeMarkdown,
   /**
    * Returns a MessageEmbed with basic values preset, such as color and timestamp.
    * @param {any} data The data object to pass to the MessageEmbed constructor.
