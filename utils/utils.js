@@ -42,13 +42,31 @@ const utils = {
     await utils.wait(t);
     interaction.deleteReply();
   },
+  /**
+   * Shortcut to Discord.Collection. See docs there for reference.
+   */
   Collection: Discord.Collection,
+  /**
+   * Shortcut to Discord.Util.escapeMarkdown. See docs there for reference.
+   */
+  escapeText: Discord.Util.escapeMarkdown,
   /**
    * Returns a MessageEmbed with basic values preset, such as color and timestamp.
    * @param {any} data The data object to pass to the MessageEmbed constructor.
    *   You can override the color and timestamp here as well.
    */
   embed: function(data) {
+    if (data.author instanceof Discord.GuildMember) {
+      data.author = {
+        name: data.author.displayName,
+        iconURL: data.author.user.displayAvatarURL()
+      };
+    } else if (data.author instanceof Discord.User) {
+      data.author = {
+        name: data.author.username,
+        iconURL: data.author.displayAvatarURL()
+      };
+    }
     const embed = new Discord.MessageEmbed(data);
     if (!data?.color) embed.setColor(config.color);
     if (!data?.timestamp) embed.setTimestamp();
@@ -67,8 +85,8 @@ const utils = {
 
     let embed = utils.embed().setTitle(error.name);
 
-    if ((message instanceof Discord.Message) || (message instanceof Discord.Interaction)) {
-      let loc = (message.guild ? `${message.guild.name} > ${message.channel.name}` : "DM");
+    if (message instanceof Discord.Message) {
+      let loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
       console.error(`${message.author.username} in ${loc}: ${message.cleanContent}`);
 
       message.channel.send("I've run into an error. I've let my devs know.")
@@ -77,11 +95,11 @@ const utils = {
         .addField("Location", loc, true)
         .addField("Command", message.cleanContent || "`undefined`", true);
     } else if (message instanceof Discord.Interaction) {
-      let loc = (message.guild ? `${message.guild.name} > ${message.channel.name}` : "DM");
+      let loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
       console.error(`Interaction by ${message.user.username} in ${loc}`);
 
-      message.reply({content: "I've run into an error. I've let my devs know.", ephemeral: true}).catch(utils.noop);
-      embed.addField("User", message.user.username, true)
+      message[(message.deferred ? "editReply" : "reply")]({content: "I've run into an error. I've let my devs know.", ephemeral: true}).catch(utils.noop);
+      embed.addField("User", message.user?.username, true)
         .addField("Location", loc, true)
         .addField("Interaction", message.commandId || message.customId || "`undefined`", true);
     } else if (typeof message === "string") {
@@ -98,6 +116,11 @@ const utils = {
     errorLog.send({embeds: [embed]});
   },
   errorLog,
+  /**
+   * Fetch partial Discord objects
+   * @param {*} obj The Discord object to fetch.
+   */
+  fetchPartial: (obj) => { return obj.fetch(); },
   /**
    * This task is extremely complicated.
    * You need to understand it perfectly to use it.

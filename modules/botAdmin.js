@@ -24,7 +24,7 @@ const Module = new Augur.Module()
   hidden: true,
   permissions: (msg) => (msg.author.id === Module.config.ownerId) || msg.member?.roles.cache.some(r => [Module.config.roles.mod, Module.config.roles.management, Module.config.roles.team].includes(r.id)),
   process: async (msg) => {
-    let sent = await msg.channel.reply({content: 'Pinging...', allowedMentions: {repliedUser: false}});
+    let sent = await msg.reply({content: 'Pinging...', allowedMentions: {repliedUser: false}});
     sent.edit({content: `Pong! Took ${sent.createdTimestamp - (msg.editedTimestamp ? msg.editedTimestamp : msg.createdTimestamp)}ms`, allowedMentions: {repliedUser: false}});
   }
 })
@@ -90,7 +90,7 @@ const Module = new Augur.Module()
   },
   permissions: (msg) => Module.config.adminId.includes(msg.author.id)
 })
-//When the bot is fully online, fetch all the ldsg members, since it will only autofetch for small servers and we want them all. 
+//When the bot is fully online, fetch all the ldsg members, since it will only autofetch for small servers and we want them all.
 .addEvent("ready", () => {
   Module.client.guilds.cache.get(Module.config.ldsg).members.fetch();
 })
