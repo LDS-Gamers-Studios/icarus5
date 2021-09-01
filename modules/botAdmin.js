@@ -28,6 +28,36 @@ const Module = new Augur.Module()
     sent.edit({content: `Pong! Took ${sent.createdTimestamp - (msg.editedTimestamp ? msg.editedTimestamp : msg.createdTimestamp)}ms`, allowedMentions: {repliedUser: false}});
   }
 })
+.addCommand({name: "pull",
+  category: "Bot Admin",
+  description: "Pull bot updates from git",
+  hidden: true,
+  process: (msg) => {
+    let spawn = require("child_process").spawn;
+
+    u.clean(msg);
+
+    let cmd = spawn("git", ["pull"], {cwd: process.cwd()});
+    let stdout = [];
+    let stderr = [];
+
+    cmd.stdout.on("data", data => {
+      stdout.push(data);
+    });
+
+    cmd.stderr.on("data", data => {
+      stderr.push(data);
+    });
+
+    cmd.on("close", code => {
+      if (code == 0)
+        msg.channel.send(stdout.join("\n") + "\n\nCompleted with code: " + code).then(u.clean);
+      else
+        msg.channel.send(`ERROR CODE ${code}:\n${stderr.join("\n")}`).then(u.clean);
+    });
+  },
+  permissions: (msg) => (Module.config.ownerId === (msg.author.id))
+})
 .addCommand({name: "pulse",
   category: "Bot Admin",
   hidden: true,
