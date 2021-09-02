@@ -143,15 +143,16 @@ async function bankGameList(interaction) {
 
     let embed = u.embed()
     .setTitle("Games Available to Redeem")
-    .setDescription(`Redeem ${gb} for game codes with the \`!gameredeem code\` command.`);
+    .setDescription(`Redeem ${gb} for game codes with the \`/bank game redeem\` command.`);
 
+    let embeds = []
     let i = 0;
     for (const game of games) {
       if (((++i) % 25) == 0) {
-        interaction.user.send({embeds: [embed]}).catch(u.noop);
+        embeds.push(embed);
         embed = u.embed()
         .setTitle("Games Available to Redeem")
-        .setDescription(`Redeem ${gb} for game codes with the \`!gameredeem code\` command.`);
+        .setDescription(`Redeem ${gb} for game codes with the \`/bank game redeem\` command.`);
       }
 
       let steamApp = null;
@@ -159,7 +160,23 @@ async function bankGameList(interaction) {
         steamApp = steamGameList.find(g => g.name.toLowerCase() == game["Game Title"].toLowerCase());
       embed.addField(`${game["Game Title"]} (${game.System})${(game.Rating ? ` [${game.Rating}]` : "")}`, `${gb}${game.Cost}${(steamApp ? ` [[Steam Store Page]](https://store.steampowered.com/app/${steamApp.appid})` : "")}\n\`/bank game redeem ${game.Code}\``);
     }
-    interaction.user.send({embeds: [embed]}).catch(u.noop);
+    embeds.push(embed);
+    
+    let embedsToSend = [];
+    let totalLength = 0;
+    while (embeds.length > 0) {
+      embed = embeds.shift();
+      if (totalLength + embed.length > 6000) {
+        interaction.user.send({embeds: [embedsToSend]}).catch(u.noop);
+        embedsToSend = [];
+        totalLength = 0;
+      }
+      embedsToSend.push(embed);
+      totalLength += embed.length;
+    }
+    if (embedsToSend.length > 0)
+      interaction.user.send({embeds: [embedsToSend]}).catch(u.noop);
+
   } catch(e) { u.errorHandler(e, interaction); }
 }
 
