@@ -20,15 +20,15 @@ const Module = new Augur.Module()
         }, { reason: "New channel permissions update" })
         .catch(e => u.errorHandler(e, `Update New Channel Permissions: ${channel.name}`));
       } else {
-        u.errorLog.send({embeds: [
+        u.errorLog.send({ embeds: [
           u.embed({
             title: "Update New Channel Permissions",
             description: `Insufficient permissions to update channel ${channel.name}. Muted permissions need to be applied manually.`
           })
-        ]});
+        ] });
       }
     }
-  } catch(error) {
+  } catch (error) {
     u.errorHandler(error, "Set permissions on channel create");
   }
 })
@@ -37,13 +37,13 @@ const Module = new Augur.Module()
     if (guild.client.ignoreNotifications?.has(user.id)) {
       guild.client.ignoreNotifications.delete(user.id);
     } else {
-      guild.channels.cache.get(Module.config.channels.modlogs).send({embeds: [
+      guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
         u.embed({
           author: user,
           title: `${user.username} has been banned`,
           color: 0x0000ff
         })
-      ]});
+      ] });
     }
   }
 })
@@ -61,31 +61,31 @@ const Module = new Augur.Module()
         .addField("Joined", moment(member.joinedAt).fromNow(), true)
         .addField("Posts", (user?.posts || 0), true);
 
-        member.guild.channels.cache.get(Module.config.channels.modlogs).send({embeds: [embed]});
+        member.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
       }
     }
-  } catch(error) { u.errorHandler(error, `Member Leave: ${u.escapeText(member.displayName)} (${member.id})`)}
+  } catch (error) { u.errorHandler(error, `Member Leave: ${u.escapeText(member.displayName)} (${member.id})`); }
 })
 .addEvent("userUpdate", async (oldUser, newUser) => {
   try {
-    let ldsg = newUser.client.guilds.cache.get(Module.config.ldsg);
-    let newMember = ldsg.members.cache.get(newUser.id);
+    const ldsg = newUser.client.guilds.cache.get(Module.config.ldsg);
+    const newMember = ldsg.members.cache.get(newUser.id);
     if (newMember && (!newMember.roles.cache.has(Module.config.roles.trusted) || newMember.roles.cache.has(Module.config.roles.untrusted))) {
       const user = await Module.db.user.fetchUser(newMember).catch(u.noop);
-      const embed = u.embed({author: oldUser})
-        .setTitle("User Update")
-        .setFooter(`${user.posts} Posts in ${moment(newMember?.joinedTimestamp).fromNow(true)}`);
+      const embed = u.embed({ author: oldUser })
+      .setTitle("User Update")
+      .setFooter(`${user.posts} Posts in ${moment(newMember?.joinedTimestamp).fromNow(true)}`);
       if (oldUser.tag !== newUser.tag) {
         embed.addField("**Username Update**", `**Old:** ${u.escapeText(oldUser.tag)}\n**New:** ${u.escapeText(newUser.tag)}`);
       }
       if (oldUser.avatar !== newUser.avatar) {
-        embed.addField("**Avatar Update**", "See Below").setImage(newUser.displayAvatarURL({dynamic: true}));
+        embed.addField("**Avatar Update**", "See Below").setImage(newUser.displayAvatarURL({ dynamic: true }));
       } else {
         embed.setThumbnail(newUser.displayAvatarURL());
       }
-      ldsg.channels.cache.get(Module.config.channels.userupdates).send({content: `${newUser}: ${newUser.id}`, embeds: [embed]});
+      ldsg.channels.cache.get(Module.config.channels.userupdates).send({ content: `${newUser}: ${newUser.id}`, embeds: [embed] });
     }
-  } catch(error) { u.errorHandler(error, `User Update Error: ${u.escapeText(newUser?.username)} (${newUser.id})`); }
+  } catch (error) { u.errorHandler(error, `User Update Error: ${u.escapeText(newUser?.username)} (${newUser.id})`); }
 });
 
 module.exports = Module;
