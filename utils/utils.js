@@ -8,7 +8,7 @@ const utils = {
    * If a command is run in a channel that doesn't want spam, returns #bot-lobby so results can be posted there.
    * @param {Discord.Message} msg The Discord message to check for bot spam.
    */
-  botSpam: function (msg) {
+  botSpam: function(msg) {
     if (msg.guild?.id === config.ldsg && // Is in server
       msg.channel.id !== config.channels.botspam && // Isn't in bot-lobby
       msg.channel.id !== config.channels.bottesting && // Isn't in Bot Testing
@@ -83,10 +83,10 @@ const utils = {
 
     console.error(Date());
 
-    let embed = utils.embed().setTitle(error.name);
+    const embed = utils.embed().setTitle(error.name);
 
     if (message instanceof Discord.Message) {
-      let loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
+      const loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
       console.error(`${message.author.username} in ${loc}: ${message.cleanContent}`);
 
       message.channel.send("I've run into an error. I've let my devs know.")
@@ -95,10 +95,10 @@ const utils = {
         .addField("Location", loc, true)
         .addField("Command", message.cleanContent || "`undefined`", true);
     } else if (message instanceof Discord.Interaction) {
-      let loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
+      const loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
       console.error(`Interaction by ${message.user.username} in ${loc}`);
 
-      message[(message.deferred ? "editReply" : "reply")]({content: "I've run into an error. I've let my devs know.", ephemeral: true}).catch(utils.noop);
+      message[(message.deferred ? "editReply" : "reply")]({ content: "I've run into an error. I've let my devs know.", ephemeral: true }).catch(utils.noop);
       embed.addField("User", message.user?.username, true)
         .addField("Location", loc, true)
         .addField("Interaction", message.commandId || message.customId || "`undefined`", true);
@@ -113,7 +113,7 @@ const utils = {
     if (stack.length > 4096) stack = stack.slice(0, 4000);
 
     embed.setDescription(stack);
-    errorLog.send({embeds: [embed]});
+    errorLog.send({ embeds: [embed] });
   },
   errorLog,
   /**
@@ -129,22 +129,24 @@ const utils = {
    *
    * It does literally nothing.
    * */
-  noop: () => { },
+  noop: () => {
+    // No-op, do nothing
+  },
   /**
    * Returns an object containing the command, suffix, and params of the message.
    * @param {Discord.Message} msg The message to get command info from.
    * @param {boolean} clean Whether to use the messages cleanContent or normal content. Defaults to false.
    */
   parse: (msg, clean = false) => {
-    for (let prefix of [config.prefix, `<@${msg.client.user.id}>`, `<@!${msg.client.user.id}>`]) {
-      let content = clean ? msg.cleanContent : msg.content;
+    for (const prefix of [config.prefix, `<@${msg.client.user.id}>`, `<@!${msg.client.user.id}>`]) {
+      const content = clean ? msg.cleanContent : msg.content;
       if (!content.startsWith(prefix)) continue;
-      let trimmed = content.substr(prefix.length).trim();
+      const trimmed = content.substr(prefix.length).trim();
       let [command, ...params] = trimmed.split(" ");
       if (command) {
         let suffix = params.join(" ");
-        if (suffix.toLowerCase() === "help") {  // Allow `!command help` syntax
-          let t = command.toLowerCase();
+        if (suffix.toLowerCase() === "help") { // Allow `!command help` syntax
+          const t = command.toLowerCase();
           command = "help";
           suffix = t;
           params = t.split(" ");
@@ -164,7 +166,7 @@ const utils = {
    * @param {number} t The time to wait, in milliseconds.
    */
   wait: function(t) {
-    return new Promise((fulfill, reject) => {
+    return new Promise((fulfill) => {
       setTimeout(fulfill, t);
     });
   }
