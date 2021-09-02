@@ -108,7 +108,8 @@ const Module = new Augur.Module()
   parseParams: true,
   process: (msg, ...files) => {
     u.clean(msg);
-    let path = require("path");
+    const fs = require("fs"),
+      path = require("path");
     if (files.length === 0) files = fs.readdirSync(path.resolve(__dirname)).filter(file => file.endsWith(".js"));
 
     for (const file of files) {
