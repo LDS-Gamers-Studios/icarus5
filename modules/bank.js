@@ -161,13 +161,13 @@ async function bankGameList(interaction) {
       embed.addField(`${game["Game Title"]} (${game.System})${(game.Rating ? ` [${game.Rating}]` : "")}`, `${gb}${game.Cost}${(steamApp ? ` [[Steam Store Page]](https://store.steampowered.com/app/${steamApp.appid})` : "")}\n\`/bank game redeem ${game.Code}\``);
     }
     embeds.push(embed);
-    
+
     let embedsToSend = [];
     let totalLength = 0;
     while (embeds.length > 0) {
       embed = embeds.shift();
       if (totalLength + embed.length > 6000) {
-        interaction.user.send({embeds: [embedsToSend]}).catch(u.noop);
+        interaction.user.send({embeds: embedsToSend}).catch(u.noop);
         embedsToSend = [];
         totalLength = 0;
       }
@@ -175,7 +175,7 @@ async function bankGameList(interaction) {
       totalLength += embed.length;
     }
     if (embedsToSend.length > 0)
-      interaction.user.send({embeds: [embedsToSend]}).catch(u.noop);
+      interaction.user.send({embeds: embedsToSend}).catch(u.noop);
 
   } catch(e) { u.errorHandler(e, interaction); }
 }
