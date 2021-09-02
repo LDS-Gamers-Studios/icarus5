@@ -294,6 +294,12 @@ async function bankDiscount(interaction) {
 async function bankAward(interaction) {
   try {
     let giver = interaction.member;
+
+    if (!giver.roles.cache.has(Module.config.roles.team)) {
+      interaction.reply({content: `*Nice try!* This command is Team-only!`, ephemeral: true});
+      return;
+    }
+
     let recipient = interaction.options.getMember("recipient", true);
     if (recipient.id == giver.id) {
       interaction.reply({content: `You can't award *yourself* ${ember}, silly.`, ephemeral: true});
