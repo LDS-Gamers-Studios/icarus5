@@ -126,6 +126,7 @@ async function bankBalance(interaction) {
 
 async function bankGameList(interaction) {
   try {
+    await interaction.deferReply({ephemeral: true});
     let games = await getGameList();
     for (const game of games.filter(g => !g.Code)) {
       game.Code = nanoid();
@@ -138,19 +139,20 @@ async function bankGameList(interaction) {
       games = games.filter(g => g.Rating.toUpperCase() != "M");
 
     // Reply so there's no "interaction failed" error message.
-    interaction.reply({content: `Watch your DMs for a list of games that can be redeemed with ${gb}!`, ephemeral: true});
+    interaction.editReply({content: `Watch your DMs for a list of games that can be redeemed with ${gb}!`});
 
     let embed = u.embed()
     .setTitle("Games Available to Redeem")
-    .setDescription(`Redeem ${gb} for game codes with the \`!gameredeem code\` command.`);
+    .setDescription(`Redeem ${gb} for game codes with the \`/bank game redeem\` command.`);
 
+    let embeds = []
     let i = 0;
     for (const game of games) {
       if (((++i) % 25) == 0) {
-        interaction.user.send({embeds: [embed]}).catch(u.noop);
+        embeds.push(embed);
         embed = u.embed()
         .setTitle("Games Available to Redeem")
-        .setDescription(`Redeem ${gb} for game codes with the \`!gameredeem code\` command.`);
+        .setDescription(`Redeem ${gb} for game codes with the \`/bank game redeem\` command.`);
       }
 
       let steamApp = null;
@@ -158,16 +160,33 @@ async function bankGameList(interaction) {
         steamApp = steamGameList.find(g => g.name.toLowerCase() == game["Game Title"].toLowerCase());
       embed.addField(`${game["Game Title"]} (${game.System})${(game.Rating ? ` [${game.Rating}]` : "")}`, `${gb}${game.Cost}${(steamApp ? ` [[Steam Store Page]](https://store.steampowered.com/app/${steamApp.appid})` : "")}\n\`/bank game redeem ${game.Code}\``);
     }
-    interaction.user.send({embeds: [embed]}).catch(u.noop);
+    embeds.push(embed);
+    
+    let embedsToSend = [];
+    let totalLength = 0;
+    while (embeds.length > 0) {
+      embed = embeds.shift();
+      if (totalLength + embed.length > 6000) {
+        interaction.user.send({embeds: [embedsToSend]}).catch(u.noop);
+        embedsToSend = [];
+        totalLength = 0;
+      }
+      embedsToSend.push(embed);
+      totalLength += embed.length;
+    }
+    if (embedsToSend.length > 0)
+      interaction.user.send({embeds: [embedsToSend]}).catch(u.noop);
+
   } catch(e) { u.errorHandler(e, interaction); }
 }
 
 async function bankGameRedeem(interaction) {
   try {
+    await interaction.deferReply({ephemeral: true});
     let games = await getGameList();
     let game = games.find(g => (g.Code == interaction.options.getString("code", true).toUpperCase()));
     if (!game) {
-      interaction.reply({content: "I couldn't find that game. User `/bank game list` to see available games.", ephemeral: true});
+      interaction.editReply("I couldn't find that game. User `/bank game list` to see available games.");
       return;
     }
 
@@ -180,12 +199,12 @@ async function bankGameRedeem(interaction) {
 
     let balance = await Module.db.bank.getBalance(interaction.user.id, "gb");
     if (balance.balance < game.Cost) {
-      interaction.reply({content: `You don't currently have enough Ghost Bucks. Sorry! ${gb}`, ephemeral: true});
+      interaction.editReply(`You don't currently have enough Ghost Bucks. Sorry! ${gb}`);
       return;
     }
 
     // Reply so there's no "interaction failed" error message.
-    interaction.reply({content: "Watch your DMs for the game you redeemed!", ephemeral: true});
+    interaction.editReply("Watch your DMs for the game you redeemed!");
 
     await Module.db.bank.addCurrency({
       currency: "gb",
@@ -227,10 +246,11 @@ async function bankGameRedeem(interaction) {
 
 async function bankDiscount(interaction) {
   try {
+    await interaction.deferReply({ephemeral: true});
     let amount = interaction.options.getInteger("amount", true);
     let balance = await Module.db.bank.getBalance(interaction.user.id, "gb");
     if ((amount > balance.balance) || (amount > 0)) {
-      interaction.reply({content: `That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${balance.balance}.`, ephemeral: true});
+      interaction.editReply(`That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${balance.balance}.`);
       return;
     }
 
@@ -257,7 +277,7 @@ async function bankDiscount(interaction) {
       };
       let withdraw = await Module.db.bank.addCurrency(withdrawal);
 
-      interaction.reply({content: "Watch your DMs for the code you just redeemed!", ephemeral: true});
+      interaction.editReply("Watch your DMs for the code you just redeemed!");
       interaction.user.send(`You have redeemed ${gb}${withdraw.value} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance - withdraw.value}.`);
       let embed = u.embed()
       .setAuthor(interaction.member.displayName, interaction.member.user.displayAvatarURL({dynamic: true}))
@@ -266,7 +286,7 @@ async function bankDiscount(interaction) {
       .setDescription(`**${u.escapeText(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
       interaction.client.channels.cache.get(Module.config.channels.modlogs).send({embeds: [embed]});
     } else {
-      interaction.reply({content: "Sorry, something went wrong. Please try again.", ephemeral: true});
+      interaction.editReply("Sorry, something went wrong. Please try again.");
     }
   } catch(e) { u.errorHandler(e, interaction); }
 }
