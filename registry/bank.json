@@ -97,7 +97,7 @@
           "required": true
         },
         {
-          "type": 3,
+          "type": 4,
           "name": "amount",
           "description": "How much ember do you want to give them?",
           "required": true
