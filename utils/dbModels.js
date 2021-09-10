@@ -77,6 +77,15 @@ const models = {
       };
     },
     /**
+     * Remove/delete an infraction
+     * @function retract
+     * @param {String|Discord.Message} flag The infraction flag
+     */
+    remove: function(flag) {
+      if (flag.id) flag = flag.id;
+      return Infraction.findOneAndDelete({ flag }).exec();
+    },
+    /**
      * Save an infraction
      * @function save
      * @param {Object} data Data to save
@@ -101,6 +110,14 @@ const models = {
       if (data.flag.id) data.flag = data.flag.id;
 
       return new Infraction(data).save();
+    },
+    /**
+     * Update an infraction
+     * @function update
+     * @param {Infraction} infraction The infraction, post-update
+     */
+    update: function(infraction) {
+      return Infraction.findByIdAndUpdate(infraction._id, infraction, { new: true }).exec();
     }
   },
   user: {
@@ -113,6 +130,18 @@ const models = {
     fetchUser: function(discordId) {
       discordId = discordId.id ?? discordId;
       return User.findOne({ discordId }).exec();
+    },
+    /**
+     * Update a member's roles in the database
+     * @function updateRoles
+     * @param {Discord.GuildMember} member The member to update
+     */
+    updateRoles: function(member) {
+      return User.findOneAndUpdate(
+        { discordId: member.id },
+        { $set: { roles: Array.from(member.roles.cache.keys()) } },
+        { new: true, upsert: false }
+      ).exec();
     },
     /**
      * Updates a guild member's tenure in the server database.
