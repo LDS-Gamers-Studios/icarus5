@@ -88,7 +88,7 @@
     {
       "type": 1,
       "name": "award",
-      "description": "Award ember to a member for the house cup.",
+      "description": "[TEAM] Award ember to a member for the house cup.",
       "options": [
         {
           "type": 6,
