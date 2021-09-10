@@ -23,12 +23,14 @@ const utils = {
   },
   /**
    * After the given amount of time, attempts to delete the message.
-   * @param {Discord.Message} msg The message to delete.
+   * @param {Discord.Message|Discord.Interaction} msg The message to delete.
    * @param {number} t The length of time to wait before deletion, in milliseconds.
    */
   clean: async function(msg, t = 20000) {
     await utils.wait(t);
-    if (msg.deletable && !msg.deleted) {
+    if (msg instanceof Discord.CommandInteraction) {
+      msg.deleteReply().catch(utils.noop);
+    } else if ((msg instanceof Discord.Message) && (msg.deletable && !msg.deleted)) {
       msg.delete().catch(utils.noop);
     }
     return Promise.resolve(msg);
