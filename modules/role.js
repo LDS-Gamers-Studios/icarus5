@@ -67,7 +67,7 @@ const Module = new Augur.Module();
 Module.addInteractionCommand({
     name: "role",
     guildId: config.ldsg,
-    commandId: "887044509798629396",
+    commandId: "",
     process: async (interaction) => {
         switch (interaction.options.getSubcommand(true)) {
             case "add":
