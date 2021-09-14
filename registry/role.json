@@ -5,15 +5,7 @@
     {
       "name": "add",
       "description": "Add an opt-in role",
-      "type": 1,
-      "options": [
-        {
-          "name": "role",
-          "description": "The role to add",
-          "type": 8,
-          "required": true
-        }
-      ]
+      "type": 1
     },
     {
       "name": "assign",
@@ -49,6 +41,11 @@
     },
     {
       "name": "inventory",
+      "description": "View all equippable roles.",
+      "type": 1
+    },
+    {
+      "name": "equip",
       "description": "View all equippable roles and equip a color from your inventory",
       "type": 1
     }
