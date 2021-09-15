@@ -252,7 +252,7 @@ async function processCardAction(interaction) {
 
     if (interaction.customId == "modCardInfo") {
       // POST FULL INFO
-      interaction.defer();
+      await interaction.deferReply();
 
       const member = await interaction.guild.members.fetch(infraction.discordId);
 
@@ -280,7 +280,7 @@ async function processCardAction(interaction) {
       .addField("Joined", member.joinedAt.toUTCString(), true)
       .addField("Account Created", member.user.createdAt.toUTCString(), true);
 
-      interaction.editReply({ embeds: [infoEmbed] });
+      await interaction.editReply({ embeds: [infoEmbed] });
     } else if (interaction.customId == "modCardClear") {
       // IGNORE FLAG
       await interaction.deferUpdate();
