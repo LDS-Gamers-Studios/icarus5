@@ -1,7 +1,7 @@
-var mongoose = require("mongoose"),
+const mongoose = require("mongoose"),
   Schema = mongoose.Schema;
 
-var BankSchema = new Schema({
+const BankSchema = new Schema({
   discordId: String,
   timestamp: {
     type: Date,
@@ -9,7 +9,10 @@ var BankSchema = new Schema({
   },
   description: String,
   value: Number,
-  currency: String,
+  currency: {
+    type: String,
+    default: "em"
+  },
   giver: String,
   hp: {
     type: Boolean,
