@@ -252,7 +252,7 @@ async function processCardAction(interaction) {
 
     if (interaction.customId == "modCardInfo") {
       // POST FULL INFO
-      interaction.defer();
+      await interaction.deferReply();
 
       const member = await interaction.guild.members.fetch(infraction.discordId);
 
