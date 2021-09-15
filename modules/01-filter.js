@@ -283,7 +283,6 @@ async function processCardAction(interaction) {
       interaction.editReply({ embeds: [infoEmbed] });
     } else if (interaction.customId == "modCardClear") {
       // IGNORE FLAG
-      await interaction.deferUpdate();
 
       await Module.db.infraction.remove(flag);
       embed.setColor(0x00FF00)
@@ -300,7 +299,7 @@ async function processCardAction(interaction) {
     } else {
       embed.setColor(0x0000FF);
       infraction.mod = mod.id;
-      const member = infraction.guild.members.cache.get(infraction.discordId);
+      const member = interaction.guild.members.cache.get(infraction.discordId);
 
       switch (interaction.customId) {
       case "modCardVerbal":
@@ -313,7 +312,7 @@ async function processCardAction(interaction) {
         break;
       case "modCardMajor":
         infraction.value = 5;
-        embed.addField("Resolved", `${mod.displayname} issued a 5 point warning.`);
+        embed.addField("Resolved", `${mod.displayName} issued a 5 point warning.`);
         break;
       case "modCardMute":
         infraction.value = 10;
