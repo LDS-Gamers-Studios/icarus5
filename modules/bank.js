@@ -39,7 +39,7 @@ async function bankGive(interaction) {
 
     let reason = interaction.options.getString("reason");
     let toIcarus = recipient.id == interaction.client.user.id
-    if (toIcarus && !(reason.length > 0)) {
+    if (toIcarus && (!reason || !(reason.length > 0))) {
       interaction.reply({content: "You need to have a reason to give to me!", ephemeral: true});
       return;
     }
