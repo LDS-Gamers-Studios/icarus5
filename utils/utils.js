@@ -3,6 +3,17 @@ const Discord = require("discord.js"),
 
 const errorLog = new Discord.WebhookClient(config.error);
 
+/**
+ * @typedef {Object} ParsedInteraction
+ * @property {String} command - The command issued, represented as a string. 
+ * @property {Array} data - Associated data for the command, such as command options or values selected.
+ */
+
+/**
+ * Converts an interaction into a more universal format for error messages.
+ * @param {Discord.Interaction} inter The interaction to be parsed.
+ * @returns {ParsedInteraction} The interaction after it has been broken down.
+ */
 function parseInteraction(inter) {
   if (inter.isCommand()) {
     let commandParts = [`/${inter.commandName}`];
