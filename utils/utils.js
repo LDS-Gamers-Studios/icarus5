@@ -3,6 +3,70 @@ const Discord = require("discord.js"),
 
 const errorLog = new Discord.WebhookClient(config.error);
 
+/**
+ * @typedef {Object} ParsedInteraction
+ * @property {String} command - The command issued, represented as a string. 
+ * @property {Array} data - Associated data for the command, such as command options or values selected.
+ */
+
+/**
+ * Converts an interaction into a more universal format for error messages.
+ * @param {Discord.Interaction} inter The interaction to be parsed.
+ * @returns {ParsedInteraction} The interaction after it has been broken down.
+ */
+function parseInteraction(inter) {
+  if (inter.isCommand()) {
+    let commandParts = [`/${inter.commandName}`];
+    let options = inter.options;
+    if (options.data.length == 0) {
+      return {
+        command: commandParts.join(" "),
+        data: options.data
+      };
+    }
+    
+    if (options.data[0].type == "SUB_COMMAND_GROUP") {
+      commandParts.push(options.data[0].name);
+      options = options.data[0].options
+      if (options.data.length == 0) {
+        return {
+          command: commandParts.join(" "),
+          data: options.data
+        };
+      }
+    }
+
+    if (options.data[0].type == "SUB_COMMAND") {
+      commandParts.push(options.data[0].name);
+      options = options.data[0].options
+      return {
+        command: commandParts.join(" "),
+        data: options.data
+      };
+    }
+  }
+
+  if (inter.isContextMenu()) {
+    return {
+      command: `[Context Menu] ${inter.commandName}`,
+      data: inter.options.data
+    };
+  }
+
+  if (inter.isMessageComponent()) {
+    let data = [{
+      name: "Message",
+      value: inter.message.guild ? `[Original Message](${inter.message.url})` : "(DM)"
+    }];
+    let command = inter.isButton() ? `[Button] ${inter.component ? inter.component?.emoji + inter.component?.label : "`undefined`"}` : "[Select Menu]";
+    
+    if (inter.isSelectMenu())
+      data.push({name: "Selection", value: inter.values.join()});
+    
+    return {command, data};
+  }
+}
+
 const utils = {
   /**
    * If a command is run in a channel that doesn't want spam, returns #bot-lobby so results can be posted there.
@@ -98,10 +162,17 @@ const utils = {
       let loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
       console.error(`Interaction by ${message.user.username} in ${loc}`);
 
-      message[(message.deferred ? "editReply" : "reply")]({content: "I've run into an error. I've let my devs know.", ephemeral: true}).catch(utils.noop);
+      message[((message.deferred || message.replied) ? "editReply" : "reply")]({content: "I've run into an error. I've let my devs know.", ephemeral: true}).catch(utils.noop);
       embed.addField("User", message.user?.username, true)
         .addField("Location", loc, true)
-        .addField("Interaction", message.commandId || message.customId || "`undefined`", true);
+      
+      let descriptionLines = [message.commandId || message.customId || "`undefined`"];
+      let {command, data} = parseInteraction(message);
+      descriptionLines.push(command);
+      for (let datum of data) {
+        descriptionLines.push(`${datum.name}: ${datum.value}`);
+      }
+      embed.addField("Interaction", descriptionLines.join("\n"));      
     } else if (typeof message === "string") {
       console.error(message);
       embed.addField("Message", message);
