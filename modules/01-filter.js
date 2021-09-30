@@ -269,7 +269,7 @@ async function processCardAction(interaction) {
       }
 
       infractionDescription = infractionDescription.join("\n");
-      if (infractionDescription.length > 1024) infractionDescription = infractionDescription.substr(0, infractionDescription.indexOf("\n", 1950)) + "\n...";
+      if (infractionDescription.length > 4050) infractionDescription = infractionDescription.substr(0, infractionDescription.indexOf("\n", 4000)) + "\n...";
 
       const infoEmbed = u.embed({ author: member })
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
