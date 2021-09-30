@@ -297,6 +297,7 @@ async function processCardAction(interaction) {
       embed.setFooter(`Linked by ${mod.displayName}`);
       await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] }).catch(u.noop);
     } else {
+      interaction.deferUpdate();
       embed.setColor(0x0000FF);
       infraction.mod = mod.id;
       const member = interaction.guild.members.cache.get(infraction.discordId);
