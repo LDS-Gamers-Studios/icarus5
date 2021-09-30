@@ -104,10 +104,10 @@ const models = {
         data.description = data.description ?? data.message.cleanContent;
         data.message = data.message.id;
       }
-      if (data.discordId.id) data.discordId = data.discordId.id;
-      if (data.channel.id) data.channel = data.channel.id;
-      if (data.mod.id) data.mod = data.mod.id;
-      if (data.flag.id) data.flag = data.flag.id;
+      data.discordId = data.discordId.id ?? data.discordId;
+      data.channel = data.channel.id ?? data.channel;
+      data.mod = data.mod.id ?? data.mod;
+      data.flag = data.flag.id ?? data.flag;
 
       return new Infraction(data).save();
     },
