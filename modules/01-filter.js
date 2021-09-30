@@ -193,7 +193,7 @@ async function warnCard(msg, filtered, call) {
     if (call) {
       u.clean(msg, 0);
       const ldsg = msg.client.guilds.cache.get(Module.config.ldsg);
-      content = [ldsg.roles.cache.get(Module.config.roles.mod)];
+      content = [ldsg.roles.cache.get(Module.config.roles.mod).toString()];
       if (msg.author.bot) {
         content.push("The message has been deleted. The member was *not* muted, on account of being a bot.");
       } else {
