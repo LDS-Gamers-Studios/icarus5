@@ -291,8 +291,9 @@ async function processCardAction(interaction) {
 
       await interaction.update({ embeds: [embed], components: [] });
     } else if (interaction.customId == "modCardLink") {
-      // LINK TO #MODLOGS
-      await interaction.deferUpdate();
+      // LINK TO #MODDISCUSSION
+      const md = await interaction.client.channels.cache.get(Module.config.channels.moddiscussion);
+      await interaction.reply({ content: `Sending the flag over to ${md}...`, ephemeral: true });
 
       embed.setFooter(`Linked by ${u.escapeText(mod.displayName)}`);
       md.send({ embeds: [embed] }).catch(u.noop);
