@@ -93,8 +93,7 @@ async function bankGive(interaction) {
     const receipt = await Module.db.bank.addCurrency(withdrawal);
     const gbBalance = await Module.db.bank.getBalance(giver.id, "gb");
     const emBalance = await Module.db.bank.getBalance(giver.id, "em");
-    const embed = u.embed()
-    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
+    const embed = u.embed({ author: interaction.client.user })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
     .setDescription(`You just gave ${coin}${-receipt.value} to ${u.escapeText(recipient.displayName)}.`);
