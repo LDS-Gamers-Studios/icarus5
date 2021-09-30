@@ -332,7 +332,7 @@ async function processCardAction(interaction) {
             }
           });
         }
-        embed.addField("Resolved", `${mod.displayName} muted the member.`);
+        embed.addField("Resolved", `${u.escapeText(mod.displayName)} muted the member.`);
         break;
       }
       await Module.db.infraction.update(infraction);
