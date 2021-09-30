@@ -39,7 +39,7 @@ async function bankGive(interaction) {
 
     let reason = interaction.options.getString("reason");
     const toIcarus = recipient.id == interaction.client.user.id;
-    if (toIcarus && !(reason.length > 0)) {
+    if (toIcarus && (!reason || !(reason.length > 0))) {
       interaction.reply({ content: "You need to have a reason to give to me!", ephemeral: true });
       return;
     }
@@ -124,6 +124,7 @@ async function bankBalance(interaction) {
 async function bankGameList(interaction) {
   try {
     await interaction.deferReply({ ephemeral: true });
+
     let games = await getGameList();
     for (const game of games.filter(g => !g.Code)) {
       game.Code = nanoid();
@@ -135,7 +136,7 @@ async function bankGameList(interaction) {
     if (!interaction.member?.roles.cache.has(Module.config.roles.rated_m)) games = games.filter(g => g.Rating.toUpperCase() != "M");
 
     // Reply so there's no "interaction failed" error message.
-    interaction.editReply({ content: `Watch your DMs for a list of games that can be redeemed with ${gb}!` });
+    interaction.editReply(`Watch your DMs for a list of games that can be redeemed with ${gb}!`);
 
     let embed = u.embed()
     .setTitle("Games Available to Redeem")
@@ -164,7 +165,13 @@ async function bankGameList(interaction) {
     while (embeds.length > 0) {
       embed = embeds.shift();
       if (totalLength + embed.length > 6000) {
-        interaction.user.send({ embeds: embedsToSend }).catch(u.noop);
+        try {
+          await interaction.user.send({ embeds: embedsToSend });
+        } catch (e) {
+          interaction.editReply(`There was an error while sending you the list of games that can be redeemed with ${gb}. Do you have DMs blocked from members of this server? You can check this in your Privacy Settings for the server.`);
+          embedsToSend = [];
+          break;
+        }
         embedsToSend = [];
         totalLength = 0;
       }

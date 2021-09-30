@@ -4,7 +4,6 @@
     "snipcart": "",
     "steam": ""
   },
-  "applicationId": "",
   "color": [248, 154, 34],
   "db": {
     "model": "utils/dbModels.js",
