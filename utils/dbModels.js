@@ -65,7 +65,7 @@ const models = {
      * @param {Number} [time=28] The time in days to review.
      */
     getSummary: async function(discordId, time = 28) {
-      if (discordId.id) discordId = discordId.id;
+      discordId = discordId.id ?? discordId;
       const since = moment().subtract(time, "days");
       const records = await Infraction.find({ discordId, timestamp: { $gte: since } }).exec();
       return {
