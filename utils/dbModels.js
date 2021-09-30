@@ -78,7 +78,7 @@ const models = {
     },
     /**
      * Remove/delete an infraction
-     * @function retract
+     * @function remove
      * @param {String|Discord.Message} flag The infraction flag
      */
     remove: function(flag) {
