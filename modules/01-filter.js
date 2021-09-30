@@ -294,8 +294,8 @@ async function processCardAction(interaction) {
       // LINK TO #MODLOGS
       await interaction.deferUpdate();
 
-      embed.setFooter(`Linked by ${mod.displayName}`);
-      await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] }).catch(u.noop);
+      embed.setFooter(`Linked by ${u.escapeText(mod.displayName)}`);
+      md.send({ embeds: [embed] }).catch(u.noop);
     } else {
       interaction.deferUpdate();
       embed.setColor(0x0000FF);
