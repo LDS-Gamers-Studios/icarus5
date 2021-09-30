@@ -88,7 +88,7 @@
     {
       "type": 1,
       "name": "award",
-      "description": "Award ember to a member for the house cup.",
+      "description": "[TEAM] Award ember to a member for the house cup.",
       "options": [
         {
           "type": 6,
@@ -100,6 +100,12 @@
           "type": 4,
           "name": "amount",
           "description": "How much ember do you want to give them?",
+          "required": true
+        },
+        {
+          "type": 3,
+          "name": "reason",
+          "description": "But ... why?",
           "required": true
         }
       ]
