@@ -310,7 +310,7 @@ async function processCardAction(interaction) {
         break;
       case "modCardMinor":
         infraction.value = 1;
-        embed.addField("Resolved", `${mod.displayName} issued a 1 point warning.`);
+        embed.addField("Resolved", `${u.escapeText(mod.displayName)} issued a 1 point warning.`);
         break;
       case "modCardMajor":
         infraction.value = 5;
