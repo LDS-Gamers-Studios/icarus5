@@ -306,7 +306,7 @@ async function processCardAction(interaction) {
       switch (interaction.customId) {
       case "modCardVerbal":
         infraction.value = 0;
-        embed.setColor(0x00FFFF).addField("Resolved", `${mod.displayName} issued a verbal warning.`);
+        embed.setColor(0x00FFFF).addField("Resolved", `${u.escapeText(mod.displayName)} issued a verbal warning.`);
         break;
       case "modCardMinor":
         infraction.value = 1;
