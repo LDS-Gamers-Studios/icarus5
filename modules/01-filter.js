@@ -262,7 +262,7 @@ async function processCardAction(interaction) {
       const userDoc = await Module.db.user.fetchUser(member);
 
       const infractionSummary = await Module.db.infraction.getSummary(member.id);
-      let infractionDescription = [`**${u.escapeText(member.displayName)}** has had **${infractionSummary.count}** infraction(s) in the last **${infractionSummary.time}** days, totalling **${infractionSummary.points}** points.`];
+      let infractionDescription = [`**${u.escapeText(member.displayName)}** has had **${infractionSummary.count}** infraction(s) in the last **${infractionSummary.time}** days, totaling **${infractionSummary.points}** points.`];
       for (const record of infractionSummary.detail) {
         const recordMod = interaction.guild.members.fetch(record.mod);
         infractionDescription.push(`${record.timestamp.toLocaleDateString()} (${record.value} pts, modded by ${recordMod?.displayName}): ${record.description}`);
