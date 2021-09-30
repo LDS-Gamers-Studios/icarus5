@@ -286,7 +286,7 @@ async function processCardAction(interaction) {
 
       await Module.db.infraction.remove(flag);
       embed.setColor(0x00FF00)
-      .addField("Resolved", `${mod.displayName} cleared the flag.`);
+      .addField("Resolved", `${u.escapeText(mod.displayName)} cleared the flag.`);
       embed.fields = embed.fields.filter(f => !f.name.startsWith("Jump"));
 
       await interaction.update({ embeds: [embed], components: [] });
