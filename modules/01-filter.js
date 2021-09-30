@@ -127,7 +127,7 @@ function processMessageLanguage(old, msg) {
  */
 function processDiscordInvites(msg) {
   const bot = msg.client;
-  let foundInvites = msg.cleanContent.match(/(http(s)?:\/\/)?discord(\.gg(\/invite)?|app\.com\/invite|\.com\/invite)\/\w+/ig);
+  let foundInvites = msg.cleanContent.match(/(http(s)?:\/\/)?discord(\.gg(\/invite)?|app\.com\/invite|\.com\/invite)\/[\w-]+/ig);
 
   if (foundInvites) {
     foundInvites = foundInvites.map(inv => bot.fetchInvite(inv.trim()));
