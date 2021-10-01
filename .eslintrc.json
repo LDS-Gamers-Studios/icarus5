@@ -8,7 +8,7 @@
 		"ecmaVersion": 2021
 	},
 	"rules": {
-    "arrow-spacing": ["warn", { "before": true, "after": true }],
+		"arrow-spacing": ["warn", { "before": true, "after": true }],
 		"brace-style": ["warn", "1tbs", { "allowSingleLine": true }],
 		"comma-spacing": "warn",
 		"comma-style": "warn",
