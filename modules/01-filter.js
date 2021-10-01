@@ -265,7 +265,7 @@ async function processCardAction(interaction) {
       let infractionDescription = [`**${u.escapeText(member.displayName)}** has had **${infractionSummary.count}** infraction(s) in the last **${infractionSummary.time}** days, totaling **${infractionSummary.points}** points.`];
       for (const record of infractionSummary.detail) {
         const recordMod = interaction.guild.members.fetch(record.mod);
-        infractionDescription.push(`${record.timestamp.toLocaleDateString()} (${record.value} pts, modded by ${u.escapeText(recordMod?.displayName)}): ${record.description}`);
+        infractionDescription.push(`${record.timestamp.toLocaleDateString()} (${record.value} pts, modded by ${u.escapeText(recordMod?.displayName ?? "Some Unknown Mod")}): ${record.description}`);
       }
 
       infractionDescription = infractionDescription.join("\n");
@@ -298,7 +298,7 @@ async function processCardAction(interaction) {
       embed.setFooter(`Linked by ${u.escapeText(mod.displayName)}`);
       md.send({ embeds: [embed] }).catch(u.noop);
     } else {
-      interaction.deferUpdate();
+      await interaction.deferUpdate();
       embed.setColor(0x0000FF);
       infraction.mod = mod.id;
       const member = interaction.guild.members.cache.get(infraction.discordId);
@@ -358,7 +358,9 @@ async function processCardAction(interaction) {
       embed.fields = embed.fields.filter(f => !f.name || !f.name.startsWith("Jump"));
       embed.fields.find(f => f.name?.startsWith("Infraction")).value = `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`;
 
-      await interaction.update({ embeds: [embed], components: [] });
+      await interaction.update({ embeds: [embed], components: [] }).catch(() => {
+        interaction.message.edit({ embeds: [embed], components: [] }).catch((error) => u.errorHandler(error, interaction));
+      });
 
       if (infraction.value > 0) {
         try {
