@@ -5,10 +5,10 @@ const Augur = require("augurbot"),
   { MessageActionRow, MessageButton } = require("discord.js");
 
 const bannedWords = new RegExp(banned.words.join("|"), "i"),
-  bannedLinks = new RegExp(`\\b(${banned.links.join("|").replaceAll(".", "\.")})`, "i"),
+  bannedLinks = new RegExp(`\\b(${banned.links.join("|").replaceAll(".", "\\.")})`, "i"),
   hasLink = /http(s)?:\/\/(\w+(-\w+)*\.)+\w+/,
   pf = new profanityFilter(),
-  scamLinks = new RegExp(`\\b(${banned.scam.join("|").replaceAll(".", "\.")})`, "i");
+  scamLinks = new RegExp(`\\b(${banned.scam.join("|").replaceAll(".", "\\.")})`, "i");
 
 const grownups = new Map(),
   processing = new Set();
@@ -48,7 +48,7 @@ function blocked(member) {
  */
 function filter(msg, text) {
   // PROFANITY FILTER
-  const noWhiteSpace = text.toLowerCase().replace(/[\.,\/#!$%\^&\*;:\{\}=\-_`~"'\(\)\?\|]/g, "").replace(/\s\s+/g, " ");
+  const noWhiteSpace = text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~"'()?|]/g, "").replace(/\s\s+/g, " ");
   const filtered = pf.scan(noWhiteSpace);
   if ((filtered.length > 0) && (noWhiteSpace.length > 0)) {
     warnCard(msg, filtered);
