@@ -239,7 +239,6 @@ async function processCardAction(interaction) {
     // Prevent double-processing
     if (processing.has(flag.id)) {
       await interaction.reply({ content: "Someone is already processing this flag!", ephemeral: true });
-      u.clean(interaction);
       return;
     }
     processing.add(flag.id);
