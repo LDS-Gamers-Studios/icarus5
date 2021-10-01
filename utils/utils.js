@@ -5,7 +5,7 @@ const errorLog = new Discord.WebhookClient(config.error);
 
 /**
  * @typedef {Object} ParsedInteraction
- * @property {String} command - The command issued, represented as a string. 
+ * @property {String} command - The command issued, represented as a string.
  * @property {Array} data - Associated data for the command, such as command options or values selected.
  */
 
@@ -16,7 +16,7 @@ const errorLog = new Discord.WebhookClient(config.error);
  */
 function parseInteraction(inter) {
   if (inter.isCommand()) {
-    let commandParts = [`/${inter.commandName}`];
+    const commandParts = [`/${inter.commandName}`];
     let options = inter.options;
     if (options.data.length == 0) {
       return {
@@ -24,10 +24,10 @@ function parseInteraction(inter) {
         data: options.data
       };
     }
-    
+
     if (options.data[0].type == "SUB_COMMAND_GROUP") {
       commandParts.push(options.data[0].name);
-      options = options.data[0].options
+      options = options.data[0].options;
       if (options.data.length == 0) {
         return {
           command: commandParts.join(" "),
@@ -38,7 +38,7 @@ function parseInteraction(inter) {
 
     if (options.data[0].type == "SUB_COMMAND") {
       commandParts.push(options.data[0].name);
-      options = options.data[0].options
+      options = options.data[0].options;
       return {
         command: commandParts.join(" "),
         data: options.data
@@ -54,16 +54,17 @@ function parseInteraction(inter) {
   }
 
   if (inter.isMessageComponent()) {
-    let data = [{
+    const data = [{
       name: "Message",
       value: inter.message.guild ? `[Original Message](${inter.message.url})` : "(DM)"
     }];
     const command = inter.isButton() ? `[Button] ${(inter.component?.emoji?.name ?? "") + (inter.component?.label ?? "")}` : "[Select Menu]";
-    
-    if (inter.isSelectMenu())
-      data.push({name: "Selection", value: inter.values.join()});
-    
-    return {command, data};
+
+    if (inter.isSelectMenu()) {
+      data.push({ name: "Selection", value: inter.values.join() });
+    }
+
+    return { command, data };
   }
 }
 
@@ -166,15 +167,15 @@ const utils = {
 
       message[((message.deferred || message.replied) ? "editReply" : "reply")]({ content: "I've run into an error. I've let my devs know.", ephemeral: true }).catch(utils.noop);
       embed.addField("User", message.user?.username, true)
-        .addField("Location", loc, true)
-      
-      let descriptionLines = [message.commandId || message.customId || "`undefined`"];
-      let {command, data} = parseInteraction(message);
+        .addField("Location", loc, true);
+
+      const descriptionLines = [message.commandId || message.customId || "`undefined`"];
+      const { command, data } = parseInteraction(message);
       descriptionLines.push(command);
-      for (let datum of data) {
+      for (const datum of data) {
         descriptionLines.push(`${datum.name}: ${datum.value}`);
       }
-      embed.addField("Interaction", descriptionLines.join("\n"));      
+      embed.addField("Interaction", descriptionLines.join("\n"));
     } else if (typeof message === "string") {
       console.error(message);
       embed.addField("Message", message);
