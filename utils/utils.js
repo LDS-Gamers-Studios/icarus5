@@ -58,7 +58,7 @@ function parseInteraction(inter) {
       name: "Message",
       value: inter.message.guild ? `[Original Message](${inter.message.url})` : "(DM)"
     }];
-    let command = inter.isButton() ? `[Button] ${inter.component ? inter.component?.emoji + inter.component?.label : "`undefined`"}` : "[Select Menu]";
+    const command = inter.isButton() ? `[Button] ${(inter.component?.emoji?.name ?? "") + (inter.component?.label ?? "")}` : "[Select Menu]";
     
     if (inter.isSelectMenu())
       data.push({name: "Selection", value: inter.values.join()});
