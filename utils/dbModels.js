@@ -132,6 +132,20 @@ const models = {
       return User.findOne({ discordId }).exec();
     },
     /**
+     * Update a member's track XP preference
+     * @function trackXp
+     * @param {Discord.GuildMember} member The guild member to update.
+     * @param {Boolean} track Whether to track the member's XP.
+     * @returns {Promise<user>}
+     */
+    trackXP: function(member, track = true) {
+      return User.findOneAndUpdate(
+        { discordId: member.id ?? member },
+        { $set: { excludeXP: !track } },
+        { new: true, upsert: false }
+      ).exec();
+    },
+    /**
      * Update a member's roles in the database
      * @function updateRoles
      * @param {Discord.GuildMember} member The member to update
