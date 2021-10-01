@@ -9,13 +9,13 @@ const SnipCart = function(auth) {
     call = encodeURI(call);
 
     if (method == "GET") {
-      let urlParams = Object.keys(data).map((key) =>
+      const urlParams = Object.keys(data).map((key) =>
         encodeURIComponent(key) + "=" + encodeURIComponent(data[key])
       ).join("&");
       call += (urlParams ? "?" + urlParams : "");
     }
 
-    let response = await axios({
+    const response = await axios({
       baseURL: "https://app.snipcart.com/api",
       url: call,
       data,
@@ -35,7 +35,7 @@ const SnipCart = function(auth) {
   // DISCOUNTS
 
   this.deleteDiscount = function(discount) {
-    let id = ((typeof discount == "string") ? discount : discount.id);
+    const id = ((typeof discount == "string") ? discount : discount.id);
     return this.callApi(`/discounts/${id}`, null, "DELETE");
   };
 
