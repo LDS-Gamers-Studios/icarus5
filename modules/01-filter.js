@@ -374,7 +374,9 @@ async function processCardAction(interaction) {
   } catch (error) { u.errorHandler(error, interaction); }
 }
 
-// Filter Events
+/********************
+**  Filter Events  **
+********************/
 const Module = new Augur.Module()
 .addEvent("messageCreate", processMessageLanguage)
 .addEvent("messageUpdate", processMessageLanguage)
