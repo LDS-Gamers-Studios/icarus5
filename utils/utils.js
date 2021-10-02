@@ -41,7 +41,7 @@ function parseInteraction(inter) {
       options = options.data[0].options;
       return {
         command: commandParts.join(" "),
-        data: options.data
+        data: options?.data ?? []
       };
     }
   }
