@@ -17,31 +17,31 @@ const errorLog = new Discord.WebhookClient(config.error);
 function parseInteraction(inter) {
   if (inter.isCommand()) {
     const commandParts = [`/${inter.commandName}`];
-    let options = inter.options;
-    if (options.data.length == 0) {
+    let optionData = inter.options.data;
+    if (optionData.length == 0) {
       return {
         command: commandParts.join(" "),
-        data: options.data
+        data: optionData
       };
     }
 
-    if (options.data[0].type == "SUB_COMMAND_GROUP") {
-      commandParts.push(options.data[0].name);
-      options = options.data[0].options;
-      if (options.data.length == 0) {
+    if (optionData[0].type == "SUB_COMMAND_GROUP") {
+      commandParts.push(optionData[0].name);
+      optionData = optionData[0].options;
+      if (optionData.length == 0) {
         return {
           command: commandParts.join(" "),
-          data: options.data
+          data: optionData
         };
       }
     }
 
-    if (options.data[0].type == "SUB_COMMAND") {
-      commandParts.push(options.data[0].name);
-      options = options.data[0].options;
+    if (optionData[0].type == "SUB_COMMAND") {
+      commandParts.push(optionData[0].name);
+      optionData = optionData[0].options;
       return {
         command: commandParts.join(" "),
-        data: options?.data ?? []
+        data: optionData ?? []
       };
     }
   }
