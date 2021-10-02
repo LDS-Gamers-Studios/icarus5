@@ -50,7 +50,7 @@ function filter(msg, text) {
   // PROFANITY FILTER
   const noWhiteSpace = text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~"'()?|]/g, "").replace(/\s\s+/g, " ");
   const filtered = pf.scan(noWhiteSpace);
-  if ((filtered.length > 0) && (noWhiteSpace.length > 0)) {
+  if ((filtered.length > 0) && filtered[0] && (noWhiteSpace.length > 0)) {
     warnCard(msg, filtered);
     return true;
   } else { return false; }
