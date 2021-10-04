@@ -142,10 +142,13 @@ const models = {
           { new: true, upsert: false }
         ).exec();
         // Update post count for all users
-        const userDocs = await User.updateMany(
+        await User.updateMany(
           { discordId: { $in: users } },
           { $inc: { posts: 1 } },
           { new: true, upsert: false }
+        ).exec();
+        const userDocs = await User.find(
+          { discordId: { $in: users } }
         ).exec();
         response.users = userDocs;
         return response;
