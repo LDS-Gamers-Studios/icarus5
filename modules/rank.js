@@ -136,7 +136,7 @@ const Module = new Augur.Module()
                 content: `${member} has posted ${user.posts} times in chat without being trusted!`,
                 embeds: [
                   u.embed({ author: member })
-                  .setThumbnail(member.displayAvatarURL({ dynamic: true }))
+                  .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
                   .addField("ID", member.id, true)
                   .addField("Activity", `Posts: ${user.posts}`, true)
                   .addField("Roles", member.roles.cache.map(r => r.name).join(", "))
