@@ -5,6 +5,72 @@ const Augur = require("augurbot"),
 
 const active = new Set();
 
+async function slashRankLeaderboard(interaction) {
+  // View leaderboard
+  try {
+    await interaction.deferReply();
+
+    const members = interaction.guild.members.cache;
+    const leaderboard = await Module.db.user.getLeaderboard({
+      members,
+      member: interaction.member
+    });
+
+    const records = leaderboard.map(l => `${l.rank}: ${members.get(l.discordId).toString()} (${l.currentXP.toLocaleString()} XP)`);
+    const embed = u.embed()
+    .setTitle("LDSG Season Chat Leaderboard")
+    .setThumbnail(interaction.guild.iconURL({ format: "png" }))
+    .setURL("https://my.ldsgamers.com/leaderboard")
+    .setDescription("Current season chat rankings:\n" + records.join("\n"))
+    .setFooter("Use `/rank track` to join the leaderboard!");
+
+    await interaction.editReply({ embeds: [embed] });
+  } catch (error) { u.errorHandler(error, interaction); }
+}
+
+async function slashRankTrack(interaction) {
+  // Set XP tracking
+  try {
+    await interaction.deferReply({ ephemeral: true });
+    const track = interaction.options.getBoolean("choice");
+    await Module.db.user.trackXP(interaction.user, track);
+    await interaction.editReply({
+      content: `Ok! I'll ${track ? "start" : "stop"} tracking your XP!`,
+      ephemeral: true
+    });
+  } catch (error) { u.errorHandler(error, interaction); }
+}
+
+async function slashRankView(interaction) {
+  // View member rankings
+  await interaction.deferReply();
+  const members = interaction.guild.members.cache;
+  const member = interaction.options.getMember("user") ?? interaction.member;
+  const record = await Module.db.user.getRank({ members, member });
+
+  if (record) {
+    const level = Rank.level(record.totalXP);
+    const nextLevel = Rank.minXp(level + 1).toLocaleString();
+
+    const embed = u.embed({ author: member })
+    .setTitle("LDSG Season Chat Ranking")
+    .setURL("https://my.ldsgamers.com/leaderboard")
+    .setFooter("https://my.ldsgamers.com/leaderboard")
+    .addField("Rank", `Season: ${record.rank} / ${members.size}`, true)
+    .addField("Level", `Current Level: ${level.toLocaleString()}\nNext Level: ${nextLevel} XP`, true)
+    .addField("Exp.", `Season: ${record.currentXP.toLocaleString()} XP\nLifetime: ${record.totalXP.toLocaleString()} XP`, true);
+
+    await interaction.editReply({ embeds: [embed] });
+  } else {
+    const snark = [
+      "don't got time for dat.",
+      "ain't interested in no XP gettin'.",
+      "don't talk to me no more, so I ignore 'em."
+    ];
+    await interaction.editReply(`**${member}** ${u.rand(snark)}\n(Try \`/rank track\` if you want to participate in chat ranks!)`);
+  }
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "rank",
@@ -15,68 +81,17 @@ const Module = new Augur.Module()
       const subcommand = interaction.options.getSubcommand(true);
 
       if (subcommand === "view") {
-        // View member rankings
-        await interaction.deferReply();
-        const members = interaction.guild.members.cache;
-        const member = interaction.options.getMember("user") ?? interaction.member;
-        const leaderboard = await Module.db.user.getLeaderboard({ members, member });
-        const record = leaderboard.find(r => r.discordId == member.id);
-
-        if (record) {
-          const level = Rank.level(record.totalXP);
-          const nextLevel = Rank.minXp(level + 1).toLocaleString();
-
-          const embed = u.embed({ author: member })
-          .setTitle("LDSG Season Chat Ranking")
-          .setURL("https://my.ldsgamers.com/leaderboard")
-          .setFooter("https://my.ldsgamers.com/leaderboard")
-          .addField("Rank", `Season: ${record.rank} / ${members.size}`, true)
-          .addField("Level", `Current Level: ${level.toLocaleString()}\nNext Level: ${nextLevel} XP`, true)
-          .addField("Exp.", `Season: ${record.currentXP.toLocaleString()} XP\nLifetime: ${record.totalXP.toLocaleString()} XP`, true);
-
-          await interaction.editReply({ embeds: [embed] });
-        } else {
-          const snark = [
-            "don't got time for dat.",
-            "ain't interested in no XP gettin'.",
-            "don't talk to me no more, so I ignore 'em."
-          ];
-          await interaction.editReply(`**${member}** ${u.rand(snark)}\n(Try \`/rank track\` if you want to participate in chat ranks!)`);
-        }
+        await slashRankView(interaction);
       } else if (subcommand === "leaderboard") {
-        // View leaderboard
-        await interaction.deferReply();
-
-        const members = interaction.guild.members.cache;
-
-        const leaderboard = await Module.db.user.getLeaderboard({
-          members,
-          member: interaction.member
-        });
-
-        const records = leaderboard.map(l => `${l.rank}: ${members.get(l.discordId).toString()} (${l.currentXP.toLocaleString()} XP)`);
-        const embed = u.embed()
-        .setTitle("LDSG Season Chat Leaderboard")
-        .setThumbnail(interaction.guild.iconURL({ format: "png" }))
-        .setURL("https://my.ldsgamers.com/leaderboard")
-        .setDescription("Current season chat rankings:\n" + records.join("\n"))
-        .setFooter("Use `/rank track` to join the leaderboard!");
-
-        await interaction.editReply({ embeds: [embed] });
+        await slashRankLeaderboard(interaction);
       } else if (subcommand === "track") {
-        // Set XP tracking
-        await interaction.deferReply({ ephemeral: true });
-        const track = interaction.options.getBoolean("choice");
-        await Module.db.user.trackXP(interaction.user, track);
-        await interaction.editReply({
-          content: `Ok! I'll ${track ? "start" : "stop"} tracking your XP!`,
-          ephemeral: true
-        });
+        await slashRankTrack(interaction);
       } else {
         interaction.reply({
           content: "Well, this is embarrasing. I don't know what you asked for.",
           ephemeral: true
         });
+        u.errorHandler(Error("Unknown Interaction Subcommand"), interaction);
       }
     } catch (error) {
       u.errorHandler(error, interaction);
@@ -103,7 +118,6 @@ const Module = new Augur.Module()
   }
 })
 .setClockwork(() => {
-  // Do stuff
   try {
     return setInterval(async function(client) {
       try {
@@ -114,7 +128,7 @@ const Module = new Augur.Module()
             const member = ldsg.members.cache.get(user.discordId);
 
             // Remind mods to trust people!
-            if ((user.posts % 25 == 0) && !member.roles.cache.has(Module.config.roles.trusted) && !(member.roles.cache.has(Module.config.roles.trusted) || member.roles.cache.has(Module.config.roles.untrusted))) {
+            if ((user.posts % 25 == 0) && !member.roles.cache.has(Module.config.roles.trusted) && !member.roles.cache.has(Module.config.roles.untrusted)) {
               const modLogs = ldsg.channels.cache.get(Module.config.channels.modlogs);
               modLogs.send({
                 content: `${member} has posted ${user.posts} times in chat without being trusted!`,

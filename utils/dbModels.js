@@ -195,17 +195,40 @@ const models = {
       // Get requested user
       const hasMember = records.some(r => r.discordId == member);
       if (member && !hasMember) {
-        const record = await User.findOne({ discordId: member, excludeXP: false }).exec();
-        const countParams = { excludeXP: false };
-        if (members) countParams.discordId = { $in: members };
-        if (season) countParams.currentXP = { $gt: record.currentXP };
-        else countParams.totalXP = { $gt: record.totalXP };
-        const count = await User.count(countParams);
-        record.rank = count + 1;
+        const record = await models.user.getRank(member, { members, season });
         records.push(record);
       }
 
       return records;
+    },
+    /**
+     * Get a user's rank
+     * @function getRank
+     * @param {(string|Discord.User|Discord.GuildMember)} member The member whose ranking you want to view.
+     * @param {Object} leaderboardOptions Options for the leaderboard fetch
+     * @param {Discord.Collection|Array} leaderboardOptions.members Collection or Array of snowflakes to include in the leaderboard
+     * @param {Boolean} leaderboardOptions.season Whether to fetch the current season (`true`, default) or lifetime (`false`) leaderboard.
+     * @returns {Promise<record>}
+     */
+    getRank: async function(member, options = {}) {
+      if (!member) return null;
+      member = member?.id || member;
+      const members = (options.members instanceof Discord.Collection ? Array.from(options.members.keys()) : options.members);
+      const season = options.season ?? true;
+
+      // Get requested user
+      const record = await User.findOne({ discordId: member, excludeXP: false }).exec();
+      if (!record) return null;
+
+      const countParams = { excludeXP: false };
+      if (members) countParams.discordId = { $in: members };
+      if (season) countParams.currentXP = { $gt: record.currentXP };
+      else countParams.totalXP = { $gt: record.totalXP };
+
+      const count = await User.count(countParams);
+      record.rank = count + 1;
+
+      return record;
     },
     /**
      * Update a member's track XP preference
