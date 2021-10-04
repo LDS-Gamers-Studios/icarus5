@@ -50,7 +50,7 @@ function filter(msg, text) {
   // PROFANITY FILTER
   const noWhiteSpace = text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~"'()?|]/g, "").replace(/\s\s+/g, " ");
   const filtered = pf.scan(noWhiteSpace);
-  if ((filtered.length > 0) && (noWhiteSpace.length > 0)) {
+  if ((filtered.length > 0) && filtered[0] && (noWhiteSpace.length > 0)) {
     warnCard(msg, filtered);
     return true;
   } else { return false; }
@@ -235,18 +235,17 @@ async function warnCard(msg, filtered, call) {
  */
 async function processCardAction(interaction) {
   try {
-    const flag = interaction.message,
-      mod = interaction.member,
-      embed = u.embed(flag.embeds[0]),
-      infraction = await Module.db.infraction.getByFlag(flag);
-
+    const flag = interaction.message;
     // Prevent double-processing
     if (processing.has(flag.id)) {
       await interaction.reply({ content: "Someone is already processing this flag!", ephemeral: true });
-      u.clean(interaction);
       return;
     }
     processing.add(flag.id);
+
+    const mod = interaction.member,
+      embed = u.embed(flag.embeds[0]),
+      infraction = await Module.db.infraction.getByFlag(flag);
 
     // NEED TO ADD RETRACTIONS
 
