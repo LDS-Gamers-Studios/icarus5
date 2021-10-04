@@ -4,12 +4,11 @@ tmp
 config/*
 !config/README.md
 !config/*-example.json
-!config/snowflakes.json
-!config/rankConfig.json
 test.js
 *-.js
 *-.json
 data/*
+!data/*-example.json
 !data/*-reference.json
 !data/birthday.json
 !data/nameParts.json

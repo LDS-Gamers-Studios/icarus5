@@ -4,9 +4,8 @@ const Augur = require("augurbot"),
   gb = "<:gb:493084576470663180>",
   ember = "<:ember:512508452619157504>";
 
-const google = require("../config/google_api.json"),
-  { GoogleSpreadsheet } = require("google-spreadsheet"),
-  doc = new GoogleSpreadsheet(google.sheets.games);
+const { GoogleSpreadsheet } = require("google-spreadsheet"),
+  doc = new GoogleSpreadsheet(config.google.sheets.games);
 
 const { customAlphabet } = require("nanoid"),
   chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ",
@@ -16,7 +15,7 @@ let steamGameList;
 
 async function getGameList() {
   try {
-    await doc.useServiceAccountAuth(google.creds);
+    await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
     let games = await doc.sheetsByIndex[0].getRows();
     games = games.filter(g => !g.Recipient).filter(filterUnique);
@@ -360,7 +359,7 @@ const Module = new Augur.Module()
 .addInteractionCommand({
   name: "bank",
   guildId: config.ldsg,
-  commandId: "882719721068331149",
+  commandId: config.commands.bank,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand(true)) {
     case "give":

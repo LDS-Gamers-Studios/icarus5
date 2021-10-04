@@ -1,10 +1,36 @@
 {
-  "adminId": ["111232201848295424", "96335658997526528", "96354827579174912"],
+  "adminId": [
+    "111232201848295424",
+    "96335658997526528",
+    "96354827579174912"
+  ],
   "api": {
     "snipcart": "",
     "steam": ""
   },
-  "color": [248, 154, 34],
+  "applicationId": "",
+  "channels": {
+    "botspam": "203518149809799168",
+    "bottesting": "209046676781006849",
+    "headsofhouse": "734797868036259860",
+    "minecraftchat": "121033996439257092",
+    "minecraftmods": "114490357474918401",
+    "moderation": "363020585988653057",
+    "moddiscussion": "506575277820739611",
+    "modlogs": "506575671242260490",
+    "muted": "356657507197779968",
+    "userupdates": "725797487129919488"
+  },
+  "color": [
+    248,
+    154,
+    34
+  ],
+  "commands": {
+    "bank": "882719721068331149",
+    "bookmark": "881936439674286080",
+    "rank": "894614354987733052"
+  },
   "db": {
     "model": "utils/dbModels.js",
     "db": "",
@@ -34,8 +60,38 @@
     "threadCreate",
     "userUpdate"
   ],
+  "google": {
+    "api": "",
+    "creds": {
+      "type": "",
+      "project_id": "",
+      "private_key_id": "",
+      "private_key": "",
+      "client_email": "",
+      "client_id": "",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://accounts.google.com/o/oauth2/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": ""
+    },
+    "sheets": {
+      "config": "",
+      "games": "",
+      "applications": ""
+    }
+  },
   "ldsg": "96335850576556032",
   "ownerId": "111232201848295424",
   "prefix": "!",
+  "roles": {
+    "ducttape": "771516264618262607",
+    "management": "96360253850935296",
+    "rated_m": "281708645161631745",
+    "mod": "503066022912196608",
+    "muted": "210909249218281474",
+    "team": "96345401078087680",
+    "trusted": "210912511514509312",
+    "untrusted": "722107904496500756"
+  },
   "token": ""
 }
