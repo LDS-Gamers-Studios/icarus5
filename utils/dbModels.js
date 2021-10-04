@@ -188,8 +188,8 @@ const models = {
       if (limit) query.limit(limit);
 
       const records = await query.exec();
-      for (let i = 1; i <= records.length; i++) {
-        records[i].rank = i;
+      for (let i = 0; i < records.length; i++) {
+        records[i].rank = i + 1;
       }
 
       // Get requested user
