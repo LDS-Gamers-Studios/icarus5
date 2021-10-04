@@ -152,7 +152,7 @@ const Module = new Augur.Module()
               const oldLvl = Rank.level(user.totalXP - response.xp);
 
               if (lvl != oldLvl) {
-                let message = `${u.rand(Rank.messages)} ${u.rand(Rank.levelPhrase.replace("%LEVEL%", lvl))}`;
+                let message = `${u.rand(Rank.messages)} ${u.rand(Rank.levelPhrase).replace("%LEVEL%", lvl)}`;
 
                 if (Rank.rewards.has(lvl)) {
                   const reward = ldsg.roles.cache.get(Rank.rewards.get(lvl).id);
