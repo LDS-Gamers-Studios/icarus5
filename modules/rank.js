@@ -106,7 +106,7 @@ const Module = new Augur.Module()
   }
 })
 .setUnload(() => active)
-.addEvent("message", (msg) => {
+.addEvent("messageCreate", (msg) => {
   if (
     msg.guild?.id == Module.config.ldsg &&
     msg.author &&
