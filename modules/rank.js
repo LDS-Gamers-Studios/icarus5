@@ -42,33 +42,35 @@ async function slashRankTrack(interaction) {
 }
 
 async function slashRankView(interaction) {
-  // View member rankings
-  await interaction.deferReply();
-  const members = interaction.guild.members.cache;
-  const member = interaction.options.getMember("user") ?? interaction.member;
-  const record = await Module.db.user.getRank({ members, member });
+  try {
+    // View member rankings
+    await interaction.deferReply();
+    const members = interaction.guild.members.cache;
+    const member = interaction.options.getMember("user") ?? interaction.member;
+    const record = await Module.db.user.getRank(member, { members });
 
-  if (record) {
-    const level = Rank.level(record.totalXP);
-    const nextLevel = Rank.minXp(level + 1).toLocaleString();
+    if (record) {
+      const level = Rank.level(record.totalXP);
+      const nextLevel = Rank.minXp(level + 1).toLocaleString();
 
-    const embed = u.embed({ author: member })
-    .setTitle("LDSG Season Chat Ranking")
-    .setURL("https://my.ldsgamers.com/leaderboard")
-    .setFooter("https://my.ldsgamers.com/leaderboard")
-    .addField("Rank", `Season: ${record.rank} / ${members.size}`, true)
-    .addField("Level", `Current Level: ${level.toLocaleString()}\nNext Level: ${nextLevel} XP`, true)
-    .addField("Exp.", `Season: ${record.currentXP.toLocaleString()} XP\nLifetime: ${record.totalXP.toLocaleString()} XP`, true);
+      const embed = u.embed({ author: member })
+      .setTitle("LDSG Season Chat Ranking")
+      .setURL("https://my.ldsgamers.com/leaderboard")
+      .setFooter("https://my.ldsgamers.com/leaderboard")
+      .addField("Rank", `Season: ${record.rank} / ${members.size}`, true)
+      .addField("Level", `Current Level: ${level.toLocaleString()}\nNext Level: ${nextLevel} XP`, true)
+      .addField("Exp.", `Season: ${record.currentXP.toLocaleString()} XP\nLifetime: ${record.totalXP.toLocaleString()} XP`, true);
 
-    await interaction.editReply({ embeds: [embed] });
-  } else {
-    const snark = [
-      "don't got time for dat.",
-      "ain't interested in no XP gettin'.",
-      "don't talk to me no more, so I ignore 'em."
-    ];
-    await interaction.editReply(`**${member}** ${u.rand(snark)}\n(Try \`/rank track\` if you want to participate in chat ranks!)`);
-  }
+      await interaction.editReply({ embeds: [embed] });
+    } else {
+      const snark = [
+        "don't got time for dat.",
+        "ain't interested in no XP gettin'.",
+        "don't talk to me no more, so I ignore 'em."
+      ];
+      await interaction.editReply(`**${member}** ${u.rand(snark)}\n(Try \`/rank track\` if you want to participate in chat ranks!)`);
+    }
+  } catch (error) { u.errorHandler(error, interaction); }
 }
 
 const Module = new Augur.Module()
