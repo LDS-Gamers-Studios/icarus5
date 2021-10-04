@@ -122,6 +122,36 @@ const models = {
   },
   user: {
     /**
+     * Add XP to a set of users
+     * @function addXp
+     * @param {Set<String>} users Users to add XP
+     * @returns {Promise<UserDoc>}
+     */
+    addXp: async function(users) {
+      users = Array.from(users.values());
+      const response = { users: [], xp: 0 };
+      if (users.length == 0) {
+        return response;
+      } else {
+        const xp = Math.floor(Math.random() * 11) + 15;
+        response.xp = xp;
+        // Update XP for ranked users
+        await User.updateMany(
+          { discordId: { $in: users }, excludeXP: false },
+          { $inc: { currentXP: xp, totalXP: xp } },
+          { new: true, upsert: false }
+        ).exec();
+        // Update post count for all users
+        const userDocs = await User.updateMany(
+          { discordId: { $in: users } },
+          { $inc: { posts: 1 } },
+          { new: true, upsert: false }
+        ).exec();
+        response.users = userDocs;
+        return response;
+      }
+    },
+    /**
      * Fetch a user record from the database.
      * @function fetchUser
      * @param {(string|Discord.User|Discord.GuildMember)} discordId The user record to fetch.

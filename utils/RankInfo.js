@@ -1,4 +1,5 @@
 const { scale, excludeChannels, excludeRoles, rewards } = require("../config/rankConfig.json");
+const { Collection } = require("discord.js");
 
 const Rank = {
   excludeChannels,
@@ -44,7 +45,7 @@ const Rank = {
     level = parseInt(level, 10);
     return scale * (Math.pow(2 * level - 1, 2) - 1) / 8;
   },
-  rewards: new Map(rewards)
+  rewards: new Collection(rewards)
 };
 
 module.exports = Rank;
