@@ -123,13 +123,59 @@ const models = {
   user: {
     /**
      * Fetch a user record from the database.
-     *
+     * @function fetchUser
      * @param {(string|Discord.User|Discord.GuildMember)} discordId The user record to fetch.
      * @returns {Promise<user>}
      */
     fetchUser: function(discordId) {
       discordId = discordId.id ?? discordId;
       return User.findOne({ discordId }).exec();
+    },
+    /**
+     * Get the top X of the leaderboard
+     * @function getLeaderboard
+     * @param {Object} leaderboardOptions Options for the leaderboard fetch
+     * @param {Discord.Collection|Array} leaderboardOptions.members Collection or Array of snowflakes to include in the leaderboard
+     * @param {Number} leaderboardOptions.limit
+     * @param {(string|Discord.User|Discord.GuildMember)} leaderboardOptions.member A user to include in the results, no matter their ranking.
+     * @param {Boolean} leaderboardOptions.season Whether to fetch the current season (`true`, default) or lifetime (`false`) leaderboard.
+     * @returns {Promise<Array(records)>}
+     */
+    getLeaderboard: async function(options = {}) {
+      const members = (options.members instanceof Discord.Collection ? Array.from(options.members.keys()) : options.members);
+      const member = options.member?.id || options.member;
+      const season = options.season ?? true;
+      const limit = options.limit ?? 10;
+
+      // Get top X users first
+      const params = { excludeXP: false };
+      if (members) params.discordId = { $in: members };
+
+      const query = User.find();
+      if (season) query.sort({ currentXP: "desc" });
+      else query.sort({ totalXP: "desc" });
+
+      if (limit) query.limit(limit);
+
+      const records = await query.exec();
+      for (let i = 1; i <= records.length; i++) {
+        records[i].rank = i;
+      }
+
+      // Get requested user
+      const hasMember = records.some(r => r.discordId == member);
+      if (member && !hasMember) {
+        const record = await User.findOne({ discordId: member, excludeXP: false }).exec();
+        const countParams = { excludeXP: false };
+        if (members) countParams.discordId = { $in: members };
+        if (season) countParams.currentXP = { $gt: record.currentXP };
+        else countParams.totalXP = { $gt: record.totalXP };
+        const count = await User.count(countParams);
+        record.rank = count + 1;
+        records.push(record);
+      }
+
+      return records;
     },
     /**
      * Update a member's track XP preference
