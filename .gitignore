@@ -5,6 +5,7 @@ config/*
 !config/README.md
 !config/*-example.json
 !config/snowflakes.json
+!config/rankConfig.json
 test.js
 *-.js
 *-.json

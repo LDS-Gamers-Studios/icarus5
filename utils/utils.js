@@ -235,6 +235,15 @@ const utils = {
     return null;
   },
   /**
+   * Choose a random element from an array
+   * @function rand
+   * @param {Array} selections Items to choose from
+   * @returns {*} A random element from the array
+   */
+  rand: function(selections) {
+    return selections[Math.floor(Math.random() * selections.length)];
+  },
+  /**
    * Returns a promise that will fulfill after the given amount of time.
    * If awaited, will block for the given amount of time.
    * @param {number} t The time to wait, in milliseconds.
