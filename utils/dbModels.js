@@ -198,7 +198,8 @@ const models = {
       // Get requested user
       const hasMember = records.some(r => r.discordId == member);
       if (member && !hasMember) {
-        const record = await models.user.getRank(member, { members, season });
+        const record = await models.user.getRank(member, members);
+        if (season) record.rank = record.lifetime;
         records.push(record);
       }
 
@@ -208,28 +209,27 @@ const models = {
      * Get a user's rank
      * @function getRank
      * @param {(string|Discord.User|Discord.GuildMember)} member The member whose ranking you want to view.
-     * @param {Object} leaderboardOptions Options for the leaderboard fetch
-     * @param {Discord.Collection|Array} leaderboardOptions.members Collection or Array of snowflakes to include in the leaderboard
-     * @param {Boolean} leaderboardOptions.season Whether to fetch the current season (`true`, default) or lifetime (`false`) leaderboard.
+     * @param {Discord.Collection|Array} members Collection or Array of snowflakes to include in the leaderboard
      * @returns {Promise<record>}
      */
-    getRank: async function(member, options = {}) {
+    getRank: async function(member, members) {
       if (!member) return null;
       member = member?.id || member;
-      const members = (options.members instanceof Discord.Collection ? Array.from(options.members.keys()) : options.members);
-      const season = options.season ?? true;
+      members = (members instanceof Discord.Collection ? Array.from(members.keys()) : members);
 
       // Get requested user
       const record = await User.findOne({ discordId: member, excludeXP: false }).exec();
       if (!record) return null;
 
-      const countParams = { excludeXP: false };
+      let countParams = { excludeXP: false, currentXP: { $gt: record.currentXP } };
       if (members) countParams.discordId = { $in: members };
-      if (season) countParams.currentXP = { $gt: record.currentXP };
-      else countParams.totalXP = { $gt: record.totalXP };
+      const currentCount = await User.count(countParams);
+      record.rank = currentCount + 1;
 
-      const count = await User.count(countParams);
-      record.rank = count + 1;
+      countParams = { excludeXP: false, totalXP: { $gt: record.totalXP } };
+      if (members) countParams.discordId = { $in: members };
+      const lifetime = await User.count(countParams);
+      record.lifetime = lifetime + 1;
 
       return record;
     },

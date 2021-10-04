@@ -47,7 +47,7 @@ async function slashRankView(interaction) {
     await interaction.deferReply();
     const members = interaction.guild.members.cache;
     const member = interaction.options.getMember("user") ?? interaction.member;
-    const record = await Module.db.user.getRank(member, { members });
+    const record = await Module.db.user.getRank(member, members);
 
     if (record) {
       const level = Rank.level(record.totalXP);
@@ -57,7 +57,7 @@ async function slashRankView(interaction) {
       .setTitle("LDSG Season Chat Ranking")
       .setURL("https://my.ldsgamers.com/leaderboard")
       .setFooter("https://my.ldsgamers.com/leaderboard")
-      .addField("Rank", `Season: ${record.rank} / ${members.size}`, true)
+      .addField("Rank", `Season: ${record.rank} / ${members.size}\nLifetime: ${record.lifetime} / ${members.size}`, true)
       .addField("Level", `Current Level: ${level.toLocaleString()}\nNext Level: ${nextLevel} XP`, true)
       .addField("Exp.", `Season: ${record.currentXP.toLocaleString()} XP\nLifetime: ${record.totalXP.toLocaleString()} XP`, true);
 
