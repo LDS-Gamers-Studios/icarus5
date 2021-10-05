@@ -160,9 +160,13 @@ const models = {
      * @param {(string|Discord.User|Discord.GuildMember)} discordId The user record to fetch.
      * @returns {Promise<user>}
      */
-    fetchUser: function(discordId) {
+    fetchUser: async function(discordId) {
       discordId = discordId.id ?? discordId;
-      return User.findOne({ discordId }).exec();
+      let user = await User.findOne({ discordId }).exec();
+      if (!user) {
+        user = await models.user.newUser(discordId);
+      }
+      return user;
     },
     /**
      * Get the top X of the leaderboard
@@ -232,6 +236,28 @@ const models = {
       record.lifetime = lifetime + 1;
 
       return record;
+    },
+    newUser: async function(discordId) {
+      if (discordId.id) discordId = discordId.id;
+      const exists = await User.findOne({discordId}).exec();
+      if (exists) {
+        return exists;
+      } else {
+        const newMember = new User({
+          discordId,
+          currentXP: 0,
+          totalXP: 0,
+          posts: 0,
+          stars: 0,
+          preferences: 0,
+          ghostBucks: 0,
+          house: null,
+          excludeXP: true,
+          twitchFollow: false,
+          roles: []
+        });
+        return newMember.save();
+      }
     },
     /**
      * Update a member's track XP preference
