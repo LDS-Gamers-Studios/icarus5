@@ -70,6 +70,19 @@ function parseInteraction(inter) {
 
 const utils = {
   /**
+   * Give the mods a heads up that someone isn't getting their DMs.
+   * @param {GuildMember} member The guild member that's blocked.
+   */
+  blocked: function(member) {
+    return member.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      utils.embed({
+        author: member,
+        color: 0x00ffff,
+        title: `${member} has me blocked. *sadface*`
+      })
+    ] });
+  },
+  /**
    * If a command is run in a channel that doesn't want spam, returns #bot-lobby so results can be posted there.
    * @param {Discord.Message} msg The Discord message to check for bot spam.
    */
@@ -105,7 +118,7 @@ const utils = {
    * @param {Discord.Interaction} interaction The interaction to delete.
    * @param {number} t The length of time to wait before deletion, in milliseconds.
    */
-  cleanInteraction: async function(interaction, t = 2000) {
+  cleanInteraction: async function(interaction, t = 20000) {
     await utils.wait(t);
     interaction.deleteReply();
   },
@@ -113,6 +126,39 @@ const utils = {
    * Shortcut to Discord.Collection. See docs there for reference.
    */
   Collection: Discord.Collection,
+  /**
+   * Confirm Dialog
+   * @function confirmInteraction
+   * @param {Discord.Interaction} interaction The interaction to confirm
+   * @param {String} prompt The prompt for the confirmation
+   * @returns {Boolean}
+   */
+  confirmInteraction: async (interaction, prompt = "Are you sure?", title = "Confirmation Dialog") => {
+    const reply = (interaction.deferred || interaction.replied) ? "editReply" : "reply";
+    const embed = utils.embed({ author: interaction.member || interaction.user })
+      .setColor(0xff0000)
+      .setTitle(title)
+      .setDescription(prompt);
+    await interaction[reply]({
+      embeds: [embed],
+      components: [
+        new Discord.MessageActionRow().addComponents(
+          new Discord.MessageButton().setCustomId("confirmTrue").setEmoji("✅").setLabel("Confirm").setStyle("SUCCESS"),
+          new Discord.MessageButton().setCustomId("confirmFalse").setEmoji("⛔").setLabel("Cancel").setStyle("DANGER")
+        )
+      ]
+    });
+
+    const confirm = await interaction.channel.awaitMessageComponent({
+      filter: (int) => int.user.id === interaction.member.id && (interaction.customId === "confirmTrue" || interaction.customId === "confirmFalse"),
+      componentType: "BUTTON",
+      time: 60000
+    }).catch(() => ({ customId: "confirmTimeout" }));
+
+    if (confirm.customId === "confirmTrue") return true;
+    else if (confirm.customId === "confirmFalse") return false;
+    else return null;
+  },
   /**
    * Shortcut to Discord.Util.escapeMarkdown. See docs there for reference.
    */
