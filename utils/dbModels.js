@@ -199,7 +199,7 @@ const models = {
       const hasMember = records.some(r => r.discordId == member);
       if (member && !hasMember) {
         const record = await models.user.getRank(member, members);
-        if (season) record.rank = record.lifetime;
+        if (!season) record.rank = record.lifetime;
         records.push(record);
       }
 
