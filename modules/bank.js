@@ -68,7 +68,7 @@ async function bankGive(interaction) {
       const deposit = {
         currency,
         discordId: recipient.id,
-        description: `From ${giver.toString()}: ${reason}`,
+        description: `From ${giver.displayName}: ${reason}`,
         value,
         giver: giver.id
       };
@@ -86,7 +86,7 @@ async function bankGive(interaction) {
     const withdrawal = {
       currency,
       discordId: giver.id,
-      description: `To ${recipient.toString()}: ${reason}`,
+      description: `To ${recipient.displayName}: ${reason}`,
       value: -value,
       giver: giver.id
     };
@@ -325,7 +325,7 @@ async function bankAward(interaction) {
     const award = {
       currency: "em",
       discordId: recipient.id,
-      description: `From ${giver.toString()} (House Points): ${reason}`,
+      description: `From ${giver.displayName} (House Points): ${reason}`,
       value,
       giver: giver.id,
       hp: true

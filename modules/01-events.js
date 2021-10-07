@@ -55,7 +55,7 @@ const Module = new Augur.Module()
         const user = await Module.db.user.fetchUser(member);
         const embed = u.embed({
           author: member,
-          title: `${member.toString()} (${member.displayName}) has left the server`,
+          title: `${member.displayName} has left the server`,
           color: 0x5865f2,
         })
         .addField("Joined", moment(member.joinedAt).fromNow(), true)

@@ -2,6 +2,20 @@ const Augur = require("augurbot"),
   u = require("../utils/utils"),
   config = require("../config/config.json");
 
+/**
+ * Give the mods a heads up that someone isn't getting their DMs.
+ * @param {GuildMember} member The guild member that's blocked.
+ */
+function blocked(member) {
+  return member.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+    u.embed({
+      author: member,
+      color: 0x00ffff,
+      title: `${member} has me blocked. *sadface*`
+    })
+  ] });
+}
+
 function compareRoles(mod, target) {
   const modHigh = mod.roles.cache.filter(r => r.id != Module.config.roles.live)
     .sort((a, b) => b.comparePositionTo(a)).first();
@@ -26,7 +40,7 @@ async function slashModBan(interaction) {
       return;
     }
 
-    const confirm = await u.confirmInteraction(interaction, `Ban ${target.toString()} for:\n${reason}?`, `Confirm Ban on ${target.toString()}`);
+    const confirm = await u.confirmInteraction(interaction, `Ban ${target.toString()} for:\n${reason}?`, `Confirm Ban on ${u.escapeText(target.displayName)}`);
     if (confirm) {
       // Do the ban!
 
@@ -46,7 +60,7 @@ async function slashModBan(interaction) {
         u.embed()
         .setTitle("User Ban")
         .setDescription(`You have been banned in ${interaction.guild.name} for:\n${reason}`)
-      ] }).catch(() => u.blocked(target));
+      ] }).catch(() => blocked(target));
       await target.ban({ days, reason });
 
       // Save infraction

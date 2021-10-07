@@ -28,6 +28,20 @@ const modActions = [
 ];
 
 /**
+ * Give the mods a heads up that someone isn't getting their DMs.
+ * @param {GuildMember} member The guild member that's blocked.
+ */
+function blocked(member) {
+  return member.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+    u.embed({
+      author: member,
+      color: 0x00ffff,
+      title: `${member} has me blocked. *sadface*`
+    })
+  ] });
+}
+
+/**
  * Filter some text, warn if appropriate.
  * @param {Discord.Message} msg The message the text is associated with.
  * @param {String} text The text to scan.
@@ -168,7 +182,7 @@ async function warnCard(msg, filtered, call) {
     .addField("Jump to Post", `[Original Message](${msg.url})`, true);
 
     // Minecraft Filter
-    if (msg.channel.id == Module.config.channels.minecraftchat) {
+    if (msg.channel.parentId == Module.config.channels.minecraftcategory) {
       msg.client.channels.cache.get(Module.config.channels.minecraftmods).send({ embeds: [embed] });
     }
 
@@ -281,7 +295,7 @@ async function processCardAction(interaction) {
       const md = await interaction.client.channels.cache.get(Module.config.channels.moddiscussion);
       await interaction.reply({ content: `Sending the flag over to ${md}...`, ephemeral: true });
 
-      embed.setFooter(`Linked by ${mod.toString()}`);
+      embed.setFooter(`Linked by ${u.escapeText(mod.displayName)}`);
       md.send({ embeds: [embed] }).catch(u.noop);
     } else {
       await interaction.deferUpdate();
@@ -338,7 +352,7 @@ async function processCardAction(interaction) {
             `We have received one or more complaints regarding content you posted. We have reviewed the content in question and have determined, in our sole discretion, that it is against our code of conduct (<https://ldsgamers.com/code-of-conduct>). This content was removed on your behalf. As a reminder, if we believe that you are frequently in breach of our code of conduct or are otherwise acting inconsistently with the letter or spirit of the code, we may limit, suspend or terminate your access to the LDSG Discord server.\n\n**${mod.toString()}** has issued this warning.`
         );
 
-        member.send({ content: response, embeds: [quote] }).catch(() => u.blocked(member));
+        member.send({ content: response, embeds: [quote] }).catch(() => blocked(member));
       }
 
       embed.fields = embed.fields.filter(f => !f.name || !f.name.startsWith("Jump"));

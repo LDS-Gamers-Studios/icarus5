@@ -70,19 +70,6 @@ function parseInteraction(inter) {
 
 const utils = {
   /**
-   * Give the mods a heads up that someone isn't getting their DMs.
-   * @param {GuildMember} member The guild member that's blocked.
-   */
-  blocked: function(member) {
-    return member.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
-      utils.embed({
-        author: member,
-        color: 0x00ffff,
-        title: `${member} has me blocked. *sadface*`
-      })
-    ] });
-  },
-  /**
    * If a command is run in a channel that doesn't want spam, returns #bot-lobby so results can be posted there.
    * @param {Discord.Message} msg The Discord message to check for bot spam.
    */
