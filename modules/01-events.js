@@ -55,7 +55,7 @@ const Module = new Augur.Module()
         const user = await Module.db.user.fetchUser(member);
         const embed = u.embed({
           author: member,
-          title: `${member.displayName} has left the server`,
+          title: `${member.toString()} (${member.displayName}) has left the server`,
           color: 0x5865f2,
         })
         .addField("Joined", moment(member.joinedAt).fromNow(), true)
@@ -64,7 +64,7 @@ const Module = new Augur.Module()
         member.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
       }
     }
-  } catch (error) { u.errorHandler(error, `Member Leave: ${u.escapeText(member.displayName)} (${member.id})`); }
+  } catch (error) { u.errorHandler(error, `Member Leave: ${member.toString()} (${member.id})`); }
 })
 .addEvent("userUpdate", async (oldUser, newUser) => {
   try {

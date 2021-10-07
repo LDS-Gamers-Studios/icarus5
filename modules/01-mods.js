@@ -26,7 +26,7 @@ async function slashModBan(interaction) {
       return;
     }
 
-    const confirm = await u.confirmInteraction(interaction, `Ban ${u.escapeText(target.displayName)} for:\n${reason}?`, `Confirm Ban on ${u.escapeText(target.displayName)}`);
+    const confirm = await u.confirmInteraction(interaction, `Ban ${target.toString()} for:\n${reason}?`, `Confirm Ban on ${target.toString()}`);
     if (confirm) {
       // Do the ban!
 
@@ -35,7 +35,7 @@ async function slashModBan(interaction) {
         embeds: [
           u.embed({ author: interaction.member })
           .setColor(0x00ff00)
-          .setDescription(`${u.escapeText(target.displayName)} banned for:\n${reason}`)
+          .setDescription(`${target.toString()} banned for:\n${reason}`)
         ],
         components: []
       });
@@ -62,7 +62,7 @@ async function slashModBan(interaction) {
       const fakeTarget = {
         id: target.id,
         roles: { cache: targetRoles }
-      }
+      };
       Module.db.user.updateRoles(fakeTarget);
 
       // Log it
@@ -96,34 +96,34 @@ const Module = new Augur.Module()
         case "ban":
           await slashModBan(interaction);
           break;
-        case "kick":
+        //case "kick":
         //  await slashModKick(interaction);
         //  break;
-        case "mute":
+        //case "mute":
         //  await slashModMute(interaction);
         //  break;
-        case "note":
+        //case "note":
         //  await slashModNote(interaction);
         //  break;
-        case "office":
+        //case "office":
         //  await slashModOffice(interaction);
         //  break;
-        case "purge":
+        //case "purge":
         //  await slashModPurge(interaction);
         //  break;
-        case "rename":
+        //case "rename":
         //  await slashModRename(interaction);
         //  break;
-        case "slowmode":
+        //case "slowmode":
         //  await slashModSlowmode(interaction);
         //  break;
-        case "summary":
+        //case "summary":
         //  await slashModSummary(interaction);
         //  break;
-        case "trust":
+        //case "trust":
         //  await slashModTrust(interaction);
         //  break;
-        case "warn":
+        //case "warn":
         //  await slashModWarn(interaction);
         //  break;
         default:
