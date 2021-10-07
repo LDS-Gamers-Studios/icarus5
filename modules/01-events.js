@@ -64,7 +64,7 @@ const Module = new Augur.Module()
         member.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
       }
     }
-  } catch (error) { u.errorHandler(error, `Member Leave: ${member.toString()} (${member.id})`); }
+  } catch (error) { u.errorHandler(error, `Member Leave: ${u.escapeText(member.displayName)} (${member.id})`); }
 })
 .addEvent("userUpdate", async (oldUser, newUser) => {
   try {
