@@ -68,7 +68,7 @@ async function bankGive(interaction) {
       const deposit = {
         currency,
         discordId: recipient.id,
-        description: `From ${giver.displayName}: ${reason}`,
+        description: `From ${giver.toString()}: ${reason}`,
         value,
         giver: giver.id
       };
@@ -78,7 +78,7 @@ async function bankGive(interaction) {
       const embed = u.embed({ author: interaction.client.user })
       .addField("Reason", reason)
       .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-      .setDescription(`${u.escapeText(giver.displayName)} just gave you ${coin}${receipt.value}.`);
+      .setDescription(`${giver.toString()} just gave you ${coin}${receipt.value}.`);
       recipient.send({ embeds: [embed] });
     }
     interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`);
@@ -86,7 +86,7 @@ async function bankGive(interaction) {
     const withdrawal = {
       currency,
       discordId: giver.id,
-      description: `To ${recipient.displayName}: ${reason}`,
+      description: `To ${recipient.toString()}: ${reason}`,
       value: -value,
       giver: giver.id
     };
@@ -96,7 +96,7 @@ async function bankGive(interaction) {
     const embed = u.embed({ author: interaction.client.user })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-    .setDescription(`You just gave ${coin}${-receipt.value} to ${u.escapeText(recipient.displayName)}.`);
+    .setDescription(`You just gave ${coin}${-receipt.value} to ${recipient.toString()}.`);
     giver.send({ embeds: [embed] });
 
     if ((currency == "em") && toIcarus) {
@@ -104,7 +104,7 @@ async function bankGive(interaction) {
       const hohEmbed = u.embed()
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
       .addField("Reason", reason)
-      .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
+      .setDescription(`**${giver.toString()}** gave me ${coin}${value}.`);
       hoh.send({ content: `<@${Module.config.ownerId}>`, embeds: [hohEmbed] });
     }
   } catch (e) { u.errorHandler(e, interaction); }
@@ -287,7 +287,7 @@ async function bankDiscount(interaction) {
       .setAuthor(interaction.member.displayName, interaction.member.user.displayAvatarURL({ dynamic: true }))
       .addField("Amount", `${gb}${withdraw.value}\n$${withdraw.value / 100}`)
       .addField("Balance", `${gb}${balance.balance - withdraw.value}`)
-      .setDescription(`**${u.escapeText(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
+      .setDescription(`**${interaction.member.toString()}** just redeemed ${gb} for a store coupon code.`);
       interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
     } else {
       interaction.editReply("Sorry, something went wrong. Please try again.");
@@ -325,7 +325,7 @@ async function bankAward(interaction) {
     const award = {
       currency: "em",
       discordId: recipient.id,
-      description: `From ${giver.displayName} (House Points): ${reason}`,
+      description: `From ${giver.toString()} (House Points): ${reason}`,
       value,
       giver: giver.id,
       hp: true
@@ -336,7 +336,7 @@ async function bankAward(interaction) {
     let embed = u.embed({ author: interaction.client.user })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-    .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ? "awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
+    .setDescription(`${u.escapeText(giver.toString())} just ${value > 0 ? "awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
     recipient.send({ embeds: [embed] });
 
     interaction.reply(`${ember}${value} ${value > 0 ? "awarded to" : "docked from"} ${u.escapeText(recipient.displayName)} for ${reason}`);
@@ -344,14 +344,14 @@ async function bankAward(interaction) {
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
     .addField("Reason", reason)
-    .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
+    .setDescription(`You just gave ${ember}${receipt.value} to ${recipient.toString()}. This counts toward their House's Points.`);
     giver.send({ embeds: [embed] });
 
     const hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
     .addField("Reason", reason)
-    .setDescription(`**${u.escapeText(giver.displayName)}** ${value > 0 ? "awarded" : "docked"} ${u.escapeText(recipient.displayName)} ${ember}${value}.`);
+    .setDescription(`**${giver.toString()}** ${value > 0 ? "awarded" : "docked"} ${recipient.toString()} ${ember}${value}.`);
     hoh.send({ embeds: [embed] });
   } catch (e) { u.errorHandler(e, interaction); }
 }
