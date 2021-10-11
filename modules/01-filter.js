@@ -174,6 +174,10 @@ async function warnCard(msg, filtered, call) {
     .setDescription((msg.editedAt ? "[Edited]\n" : "") + msg.cleanContent)
     .setURL(msg.url);
 
+    const allowedMentions = {
+      roles: [Module.config.roles.mod]
+    }
+
     if (Array.isArray(filtered)) filtered = filtered.join(", ");
     if (filtered) embed.addField("Match", filtered);
 
@@ -202,14 +206,22 @@ async function warnCard(msg, filtered, call) {
           if (msg.member.voice.channel) {
             msg.member.voice.disconnect("Auto-mute");
           }
-          ldsg.channels.cache.get(Module.config.channels.muted).send(`${msg.member}, you have been auto-muted in ${msg.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`);
+          ldsg.channels.cache.get(Module.config.channels.muted).send({
+            content: `${msg.member}, you have been auto-muted in ${msg.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`,
+            allowedMentions: { users: [msg.member.id] }
+          });
         }
         content.push("The mute role has been applied and message deleted.");
       }
       content = content.join("\n");
     }
 
-    const card = await msg.client.channels.cache.get(Module.config.channels.modlogs).send({ content, embeds: [embed], components: (msg.author.bot ? undefined : modActions) });
+    const card = await msg.client.channels.cache.get(Module.config.channels.modlogs).send({
+      content,
+      embeds: [embed],
+      components: (msg.author.bot ? undefined : modActions),
+      allowedMentions: { roles: [Module.config.roles.mod] }
+    });
 
     if (!msg.author.bot) {
       const infraction = {
@@ -322,7 +334,10 @@ async function processCardAction(interaction) {
           try {
             await member.roles.add([Module.config.roles.muted, Module.config.roles.untrusted]);
             if (member.voice.channel) await member.voice.disconnect("User mute").catch(u.noop);
-            interaction.client.channels.cache.get(Module.config.channels.muted).send(`${member}, you have been muted in ${member.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`).catch(u.noop);
+            interaction.client.channels.cache.get(Module.config.channels.muted).send({
+              content: `${member}, you have been muted in ${member.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`,
+              allowedMentions: { users: [member.id] }
+            }).catch(u.noop);
           } catch (error) { u.errorHandler(error, "Mute user via card"); }
         } else if (!member) {
           const roles = (await Module.db.user.fetchUser(infraction.discordId)).roles.concat(Module.config.roles.muted, Module.config.roles.untrusted);
