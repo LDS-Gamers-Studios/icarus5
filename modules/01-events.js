@@ -2,6 +2,8 @@ const Augur = require("augurbot"),
   u = require("../utils/utils"),
   moment = require("moment");
 
+const ductTapeExclude = true;
+
 const Module = new Augur.Module()
 .addEvent("channelCreate", (channel) => {
   try {
@@ -19,6 +21,22 @@ const Module = new Augur.Module()
           STREAM: false
         }, { reason: "New channel permissions update" })
         .catch(e => u.errorHandler(e, `Update New Channel Permissions: ${channel.name}`));
+
+        // Keep Duct Tape Out
+        if (ductTapeExclude) {
+          channel.permissionOverwrites.create(Module.config.roles.ducttape, {
+            // text
+            VIEW_CHANNEL: false,
+            ADD_REACTIONS: false,
+            SEND_MESSAGES: false,
+            READ_MESSAGE_HISTORY: false,
+            // voice
+            CONNECT: false,
+            SPEAK: false,
+            STREAM: false
+          }, { reason: "New channel permissions update" })
+          .catch(e => u.errorHandler(e, `Update New Channel Permissions: ${channel.name}`));
+        }
       } else {
         u.errorLog.send({ embeds: [
           u.embed({
