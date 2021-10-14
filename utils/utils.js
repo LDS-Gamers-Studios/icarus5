@@ -2,6 +2,7 @@ const Discord = require("discord.js"),
   config = require("../config/config.json");
 
 const errorLog = new Discord.WebhookClient(config.error);
+const { nanoid } = require("nanoid");
 
 /**
  * @typedef {Object} ParsedInteraction
@@ -126,26 +127,34 @@ const utils = {
       .setColor(0xff0000)
       .setTitle(title)
       .setDescription(prompt);
+    const confirmTrue = utils.customId(),
+      confirmFalse = utils.customId();
+
     await interaction[reply]({
       embeds: [embed],
       components: [
         new Discord.MessageActionRow().addComponents(
-          new Discord.MessageButton().setCustomId("confirmTrue").setEmoji("✅").setLabel("Confirm").setStyle("SUCCESS"),
-          new Discord.MessageButton().setCustomId("confirmFalse").setEmoji("⛔").setLabel("Cancel").setStyle("DANGER")
+          new Discord.MessageButton().setCustomId(confirmTrue).setEmoji("✅").setLabel("Confirm").setStyle("SUCCESS"),
+          new Discord.MessageButton().setCustomId(confirmFalse).setEmoji("⛔").setLabel("Cancel").setStyle("DANGER")
         )
-      ]
+      ],
+      ephemeral: true
     });
 
     const confirm = await interaction.channel.awaitMessageComponent({
-      filter: (int) => int.user.id === interaction.member.id && (interaction.customId === "confirmTrue" || interaction.customId === "confirmFalse"),
+      filter: (int) => int.user.id === interaction.member.id && (interaction.customId === confirmTrue || interaction.customId === confirmFalse),
       componentType: "BUTTON",
       time: 60000
     }).catch(() => ({ customId: "confirmTimeout" }));
 
-    if (confirm.customId === "confirmTrue") return true;
-    else if (confirm.customId === "confirmFalse") return false;
+    if (confirm.customId === confirmTrue) return true;
+    else if (confirm.customId === confirmFalse) return false;
     else return null;
   },
+  /**
+   * Shortcut to nanoid. See docs there for reference.
+   */
+  customId: nanoid,
   /**
    * Shortcut to Discord.Util.escapeMarkdown. See docs there for reference.
    */
