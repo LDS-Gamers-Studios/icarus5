@@ -253,8 +253,8 @@ async function bankDiscount(interaction) {
     await interaction.deferReply({ ephemeral: true });
     const amount = interaction.options.getInteger("amount", true);
     const balance = await Module.db.bank.getBalance(interaction.user.id, "gb");
-    if ((amount > balance.balance) || (amount > 0)) {
-      interaction.editReply(`That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${balance.balance}.`);
+    if ((amount > balance.balance) || (amount < 0) || (amount > 1000)) {
+      interaction.editReply(`That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${Math.max(balance.balance, 1000)}.`);
       return;
     }
 
