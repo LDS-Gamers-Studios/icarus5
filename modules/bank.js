@@ -282,11 +282,11 @@ async function bankDiscount(interaction) {
       const withdraw = await Module.db.bank.addCurrency(withdrawal);
 
       interaction.editReply("Watch your DMs for the code you just redeemed!");
-      interaction.user.send(`You have redeemed ${gb}${withdraw.value} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance - withdraw.value}.`);
+      interaction.user.send(`You have redeemed ${gb}${withdraw.value} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance + withdraw.value}.`);
       const embed = u.embed()
       .setAuthor(interaction.member.displayName, interaction.member.user.displayAvatarURL({ dynamic: true }))
-      .addField("Amount", `${gb}${withdraw.value}\n$${withdraw.value / 100}`)
-      .addField("Balance", `${gb}${balance.balance - withdraw.value}`)
+      .addField("Amount", `${gb}${-withdraw.value}\n$${-withdraw.value / 100}`)
+      .addField("Balance", `${gb}${balance.balance + withdraw.value}`)
       .setDescription(`**${u.escapeText(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
       interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
     } else {
