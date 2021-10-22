@@ -268,7 +268,7 @@ const models = {
     updateTenure: function(member) {
       return User.findOneAndUpdate(
         { discordId: member.id },
-        { $inc: { priorTenure: moment().diff(moment(member.joinedAt), "days") } },
+        { $inc: { priorTenure: (moment().diff(moment(member.joinedAt), "days") || 0) } },
         { new: true, upsert: false }
       ).exec();
     }
