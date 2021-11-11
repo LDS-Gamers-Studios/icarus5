@@ -127,7 +127,8 @@ const Module = new Augur.Module()
         if (response.users.length > 0) {
           const ldsg = client.guilds.cache.get(Module.config.ldsg);
           for (const user of response.users) {
-            const member = ldsg.members.cache.get(user.discordId);
+            const member = ldsg.members.cache.get(user.discordId) ?? await ldsg.members.cache.fetch(user.discordId);
+            if (!member) continue;
 
             // Remind mods to trust people!
             if ((user.posts % 25 == 0) && !member.roles.cache.has(Module.config.roles.trusted) && !member.roles.cache.has(Module.config.roles.untrusted)) {
