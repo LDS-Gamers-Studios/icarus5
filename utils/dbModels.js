@@ -184,7 +184,7 @@ const models = {
       const params = { excludeXP: false };
       if (members) params.discordId = { $in: members };
 
-      const query = User.find();
+      const query = User.find(params);
       if (season) query.sort({ currentXP: "desc" });
       else query.sort({ totalXP: "desc" });
 
