@@ -21,7 +21,7 @@ async function getGameList() {
     let games = await doc.sheetsByIndex[0].getRows();
     games = games.filter(g => !g.Recipient).filter(filterUnique);
     return games;
-  } catch (e) { e.errorHandler(e, "Fetch Game List"); }
+  } catch (e) { u.errorHandler(e, "Fetch Game List"); }
 }
 
 function filterUnique(e, i, a) {
