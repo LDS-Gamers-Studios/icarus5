@@ -2,7 +2,7 @@ const Augur = require("augurbot"),
   u = require("../utils/utils"),
   config = require("../config/config.json");
 
-const muteState = u.Collection();
+const muteState = new u.Collection();
 
 /**
  * Give the mods a heads up that someone isn't getting their DMs.
@@ -223,15 +223,16 @@ async function slashModMute(interaction) {
       muteState.set(target.id, target.voice.serverMute);
       await target.voice.setMute(true, reason);
 
-      await interaction.client.channels.get(Module.config.channels.modlogs).send({ embeds: [
+      await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("Member Mute")
         .setDescription(`**${interaction.member}** muted **${target}** for:\n${reason}`)
         .setColor(0x0000ff)
       ] });
 
-      await interaction.client.channels.get(Module.config.channels.muted).send(
-        `${target}, you have been muted in ${interaction.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`
+      await interaction.client.channels.cache.get(Module.config.channels.muted).send(
+        `${target}, you have been muted in ${interaction.guild.name}. `
+        + 'Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct'
       );
     } else { // Remove mute
       await interaction.editReply({
@@ -247,13 +248,40 @@ async function slashModMute(interaction) {
       if (muteState.get(target.id)) await target.voice.setMute(false, "Mute resolved");
       muteState.delete(target.id);
 
-      await interaction.client.channels.get(Module.config.channels.modlogs).send({ embeds: [
+      await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("Member Unmute")
         .setDescription(`**${interaction.member}** unmuted **${target}**`)
         .setColor(0x00ff00)
       ] });
     }
+  } catch (error) { u.errorHandler(error, interaction); }
+}
+
+async function slashModNote(interaction) {
+  try {
+    await interaction.deferReply({ ephemeral: true });
+    const target = interaction.options.getMember("user");
+    const note = interaction.options.getString("note");
+
+    Module.db.infraction.save({
+      discordId: target.id,
+      value: 0,
+      description: note,
+      mod: interaction.user.id
+    });
+    const summary = await Module.db.infraction.getSummary(target.id);
+
+    await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      u.embed({ author: target })
+      .setColor("#0000FF")
+      .setDescription(note)
+      .addField("Resolved", `${u.escapeText(interaction.user.username)} added a note.`)
+      .addField(`Infraction Summary (${summary.time} Days)`, `Infractions: ${summary.count}\nPoints: ${summary.points}`)
+      .setTimestamp()
+    ] });
+
+    await interaction.editReply({ content: `Note added for user ${target.toString()}.`, ephemeral: true });
   } catch (error) { u.errorHandler(error, interaction); }
 }
 
@@ -276,10 +304,10 @@ const Module = new Augur.Module()
       case "mute":
         await slashModMute(interaction);
         break;
-      /*
       case "note":
         await slashModNote(interaction);
         break;
+      /*
       case "office":
         await slashModOffice(interaction);
         break;

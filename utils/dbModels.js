@@ -105,9 +105,9 @@ const models = {
         data.message = data.message.id;
       }
       data.discordId = data.discordId.id ?? data.discordId;
-      data.channel = data.channel.id ?? data.channel;
+      data.channel = data.channel?.id ?? data.channel;
       data.mod = data.mod.id ?? data.mod;
-      data.flag = data.flag.id ?? data.flag;
+      data.flag = data.flag?.id ?? data.flag;
 
       return new Infraction(data).save();
     },
