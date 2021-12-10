@@ -200,7 +200,7 @@ const models = {
       if (member && !hasMember) {
         const record = await models.user.getRank(member, members);
         if (!season) record.rank = record.lifetime;
-        records.push(record);
+        if (record) records.push(record);
       }
 
       return records;
