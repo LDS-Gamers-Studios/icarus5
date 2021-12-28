@@ -42,7 +42,7 @@
 		"space-in-parens": "warn",
 		"space-infix-ops": "warn",
 		"space-unary-ops": "warn",
-		"spaced-comment": "warn",
+		"spaced-comment": ["warn", "always", {"exceptions": ["*"]}],
 		"yoda": "error"
 	}
 }
