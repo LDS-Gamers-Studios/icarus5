@@ -33,17 +33,5 @@
     "eslint-plugin-import": "^2.24.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0"
-  },
-  "eslintConfig": {
-    "env": {
-      "node": true,
-      "es6": true
-    },
-    "parserOptions": {
-      "ecmaVersion": 2021
-    },
-    "extends": "eslint:recommended",
-    "rules": {
-    }
   }
 }
