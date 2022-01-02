@@ -484,6 +484,24 @@ async function slashModSlowmode(interaction) {
   }
 }
 
+async function slashModSummary(interaction) {
+  await interaction.deferReply({ ephemeral: true });
+  const member = interaction.options.getMember("user");
+  const time = interaction.options.getInteger("history");
+
+  const data = await Module.db.infraction.getSummary(member.id, time);
+  const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
+  if ((data.count > 0) && (data.detail.length > 0)) {
+    for (const record of data.detail) {
+      const mod = interaction.guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
+      response.push(`${record.timestamp.toLocaleDateString()} (${record.value} pts, modded by ${mod}): ${record.description}`);
+    }
+  }
+  const modlogs = await interaction.guild.channels.cache.get(Module.config.channels.modlogs);
+  await modlogs.send(response.join("\n"), { split: true });
+  await interaction.deferReply({ content: `I've put the summary you requested in ${modlogs}.`, ephemeral: true });
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
@@ -518,10 +536,10 @@ const Module = new Augur.Module()
       case "slowmode":
         await slashModSlowmode(interaction);
         break;
-      /*
       case "summary":
         await slashModSummary(interaction);
         break;
+      /*
       case "trust":
         await slashModTrust(interaction);
         break;
