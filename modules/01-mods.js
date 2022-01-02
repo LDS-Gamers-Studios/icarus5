@@ -30,6 +30,13 @@ function isMod(interaction) {
   return interaction.member.roles.cache.some(r => ([Module.config.roles.management, Module.config.roles.mod].includes(r.id)));
 }
 
+function nameGen() {
+  const { names, colors, adjectives } = require("../data/nameParts.json");
+  let result = u.rand(adjectives) + " " + u.rand(colors) + " " + u.rand(names);
+  while (result.length > 32) { result = u.rand(adjectives) + " " + u.rand(colors) + " " + u.rand(names); }
+  return result;
+}
+
 async function slashModBan(interaction) {
   try {
     await interaction.deferReply({ ephemeral: true });
@@ -402,6 +409,39 @@ async function slashModPurge(interaction) {
   }
 }
 
+async function slashModRename(interaction) {
+  await interaction.deferReply({ ephemeral: true });
+  const target = interaction.options.getMember("user");
+  const newNick = interaction.options.getString("name") || nameGen();
+
+  const oldNick = target.displayName;
+
+  await target.setNickname(newNick);
+
+  const comment = `Set nickname to ${u.escapeText(newNick)} from ${u.escapeText(oldNick)}.`;
+
+  await Module.db.infraction.save({
+    discordId: target.id,
+    value: 0,
+    description: comment,
+    message: interaction.id,
+    channel: interaction.channel.id,
+    mod: interaction.author.id
+  });
+  const summary = await Module.db.infraction.getSummary(target.id);
+
+  interaction.client.channels.cache.get(Module.config.channels.modLogs).send({ embeds: [
+    u.embed({ author: target })
+    .setColor("#0000FF")
+    .setDescription(comment)
+    .addField("Resolved", `${interaction.author} changed ${target}'s nickname from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.`)
+    .addField(`Infraction Summary (${summary.time} Days) `, `Infractions: ${summary.count}\nPoints: ${summary.points}`)
+    .setTimestamp()
+  ] });
+
+  await interaction.editReply({ content: `${target}'s nickname changed from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.` });
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
@@ -430,10 +470,10 @@ const Module = new Augur.Module()
       case "purge":
         await slashModPurge(interaction);
         break;
-      /*
       case "rename":
         await slashModRename(interaction);
         break;
+      /*
       case "slowmode":
         await slashModSlowmode(interaction);
         break;
