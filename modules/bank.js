@@ -28,7 +28,7 @@ function filterUnique(e, i, a) {
   return (a.indexOf(a.find(g => g["Game Title"] == e["Game Title"] && g["System"] == e["System"])) == i);
 }
 
-async function bankGive(interaction) {
+async function slashBankGive(interaction) {
   try {
     const giver = interaction.member;
     const recipient = interaction.options.getMember("recipient", true);
@@ -110,7 +110,7 @@ async function bankGive(interaction) {
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
-async function bankBalance(interaction) {
+async function slashBankBalance(interaction) {
   try {
     const member = interaction.member;
     const gbBalance = await Module.db.bank.getBalance(member, "gb");
@@ -121,7 +121,7 @@ async function bankBalance(interaction) {
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
-async function bankGameList(interaction) {
+async function slashBankGameList(interaction) {
   try {
     await interaction.deferReply({ ephemeral: true });
 
@@ -185,7 +185,7 @@ async function bankGameList(interaction) {
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
-async function bankGameRedeem(interaction) {
+async function slashBankGameRedeem(interaction) {
   try {
     await interaction.deferReply({ ephemeral: true });
     const games = await getGameList();
@@ -250,7 +250,7 @@ async function bankGameRedeem(interaction) {
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
-async function bankDiscount(interaction) {
+async function slashBankDiscount(interaction) {
   try {
     await interaction.deferReply({ ephemeral: true });
     const amount = interaction.options.getInteger("amount", true);
@@ -300,7 +300,7 @@ async function bankDiscount(interaction) {
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
-async function bankAward(interaction) {
+async function slashBankAward(interaction) {
   try {
     const giver = interaction.member;
 
@@ -369,22 +369,22 @@ const Module = new Augur.Module()
   process: async (interaction) => {
     switch (interaction.options.getSubcommand(true)) {
     case "give":
-      await bankGive(interaction);
+      await slashBankGive(interaction);
       break;
     case "balance":
-      await bankBalance(interaction);
+      await slashBankBalance(interaction);
       break;
     case "list":
-      await bankGameList(interaction);
+      await slashBankGameList(interaction);
       break;
     case "redeem":
-      await bankGameRedeem(interaction);
+      await slashBankGameRedeem(interaction);
       break;
     case "discount":
-      await bankDiscount(interaction);
+      await slashBankDiscount(interaction);
       break;
     case "award":
-      await bankAward(interaction);
+      await slashBankAward(interaction);
       break;
     }
   }
