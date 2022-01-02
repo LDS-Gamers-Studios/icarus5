@@ -361,6 +361,47 @@ async function slashModOffice(interaction) {
   } catch (error) { u.errorHandler(error, interaction); }
 }
 
+async function slashModPurge(interaction) {
+  await interaction.deferReply({ ephemeral: true });
+  const number = interaction.options.getInteger("number");
+  let num = number;
+  const reason = interaction.options.getString("reason");
+
+  const channel = interaction.channel;
+  if (num > 0) {
+    await interaction.editReply({ content: `Deleting ${number} messages.`, ephemeral: true });
+
+    // Use bulkDelete() first
+    while (num > 0) {
+      const deleting = Math.min(num, 50);
+      const deleted = await channel.bulkDelete(deleting, true);
+      num -= deleted.size;
+      if (deleted.size != deleting) { break; }
+    }
+    // Handle the remainder one by one
+    while (num > 0) {
+      const fetching = Math.min(num, 50);
+      const msgsToDelete = await channel.messages.fetch({ limit: fetching, before: interaction.id }).catch(u.noop);
+      if (!msgsToDelete) { break; }
+      for (const [, msg] of msgsToDelete) { await msg.delete().catch(u.noop); }
+      num -= msgsToDelete.size;
+      if (msgsToDelete.size != fetching) { break; }
+    }
+    // Log it
+    await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      u.embed({ author: interaction.member })
+      .setTitle("Channel Purge")
+      .setDescription(`**${interaction.member}** purged ${number - num} messages in ${interaction.channel}`)
+      .addField('Reason', reason)
+      .setColor(0x00ff00)
+    ] });
+
+    await interaction.followUp({ content: `${number - num} messages deleted.`, ephemeral: true });
+  } else {
+    await interaction.editReply({ content: `You need to tell me how many to delete!`, ephemeral: true });
+  }
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
@@ -386,10 +427,10 @@ const Module = new Augur.Module()
       case "office":
         await slashModOffice(interaction);
         break;
-      /*
       case "purge":
         await slashModPurge(interaction);
         break;
+      /*
       case "rename":
         await slashModRename(interaction);
         break;
