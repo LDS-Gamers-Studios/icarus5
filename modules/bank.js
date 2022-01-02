@@ -236,7 +236,9 @@ async function bankGameRedeem(interaction) {
     game.Recipient = interaction.user.username;
     game.Date = new Date();
     game.save();
-    interaction.user.send({ embeds: [embed] }).catch(e => u.errorHandler(e, interaction));
+    interaction.user.send({ embeds: [embed] }).catch(() => {
+      interaction.followUp("I wasn't able to send you the game key! Do you have DMs allowed for server members? Please check with a member of Management to get your game key.");
+    });
 
     embed = u.embed({ author: interaction.member })
     .setDescription(`${interaction.user.username} just redeemed a key for a ${game["Game Title"]} (${game.System}) key.`)
