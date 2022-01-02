@@ -196,6 +196,9 @@ const Module = new Augur.Module()
         u.errorHandler(Error("Mismatch from example file"), `Field(s) \`${m2.join("`, `")}\` in example file but not ${filename + ".json"}`);
       }
     }
+    const snowflakes = require("../config/snowflakes.json");
+    Module.config.channels = snowflakes.channels;
+    Module.config.roles = snowflakes.roles;
   } catch (e) {
     u.errorHandler(e, "Error in botAdmin.setInit.");
   }
