@@ -79,7 +79,7 @@ async function bankGive(interaction) {
       .addField("Reason", reason)
       .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
       .setDescription(`${u.escapeText(giver.displayName)} just gave you ${coin}${receipt.value}.`);
-      recipient.send({ embeds: [embed] });
+      recipient.send({ embeds: [embed] }).catch(u.noop);
     }
     interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`);
 
@@ -97,7 +97,7 @@ async function bankGive(interaction) {
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
     .setDescription(`You just gave ${coin}${-receipt.value} to ${u.escapeText(recipient.displayName)}.`);
-    giver.send({ embeds: [embed] });
+    giver.send({ embeds: [embed] }).catch(u.noop);
 
     if ((currency == "em") && toIcarus) {
       const hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
@@ -166,7 +166,7 @@ async function bankGameList(interaction) {
       embed = embeds.shift();
       if (totalLength + embed.length > 6000) {
         try {
-          await interaction.user.send({ embeds: embedsToSend });
+          await interaction.user.send({ embeds: embedsToSend }).catch(u.noop);
         } catch (e) {
           interaction.editReply(`There was an error while sending you the list of games that can be redeemed with ${gb}. Do you have DMs blocked from members of this server? You can check this in your Privacy Settings for the server.`);
           embedsToSend = [];
@@ -282,7 +282,7 @@ async function bankDiscount(interaction) {
       const withdraw = await Module.db.bank.addCurrency(withdrawal);
 
       interaction.editReply("Watch your DMs for the code you just redeemed!");
-      interaction.user.send(`You have redeemed ${gb}${withdraw.value} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance + withdraw.value}.`);
+      interaction.user.send(`You have redeemed ${gb}${withdraw.value} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance + withdraw.value}.`).catch(u.noop);
       const embed = u.embed()
       .setAuthor(interaction.member.displayName, interaction.member.user.displayAvatarURL({ dynamic: true }))
       .addField("Amount", `${gb}${-withdraw.value}\n$${-withdraw.value / 100}`)
@@ -337,7 +337,7 @@ async function bankAward(interaction) {
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
     .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ? "awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
-    recipient.send({ embeds: [embed] });
+    recipient.send({ embeds: [embed] }).catch(u.noop);
 
     interaction.reply(`${ember}${value} ${value > 0 ? "awarded to" : "docked from"} ${u.escapeText(recipient.displayName)} for ${reason}`);
 
@@ -345,7 +345,7 @@ async function bankAward(interaction) {
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
     .addField("Reason", reason)
     .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
-    giver.send({ embeds: [embed] });
+    giver.send({ embeds: [embed] }).catch(u.noop);
 
     const hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
     embed = u.embed()
