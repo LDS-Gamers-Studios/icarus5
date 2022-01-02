@@ -232,7 +232,9 @@ async function slashModMute(interaction) {
 
       await interaction.client.channels.cache.get(Module.config.channels.muted).send(
         `${target}, you have been muted in ${interaction.guild.name}. `
-        + 'Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct'
+        + 'Please review our Code of Conduct. '
+        + 'A member of the mod team will be available to discuss more details.\n\n'
+        + 'http://ldsgamers.com/code-of-conduct'
       );
     } else { // Remove mute
       await interaction.editReply({
@@ -285,6 +287,80 @@ async function slashModNote(interaction) {
   } catch (error) { u.errorHandler(error, interaction); }
 }
 
+async function slashModOffice(interaction) {
+  try {
+    await interaction.deferReply({ ephemeral: true });
+    const target = interaction.options.getMember("user");
+    const reason = interaction.options.getString("reason") || "No reason provided";
+    const apply = interaction.options.getBoolean("apply") ?? true;
+
+    if (!compareRoles(interaction.member, target)) {
+      await interaction.editReply({
+        content: `You have insufficient permissions to put ${target} in the office!`,
+        ephemeral: true
+      });
+      return;
+    } else if (!target.manageable) {
+      await interaction.editReply({
+        content: `I have insufficient permissions to put ${target} in the office!`,
+        ephemeral: true
+      });
+      return;
+    }
+
+    if (apply) { // Send 'em
+      await interaction.editReply({
+        content: `Sending ${target} to the office...`,
+        ephemeral: true
+      });
+
+      // Don't bother if it's already done
+      if (target.roles.cache.has(Module.config.roles.ducttape)) return;
+
+      // Impose "duct tape"
+      await target.roles.add(Module.config.roles.ducttape);
+      // if (target.voice.channel) await target.voice.disconnect(reason);
+      // muteState.set(target.id, target.voice.serverMute);
+      // await target.voice.setMute(true, reason);
+
+      await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+        u.embed({ author: target })
+        .setTitle("Member Sent to Office")
+        .setDescription(`**${interaction.member}** sent **${target}** to the office for:\n${reason}`)
+        .setColor(0x0000ff)
+      ] });
+
+      await interaction.client.channels.cache.get(Module.config.channels.office).send(
+        `${target}, you have been sent to the office in ${interaction.guild.name}. `
+        + 'This allows you and the mods to have a private space to discuss any issues without restricting access to the rest of the server. '
+        + 'Please review our Code of Conduct. '
+        + 'A member of the mod team will be available to discuss more details.\n\n'
+        + 'http://ldsgamers.com/code-of-conduct'
+      );
+    } else { // Remove "duct tape"
+      await interaction.editReply({
+        content: `Unmuting ${target}...`,
+        ephemeral: true
+      });
+
+      // Don't bother if it's already done
+      if (!target.roles.cache.has(Module.config.roles.ducttape)) return;
+
+      // Remove "duct tape""
+      await target.roles.remove(Module.config.roles.ducttape);
+      // if (muteState.get(target.id)) await target.voice.setMute(false, "Mute resolved");
+      // muteState.delete(target.id);
+
+      await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+        u.embed({ author: target })
+        .setTitle("Member Released from Office")
+        .setDescription(`**${interaction.member}** let **${target}** out of the office.`)
+        .setColor(0x00ff00)
+      ] });
+    }
+  } catch (error) { u.errorHandler(error, interaction); }
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
@@ -307,10 +383,10 @@ const Module = new Augur.Module()
       case "note":
         await slashModNote(interaction);
         break;
-      /*
       case "office":
         await slashModOffice(interaction);
         break;
+      /*
       case "purge":
         await slashModPurge(interaction);
         break;
