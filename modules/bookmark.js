@@ -17,7 +17,7 @@ const Module = new Augur.Module()
           .setDescription(message.cleanContent)
           .setColor(message.member?.displayColor)
           .setTimestamp(message.createdAt);
-        interaction.user.send({ embeds: [embed].concat(message.embeds), files: Array.from(message.attachments.values()) });
+        interaction.user.send({ embeds: [embed].concat(message.embeds), files: Array.from(message.attachments.values()) }).catch(u.noop);
       } else {
         interaction.editReply({ content: "Against all odds, I couldn't find that message.", ephemeral: true });
       }
