@@ -442,6 +442,48 @@ async function slashModRename(interaction) {
   await interaction.editReply({ content: `${target}'s nickname changed from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.` });
 }
 
+const molasses = new Map();
+
+async function slashModSlowmode(interaction) {
+  await interaction.deferReply();
+  const duration = interaction.options.getInteger("duration") ?? 10;
+  const timer = interaction.options.getInteger("timer") || 15;
+
+  if (duration == 0) {
+    interaction.channel.edit({ rateLimitPerUser: 0 }).catch(e => u.errorHandler(e, interaction));
+
+    if (molasses.has(interaction.channel.id)) {
+      clearTimeout(molasses.get(interaction.channel.id));
+      molasses.delete(interaction.channel.id);
+    }
+
+    interaction.editReply("Slowmode deactivated.");
+  } else {
+    // Reset duration if already in slowmode
+    const prev = molasses.get(interaction.channel.id);
+    if (prev) clearTimeout(prev.timeout);
+
+    const limit = prev ? prev.limit : interaction.channel.rateLimitPerUser;
+    await interaction.channel.edit({ rateLimitPerUser: timer });
+
+    molasses.set(interaction.channel.id, {
+      timeout: setTimeout((channel, rateLimitPerUser) => {
+        channel.edit({ rateLimitPerUser }).catch(error => u.errorHandler(error, "Reset rate limit after slowmode"));
+        molasses.delete(channel.id);
+      }, duration * 60000, interaction.channel, limit),
+      limit
+    });
+
+    interaction.editReply(`${timer}-second slowmode activated for ${duration} minute${duration > 1 ? 's' : ''}.`);
+    interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      u.embed({ author: interaction.member })
+      .setTitle("Channel Slowmode")
+      .setDescription(`${interaction.member} set a ${timer}-second slow mode for ${duration} minute${duration > 1 ? 's' : ''} in ${interaction.channel}.`)
+      .setColor(0x00ff00)
+    ] });
+  }
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
@@ -473,10 +515,10 @@ const Module = new Augur.Module()
       case "rename":
         await slashModRename(interaction);
         break;
-      /*
       case "slowmode":
         await slashModSlowmode(interaction);
         break;
+      /*
       case "summary":
         await slashModSummary(interaction);
         break;
