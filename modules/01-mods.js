@@ -426,7 +426,7 @@ async function slashModRename(interaction) {
     description: comment,
     message: interaction.id,
     channel: interaction.channel.id,
-    mod: interaction.author.id
+    mod: interaction.member.id
   });
   const summary = await Module.db.infraction.getSummary(target.id);
 
@@ -434,7 +434,7 @@ async function slashModRename(interaction) {
     u.embed({ author: target })
     .setColor("#0000FF")
     .setDescription(comment)
-    .addField("Resolved", `${interaction.author} changed ${target}'s nickname from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.`)
+    .addField("Resolved", `${interaction.member} changed ${target}'s nickname from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.`)
     .addField(`Infraction Summary (${summary.time} Days) `, `Infractions: ${summary.count}\nPoints: ${summary.points}`)
     .setTimestamp()
   ] });
