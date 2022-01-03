@@ -1,6 +1,6 @@
 const Augur = require("augurbot"),
   Rank = require("../utils/RankInfo"),
-  snowflakes = require("../config/snowflakes.json"),
+  snowflakes = require("../config/snowflakes"),
   u = require("../utils/utils");
 
 const active = new Set();

@@ -2,7 +2,7 @@ const Augur = require("augurbot"),
   banned = require("../data/banned.json"),
   profanityFilter = require("profanity-matcher"),
   u = require("../utils/utils"),
-  snowflakes = require("../config/snowflakes.json"),
+  snowflakes = require("../config/snowflakes"),
   { MessageActionRow, MessageButton } = require("discord.js");
 
 const bannedWords = new RegExp(banned.words.join("|"), "i"),

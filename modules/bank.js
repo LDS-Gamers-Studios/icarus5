@@ -1,6 +1,6 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
-  snowflakes = require("../config/snowflakes.json"),
+  snowflakes = require("../config/snowflakes"),
   config = require("../config/config.json"),
   gb = "<:gb:493084576470663180>",
   ember = "<:ember:512508452619157504>";

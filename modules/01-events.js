@@ -1,6 +1,6 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
-  snowflakes = require("../config/snowflakes.json"),
+  snowflakes = require("../config/snowflakes"),
   moment = require("moment");
 
 const ductTapeExclude = true;
