@@ -63,13 +63,13 @@ const Module = new Augur.Module()
       process.exit();
     } catch (e) { u.errorHandler(e, msg); }
   },
-  permissions: (msg) => Module.config.adminId.includes(msg.author.id)
+  permissions: (msg) => snowflakes.adminId.includes(msg.author.id)
 })
 .addCommand({ name: "ping",
   category: "Bot Admin",
   description: "Gets the current total ping time for the bot.",
   hidden: true,
-  permissions: (msg) => (msg.author.id === Module.config.ownerId) || msg.member?.roles.cache.some(r => [Module.config.roles.mod, Module.config.roles.management, Module.config.roles.team].includes(r.id)),
+  permissions: (msg) => (msg.author.id === snowflakes.ownerId) || msg.member?.roles.cache.some(r => [snowflakes.roles.mod, snowflakes.roles.management, snowflakes.roles.team].includes(r.id)),
   process: async (msg) => {
     const sent = await msg.reply({ content: 'Pinging...', allowedMentions: { repliedUser: false } });
     sent.edit({ content: `Pong! Took ${sent.createdTimestamp - (msg.editedTimestamp ? msg.editedTimestamp : msg.createdTimestamp)}ms`, allowedMentions: { repliedUser: false } });
@@ -104,13 +104,13 @@ const Module = new Augur.Module()
       }
     });
   },
-  permissions: (msg) => (Module.config.ownerId === (msg.author.id))
+  permissions: (msg) => (snowflakes.ownerId === (msg.author.id))
 })
 .addCommand({ name: "pulse",
   category: "Bot Admin",
   hidden: true,
   description: "The pulse command get basic information about the bot's current health and uptime for each shard (if applicable).",
-  permissions: (msg) => (Module.config.ownerId === msg.author.id),
+  permissions: (msg) => (snowflakes.ownerId === msg.author.id),
   process: async function(msg) {
     try {
       const client = msg.client;
@@ -167,11 +167,11 @@ const Module = new Augur.Module()
     }
     msg.react("👌").catch(u.noop);
   },
-  permissions: (msg) => Module.config.adminId.includes(msg.author.id)
+  permissions: (msg) => snowflakes.adminId.includes(msg.author.id)
 })
 // When the bot is fully online, fetch all the ldsg members, since it will only autofetch for small servers and we want them all.
 .addEvent("ready", () => {
-  Module.client.guilds.cache.get(Module.config.ldsg).members.fetch();
+  Module.client.guilds.cache.get(snowflakes.ldsg).members.fetch();
 })
 // Each time this module is loaded, update the module.config snowflakes.
 .setInit(async (reload) => {
@@ -197,8 +197,8 @@ const Module = new Augur.Module()
       }
     }
     const snowflakes = require("../config/snowflakes.json");
-    Module.config.channels = snowflakes.channels;
-    Module.config.roles = snowflakes.roles;
+    snowflakes.channels = snowflakes.channels;
+    snowflakes.roles = snowflakes.roles;
   } catch (e) {
     u.errorHandler(e, "Error in botAdmin.setInit.");
   }

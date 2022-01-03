@@ -1,5 +1,6 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
+  snowflakes = require("../config/snowflakes.json"),
   config = require("../config/config.json"),
   gb = "<:gb:493084576470663180>",
   ember = "<:ember:512508452619157504>";
@@ -99,12 +100,12 @@ async function bankGive(interaction) {
     giver.send({ embeds: [embed] });
 
     if ((currency == "em") && toIcarus) {
-      const hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
+      const hoh = interaction.client.channels.cache.get(snowflakes.channels.headsofhouse);
       const hohEmbed = u.embed()
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
       .addField("Reason", reason)
       .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
-      hoh.send({ content: `<@${Module.config.ownerId}>`, embeds: [hohEmbed] });
+      hoh.send({ content: `<@${snowflakes.ownerId}>`, embeds: [hohEmbed] });
     }
   } catch (e) { u.errorHandler(e, interaction); }
 }
@@ -132,7 +133,7 @@ async function bankGameList(interaction) {
 
     games = games.sort((a, b) => a["Game Title"].localeCompare(b["Game Title"]));
     // Filter Rated M, unless the member has the Rated M Role
-    if (!interaction.member?.roles.cache.has(Module.config.roles.rated_m)) games = games.filter(g => g.Rating.toUpperCase() != "M");
+    if (!interaction.member?.roles.cache.has(snowflakes.roles.rated_m)) games = games.filter(g => g.Rating.toUpperCase() != "M");
 
     // Reply so there's no "interaction failed" error message.
     interaction.editReply(`Watch your DMs for a list of games that can be redeemed with ${gb}!`);
@@ -242,7 +243,7 @@ async function bankGameRedeem(interaction) {
     .addField("Cost", gb + game.Cost, true)
     .addField("Balance", gb + (balance.balance - game.Cost), true);
 
-    interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
+    interaction.client.channels.cache.get(snowflakes.channels.modlogs).send({ embeds: [embed] });
 
   } catch (e) { u.errorHandler(e, interaction); }
 }
@@ -287,7 +288,7 @@ async function bankDiscount(interaction) {
       .addField("Amount", `${gb}${-withdraw.value}\n$${-withdraw.value / 100}`)
       .addField("Balance", `${gb}${balance.balance + withdraw.value}`)
       .setDescription(`**${u.escapeText(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
-      interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
+      interaction.client.channels.cache.get(snowflakes.channels.modlogs).send({ embeds: [embed] });
     } else {
       interaction.editReply("Sorry, something went wrong. Please try again.");
     }
@@ -298,7 +299,7 @@ async function bankAward(interaction) {
   try {
     const giver = interaction.member;
 
-    if (!giver.roles.cache.has(Module.config.roles.team)) {
+    if (!giver.roles.cache.has(snowflakes.roles.team)) {
       interaction.reply({ content: `*Nice try!* This command is Team-only!`, ephemeral: true });
       return;
     }
@@ -346,7 +347,7 @@ async function bankAward(interaction) {
     .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
     giver.send({ embeds: [embed] });
 
-    const hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
+    const hoh = interaction.client.channels.cache.get(snowflakes.channels.headsofhouse);
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
     .addField("Reason", reason)
@@ -358,8 +359,8 @@ async function bankAward(interaction) {
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "bank",
-  guildId: config.ldsg,
-  commandId: config.commands.bank,
+  guildId: snowflakes.ldsg,
+  commandId: snowflakes.commands.bank,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand(true)) {
     case "give":

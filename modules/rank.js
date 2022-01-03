@@ -1,6 +1,6 @@
 const Augur = require("augurbot"),
   Rank = require("../utils/RankInfo"),
-  config = require("../config/config.json"),
+  snowflakes = require("../config/snowflakes.json"),
   u = require("../utils/utils");
 
 const active = new Set();
@@ -76,8 +76,8 @@ async function slashRankView(interaction) {
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "rank",
-  guildId: config.ldsg,
-  commandId: config.commands.rank,
+  guildId: snowflakes.ldsg,
+  commandId: snowflakes.commands.rank,
   process: async (interaction) => {
     try {
       const subcommand = interaction.options.getSubcommand(true);
@@ -108,7 +108,7 @@ const Module = new Augur.Module()
 .setUnload(() => active)
 .addEvent("messageCreate", (msg) => {
   if (
-    msg.guild?.id == Module.config.ldsg &&
+    msg.guild?.id == snowflakes.ldsg &&
     msg.author &&
     !active.has(msg.author.id) &&
     !(Rank.excludeChannels.includes(msg.channel.id) || Rank.excludeChannels.includes(msg.channel.parentId)) &&
@@ -125,14 +125,14 @@ const Module = new Augur.Module()
       try {
         const response = await Module.db.user.addXp(active);
         if (response.users.length > 0) {
-          const ldsg = client.guilds.cache.get(Module.config.ldsg);
+          const ldsg = client.guilds.cache.get(snowflakes.ldsg);
           for (const user of response.users) {
             const member = ldsg.members.cache.get(user.discordId) ?? await ldsg.members.fetch(user.discordId).catch(u.noop);
             if (!member) continue;
 
             // Remind mods to trust people!
-            if ((user.posts % 25 == 0) && !member.roles.cache.has(Module.config.roles.trusted) && !member.roles.cache.has(Module.config.roles.untrusted)) {
-              const modLogs = ldsg.channels.cache.get(Module.config.channels.modlogs);
+            if ((user.posts % 25 == 0) && !member.roles.cache.has(snowflakes.roles.trusted) && !member.roles.cache.has(snowflakes.roles.untrusted)) {
+              const modLogs = ldsg.channels.cache.get(snowflakes.channels.modlogs);
               modLogs.send({
                 content: `${member} has posted ${user.posts} times in chat without being trusted!`,
                 embeds: [
