@@ -1,12 +1,12 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
+  sf = require("../config/snowflakes"),
   config = require("../config/config.json"),
   gb = "<:gb:493084576470663180>",
   ember = "<:ember:512508452619157504>";
 
-const google = require("../config/google_api.json"),
-  { GoogleSpreadsheet } = require("google-spreadsheet"),
-  doc = new GoogleSpreadsheet(google.sheets.games);
+const { GoogleSpreadsheet } = require("google-spreadsheet"),
+  doc = new GoogleSpreadsheet(config.google.sheets.games);
 
 const { customAlphabet } = require("nanoid"),
   chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ",
@@ -16,7 +16,7 @@ let steamGameList;
 
 async function getGameList() {
   try {
-    await doc.useServiceAccountAuth(google.creds);
+    await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
     let games = await doc.sheetsByIndex[0].getRows();
     games = games.filter(g => !g.Recipient).filter(filterUnique);
@@ -100,12 +100,12 @@ async function slashBankGive(interaction) {
     giver.send({ embeds: [embed] }).catch(u.noop);
 
     if ((currency == "em") && toIcarus) {
-      const hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
+      const hoh = interaction.client.channels.cache.get(sf.channels.headsofhouse);
       const hohEmbed = u.embed()
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
       .addField("Reason", reason)
       .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
-      hoh.send({ content: `<@${Module.config.ownerId}>`, embeds: [hohEmbed] });
+      hoh.send({ content: `<@${sf.ownerId}>`, embeds: [hohEmbed] });
     }
   } catch (e) { u.errorHandler(e, interaction); }
 }
@@ -133,7 +133,7 @@ async function slashBankGameList(interaction) {
 
     games = games.sort((a, b) => a["Game Title"].localeCompare(b["Game Title"]));
     // Filter Rated M, unless the member has the Rated M Role
-    if (!interaction.member?.roles.cache.has(Module.config.roles.rated_m)) games = games.filter(g => g.Rating.toUpperCase() != "M");
+    if (!interaction.member?.roles.cache.has(sf.roles.rated_m)) games = games.filter(g => g.Rating.toUpperCase() != "M");
 
     // Reply so there's no "interaction failed" error message.
     interaction.editReply(`Watch your DMs for a list of games that can be redeemed with ${gb}!`);
@@ -245,7 +245,7 @@ async function slashBankGameRedeem(interaction) {
     .addField("Cost", gb + game.Cost, true)
     .addField("Balance", gb + (balance.balance - game.Cost), true);
 
-    interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
+    interaction.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
 
   } catch (e) { u.errorHandler(e, interaction); }
 }
@@ -293,7 +293,7 @@ async function slashBankDiscount(interaction) {
       .addField("Amount", `${gb}${-withdraw.value}\n$${-withdraw.value / 100}`)
       .addField("Balance", `${gb}${balance.balance + withdraw.value}`)
       .setDescription(`**${u.escapeText(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
-      interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
+      interaction.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
     } else {
       interaction.editReply("Sorry, something went wrong. Please try again.");
     }
@@ -304,7 +304,7 @@ async function slashBankAward(interaction) {
   try {
     const giver = interaction.member;
 
-    if (!giver.roles.cache.has(Module.config.roles.team)) {
+    if (!giver.roles.cache.has(sf.roles.team)) {
       interaction.reply({ content: `*Nice try!* This command is Team-only!`, ephemeral: true });
       return;
     }
@@ -352,7 +352,7 @@ async function slashBankAward(interaction) {
     .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
     giver.send({ embeds: [embed] }).catch(u.noop);
 
-    const hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
+    const hoh = interaction.client.channels.cache.get(sf.channels.headsofhouse);
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
     .addField("Reason", reason)
@@ -364,8 +364,8 @@ async function slashBankAward(interaction) {
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "bank",
-  guildId: config.ldsg,
-  commandId: "882719721068331149",
+  guildId: sf.ldsg,
+  commandId: sf.commands.bank,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand(true)) {
     case "give":

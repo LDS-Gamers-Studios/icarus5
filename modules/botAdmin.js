@@ -1,7 +1,55 @@
 // This file is a place for all the publicly visible bot diagnostic commands usable primarily only by the head bot dev.
 
 const Augur = require("augurbot"),
-  u = require("../utils/utils");
+  u = require("../utils/utils"),
+  sf = require("../config/snowflakes");
+
+/**
+ * function fieldMismatches
+ * @param {Object} obj1 First object for comparison
+ * @param {Object} obj2 Second object for comparison
+ * @returns String[] Two-element array. The first contains keys found in first object but not the second. The second contains keys found in the second object but not the first.
+ */
+function fieldMismatches(obj1, obj2) {
+  const keys1 = new Set(Object.keys(obj1));
+  const keys2 = new Set(Object.keys(obj2));
+
+  const m1 = [];
+  const m2 = [];
+  for (const key of keys1) {
+    if (keys2.has(key)) {
+      if (obj1[key] != null && !Array.isArray(obj1[key]) && typeof obj1[key] === "object") {
+        const [m_1, m_2] = fieldMismatches(obj1[key], obj2[key]);
+        for (const m of m_1) {
+          m1.push(key + "." + m);
+        }
+        for (const m of m_2) {
+          m2.push(key + "." + m);
+        }
+      }
+      keys2.delete(key);
+    } else {
+      m1.push(key);
+    }
+  }
+  for (const key of keys2) {
+    if (keys1.has(key)) {
+      if (obj1[key] != null && typeof obj1[key] === "object") {
+        const [m_1, m_2] = fieldMismatches(obj1[key], obj2[key]);
+        for (const m of m_1) {
+          m1.push(key + "." + m);
+        }
+        for (const m of m_2) {
+          m2.push(key + "." + m);
+        }
+      }
+    } else {
+      m2.push(key);
+    }
+  }
+
+  return [m1, m2];
+}
 
 const Module = new Augur.Module()
 .addCommand({ name: "gotobed",
@@ -16,13 +64,13 @@ const Module = new Augur.Module()
       process.exit();
     } catch (e) { u.errorHandler(e, msg); }
   },
-  permissions: (msg) => Module.config.adminId.includes(msg.author.id)
+  permissions: (msg) => sf.adminId.includes(msg.author.id)
 })
 .addCommand({ name: "ping",
   category: "Bot Admin",
   description: "Gets the current total ping time for the bot.",
   hidden: true,
-  permissions: (msg) => (msg.author.id === Module.config.ownerId) || msg.member?.roles.cache.some(r => [Module.config.roles.mod, Module.config.roles.management, Module.config.roles.team].includes(r.id)),
+  permissions: (msg) => (msg.author.id === sf.ownerId) || msg.member?.roles.cache.some(r => [sf.roles.mod, sf.roles.management, sf.roles.team].includes(r.id)),
   process: async (msg) => {
     const sent = await msg.reply({ content: 'Pinging...', allowedMentions: { repliedUser: false } });
     sent.edit({ content: `Pong! Took ${sent.createdTimestamp - (msg.editedTimestamp ? msg.editedTimestamp : msg.createdTimestamp)}ms`, allowedMentions: { repliedUser: false } });
@@ -57,13 +105,13 @@ const Module = new Augur.Module()
       }
     });
   },
-  permissions: (msg) => (Module.config.ownerId === (msg.author.id))
+  permissions: (msg) => (sf.ownerId === (msg.author.id))
 })
 .addCommand({ name: "pulse",
   category: "Bot Admin",
   hidden: true,
   description: "The pulse command get basic information about the bot's current health and uptime for each shard (if applicable).",
-  permissions: (msg) => (Module.config.ownerId === msg.author.id),
+  permissions: (msg) => (sf.ownerId === msg.author.id),
   process: async function(msg) {
     try {
       const client = msg.client;
@@ -120,21 +168,35 @@ const Module = new Augur.Module()
     }
     msg.react("👌").catch(u.noop);
   },
-  permissions: (msg) => Module.config.adminId.includes(msg.author.id)
+  permissions: (msg) => sf.adminId.includes(msg.author.id)
 })
 // When the bot is fully online, fetch all the ldsg members, since it will only autofetch for small servers and we want them all.
 .addEvent("ready", () => {
-  Module.client.guilds.cache.get(Module.config.ldsg).members.fetch();
+  Module.client.guilds.cache.get(sf.ldsg).members.fetch();
 })
-// Each time this module is loaded, update the module.config snowflakes.
 .setInit(async (reload) => {
   try {
     if (!reload) {
       u.errorLog.send({ embeds: [ u.embed().setDescription("Bot is ready!") ] });
     }
-    const snowflakes = require("../config/snowflakes.json");
-    Module.config.channels = snowflakes.channels;
-    Module.config.roles = snowflakes.roles;
+    const requiredHidden = [
+      "../config/config",
+      "../config/rankConfig",
+      "../config/snowflakes",
+      "../data/banned"
+    ];
+    for (const filename of requiredHidden) {
+      const prod = require(filename + ".json");
+      const repo = require(filename + "-example.json");
+      // console.log(`Checking ${filename}`);
+      const [m1, m2] = fieldMismatches(prod, repo);
+      if (m1.length > 0) {
+        u.errorHandler(Error("Mismatch from example file"), `Field(s) \`${m1.join("`, `")}\` in file ${filename + ".json"} but not example file`);
+      }
+      if (m2.length > 0) {
+        u.errorHandler(Error("Mismatch from example file"), `Field(s) \`${m2.join("`, `")}\` in example file but not ${filename + ".json"}`);
+      }
+    }
   } catch (e) {
     u.errorHandler(e, "Error in botAdmin.setInit.");
   }
