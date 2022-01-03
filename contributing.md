@@ -2,16 +2,16 @@ To set up a test intance of Icarus, here's what you'll need to do:
 
 # Requirements
 - This guide assumes you are moderately familiar with Discord bots and the Discord API.
-- [MongoDB](https://www.mongodb.com/) ***(Any Supported Version)***
+- [MongoDB](https://www.mongodb.com/) ***(Version - ^4.0.22)***
 - [Node.js](https://nodejs.org/) ***(Version - ^16.13.1)***
 
-# Setting Up The Test Instance
-1. Open a shell to your MongoDB instance. Run `use databasename`. Replacing `databasename` with something else, such as `icarusdata`. Note whatever name you use for the config file later.
+# Setting Up A Test Instance
+1. Open a shell to your MongoDB instance. Run `use databasename`, replacing `databasename` with something else such as `icarusdata`. Note whatever name you use for the config file later.
 2. Create a Discord bot application. Note the bot token and applicationId.
 3. Invite your bot to [the official Icarus test server](https://discord.gg/BANbkb22Km), or your own server. [This generator](https://discordapi.com/permissions.html#1099511492566) is filled in with the required permissions. Just fill in the applicationId, and the scope field must be `applications.commands bot`.
 4. Clone the repository.
 5. For each of the files in `registry`, use a script (or [Postman](https://www.postman.com/downloads/)) to post those slash commands to the ***guild*** the bot is in (not global commands). Explanations on the required APIs for that can be found [within Discord docs.](https://discord.com/developers/docs/interactions/application-commands#making-a-guild-command) Note the ID of every command registered for configuring the bot later.
-6. Create the following files, based on their matching `-example` file: `config\config.json`, `config\snowflakes.json`, `config\rankConfig.json`, `data\banned.json`.
+6. Create the following files, based on their matching `-example` file: `config\config.json`, `config\snowflakes.json`, `config\rankConfig.json`, and `data\banned.json`.
     1. Explanations of these files can be found below.
 7. Within the root folder of the repo, run `npm ci`.
 8. The start-up command is `node ./icarus.js`.
@@ -48,6 +48,3 @@ The provided example can be copied without modification.
 - Google Sheets config and example for testing `bank.js`.
 - How to test Snipcart-related functionality if needed?
 - Automation of slash command registration.
-
-# Notes for pull request
-- Merging the PR ***will delete some config files*** in the process of adding them to the `.gitignore` (specifically, `rankConfig.json`). Back them up before merging!

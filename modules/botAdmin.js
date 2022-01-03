@@ -2,7 +2,7 @@
 
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
-  snowflakes = require("../config/snowflakes");
+  sf = require("../config/snowflakes");
 
 /**
  * function fieldMismatches
@@ -64,13 +64,13 @@ const Module = new Augur.Module()
       process.exit();
     } catch (e) { u.errorHandler(e, msg); }
   },
-  permissions: (msg) => snowflakes.adminId.includes(msg.author.id)
+  permissions: (msg) => sf.adminId.includes(msg.author.id)
 })
 .addCommand({ name: "ping",
   category: "Bot Admin",
   description: "Gets the current total ping time for the bot.",
   hidden: true,
-  permissions: (msg) => (msg.author.id === snowflakes.ownerId) || msg.member?.roles.cache.some(r => [snowflakes.roles.mod, snowflakes.roles.management, snowflakes.roles.team].includes(r.id)),
+  permissions: (msg) => (msg.author.id === sf.ownerId) || msg.member?.roles.cache.some(r => [sf.roles.mod, sf.roles.management, sf.roles.team].includes(r.id)),
   process: async (msg) => {
     const sent = await msg.reply({ content: 'Pinging...', allowedMentions: { repliedUser: false } });
     sent.edit({ content: `Pong! Took ${sent.createdTimestamp - (msg.editedTimestamp ? msg.editedTimestamp : msg.createdTimestamp)}ms`, allowedMentions: { repliedUser: false } });
@@ -105,13 +105,13 @@ const Module = new Augur.Module()
       }
     });
   },
-  permissions: (msg) => (snowflakes.ownerId === (msg.author.id))
+  permissions: (msg) => (sf.ownerId === (msg.author.id))
 })
 .addCommand({ name: "pulse",
   category: "Bot Admin",
   hidden: true,
   description: "The pulse command get basic information about the bot's current health and uptime for each shard (if applicable).",
-  permissions: (msg) => (snowflakes.ownerId === msg.author.id),
+  permissions: (msg) => (sf.ownerId === msg.author.id),
   process: async function(msg) {
     try {
       const client = msg.client;
@@ -168,13 +168,12 @@ const Module = new Augur.Module()
     }
     msg.react("👌").catch(u.noop);
   },
-  permissions: (msg) => snowflakes.adminId.includes(msg.author.id)
+  permissions: (msg) => sf.adminId.includes(msg.author.id)
 })
 // When the bot is fully online, fetch all the ldsg members, since it will only autofetch for small servers and we want them all.
 .addEvent("ready", () => {
-  Module.client.guilds.cache.get(snowflakes.ldsg).members.fetch();
+  Module.client.guilds.cache.get(sf.ldsg).members.fetch();
 })
-// Each time this module is loaded, update the module.config snowflakes.
 .setInit(async (reload) => {
   try {
     if (!reload) {
@@ -183,6 +182,7 @@ const Module = new Augur.Module()
     const requiredHidden = [
       "../config/config",
       "../config/rankConfig",
+      "../config/snowflakes",
       "../data/banned"
     ];
     for (const filename of requiredHidden) {
@@ -197,9 +197,6 @@ const Module = new Augur.Module()
         u.errorHandler(Error("Mismatch from example file"), `Field(s) \`${m2.join("`, `")}\` in example file but not ${filename + ".json"}`);
       }
     }
-    const snowflakes = require("../config/snowflakes.json");
-    snowflakes.channels = snowflakes.channels;
-    snowflakes.roles = snowflakes.roles;
   } catch (e) {
     u.errorHandler(e, "Error in botAdmin.setInit.");
   }
