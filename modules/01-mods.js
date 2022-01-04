@@ -598,6 +598,44 @@ async function slashModTrust(interaction) {
   await interaction.guild.channels.cache.get(channel).send({ embeds: [embed] });
 }
 
+async function slashModWarn(interaction) {
+  await interaction.deferReply({ ephemeral: true });
+  const member = interaction.options.getMember("user");
+  const reason = interaction.options.getString("reason");
+  const value = interaction.options.getInteger("value") ?? 1;
+
+  const response = "We have received one or more complaints regarding content you posted. "
+    + "We have reviewed the content in question and have determined, in our sole discretion, that it is against our code of conduct (<http://ldsgamers.com/code-of-conduct>). "
+    + "This content was removed on your behalf. "
+    + "As a reminder, if we believe that you are frequently in breach of our code of conduct or are otherwise acting inconsistently with the letter or spirit of the code, we may limit, suspend or terminate your access to the LDSG Discord server.\n\n"
+    + `**${u.escapeText(interaction.member.displayName)}** has issued you a warning for:\n`
+    + reason;
+  member.send(response).catch(() => blocked(member));
+
+  const embed = u.embed()
+    .setColor("#0000FF")
+    .setAuthor(member.displayName, member.user.displayAvatarURL())
+    .setDescription(reason)
+    .addField("Resolved", `${u.escapeText(interaction.user.username)} issued a ${value} point warning.`)
+    .setTimestamp();
+  const flag = await interaction.guild.channels.cache.get(Module.config.channels.modLogs).send({ embeds: [embed] });
+
+  await Module.db.infraction.save({
+    discordId: member.id,
+    value: value,
+    description: reason,
+    message: interaction.id,
+    flag: flag.id,
+    channel: interaction.channel.id,
+    mod: interaction.author.id
+  });
+
+  const summary = await Module.db.infraction.getSummary(member.id);
+  embed.addField(`Infraction Summary (${summary.time} Days) `, `Infractions: ${summary.count}\nPoints: ${summary.points}`);
+
+  flag.edit({ embeds: [embed] });
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
@@ -638,17 +676,11 @@ const Module = new Augur.Module()
       case "trust":
         await slashModTrust(interaction);
         break;
-      /*
       case "warn":
         await slashModWarn(interaction);
         break;
-      */
       default:
-        interaction.reply({
-          content: "Well, this is embarrasing. I don't know how to handle that (yet).",
-          ephemeral: true
-        });
-        // u.errorHandler(Error("Unknown Interaction Subcommand"), interaction);
+        u.errorHandler(Error("Unknown Interaction Subcommand"), interaction);
       }
     } catch (error) { u.errorHandler(error, interaction); }
   }
