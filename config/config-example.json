@@ -1,10 +1,14 @@
 {
-  "adminId": ["111232201848295424", "96335658997526528", "96354827579174912"],
   "api": {
     "snipcart": "",
     "steam": ""
   },
-  "color": [248, 154, 34],
+  "applicationId": "",
+  "color": [
+    248,
+    154,
+    34
+  ],
   "db": {
     "model": "utils/dbModels.js",
     "db": "",
@@ -34,8 +38,26 @@
     "threadCreate",
     "userUpdate"
   ],
-  "ldsg": "96335850576556032",
-  "ownerId": "111232201848295424",
+  "google": {
+    "api": "",
+    "creds": {
+      "type": "",
+      "project_id": "",
+      "private_key_id": "",
+      "private_key": "",
+      "client_email": "",
+      "client_id": "",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://accounts.google.com/o/oauth2/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": ""
+    },
+    "sheets": {
+      "config": "",
+      "games": "",
+      "applications": ""
+    }
+  },
   "prefix": "!",
   "token": ""
 }

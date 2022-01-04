@@ -1,13 +1,16 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
+  sf = require("../config/snowflakes"),
   moment = require("moment");
+
+const ductTapeExclude = true;
 
 const Module = new Augur.Module()
 .addEvent("channelCreate", (channel) => {
   try {
-    if (channel.guild?.id == Module.config.ldsg) {
+    if (channel.guild?.id == sf.ldsg) {
       if (channel.permissionsFor(channel.client.user)?.has(["VIEW_CHANNEL", "MANAGE_CHANNELS"])) {
-        channel.permissionOverwrites.create(Module.config.roles.muted, {
+        channel.permissionOverwrites.create(sf.roles.muted, {
           // text
           VIEW_CHANNEL: false,
           ADD_REACTIONS: false,
@@ -19,6 +22,22 @@ const Module = new Augur.Module()
           STREAM: false
         }, { reason: "New channel permissions update" })
         .catch(e => u.errorHandler(e, `Update New Channel Permissions: ${channel.name}`));
+
+        // Keep Duct Tape Out
+        if (ductTapeExclude) {
+          channel.permissionOverwrites.create(sf.roles.ducttape, {
+            // text
+            VIEW_CHANNEL: false,
+            ADD_REACTIONS: false,
+            SEND_MESSAGES: false,
+            READ_MESSAGE_HISTORY: false,
+            // voice
+            CONNECT: false,
+            SPEAK: false,
+            STREAM: false
+          }, { reason: "New channel permissions update" })
+          .catch(e => u.errorHandler(e, `Update New Channel Permissions: ${channel.name}`));
+        }
       } else {
         u.errorLog.send({ embeds: [
           u.embed({
@@ -33,11 +52,11 @@ const Module = new Augur.Module()
   }
 })
 .addEvent("guildBanAdd", (guild, user) => {
-  if (guild.id == Module.config.ldsg) {
+  if (guild.id == sf.ldsg) {
     if (guild.client.ignoreNotifications?.has(user.id)) {
       guild.client.ignoreNotifications.delete(user.id);
     } else {
-      guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({
           author: user,
           title: `${user.username} has been banned`,
@@ -49,7 +68,7 @@ const Module = new Augur.Module()
 })
 .addEvent("guildMemberRemove", async (member) => {
   try {
-    if (member.guild.id == Module.config.ldsg) {
+    if (member.guild.id == sf.ldsg) {
       await Module.db.user.updateTenure(member);
       if (!member.client.ignoreNotifications?.has(member.id)) {
         const user = await Module.db.user.fetchUser(member);
@@ -61,16 +80,16 @@ const Module = new Augur.Module()
         .addField("Joined", moment(member.joinedAt).fromNow(), true)
         .addField("Posts", (user?.posts || 0) + " Posts", true);
 
-        member.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
+        member.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
       }
     }
   } catch (error) { u.errorHandler(error, `Member Leave: ${u.escapeText(member.displayName)} (${member.id})`); }
 })
 .addEvent("userUpdate", async (oldUser, newUser) => {
   try {
-    const ldsg = newUser.client.guilds.cache.get(Module.config.ldsg);
+    const ldsg = newUser.client.guilds.cache.get(sf.ldsg);
     const newMember = ldsg.members.cache.get(newUser.id);
-    if (newMember && (!newMember.roles.cache.has(Module.config.roles.trusted) || newMember.roles.cache.has(Module.config.roles.untrusted))) {
+    if (newMember && (!newMember.roles.cache.has(sf.roles.trusted) || newMember.roles.cache.has(sf.roles.untrusted))) {
       const user = await Module.db.user.fetchUser(newMember).catch(u.noop);
       const embed = u.embed({ author: oldUser })
       .setTitle("User Update")
@@ -83,7 +102,7 @@ const Module = new Augur.Module()
       } else {
         embed.setThumbnail(newUser.displayAvatarURL());
       }
-      ldsg.channels.cache.get(Module.config.channels.userupdates).send({ content: `${newUser}: ${newUser.id}`, embeds: [embed] });
+      ldsg.channels.cache.get(sf.channels.userupdates).send({ content: `${newUser}: ${newUser.id}`, embeds: [embed] });
     }
   } catch (error) { u.errorHandler(error, `User Update Error: ${u.escapeText(newUser?.username)} (${newUser.id})`); }
 });

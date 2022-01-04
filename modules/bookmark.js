@@ -1,11 +1,12 @@
 const Augur = require("augurbot"),
-  u = require("../utils/utils");
+  u = require("../utils/utils"),
+  sf = require("../config/snowflakes");
 
 // Message context menu for bookmarking a message.
 
 const Module = new Augur.Module()
 .addInteractionCommand({ name: "Bookmark",
-  commandId: "881936439674286080",
+  commandId: sf.commands.bookmark,
   process: async (interaction) => {
     try {
       await interaction.deferReply?.({ ephemeral: true });
@@ -17,7 +18,7 @@ const Module = new Augur.Module()
           .setDescription(message.cleanContent)
           .setColor(message.member?.displayColor)
           .setTimestamp(message.createdAt);
-        interaction.user.send({ embeds: [embed].concat(message.embeds), files: Array.from(message.attachments.values()) });
+        interaction.user.send({ embeds: [embed].concat(message.embeds), files: Array.from(message.attachments.values()) }).catch(u.noop);
       } else {
         interaction.editReply({ content: "Against all odds, I couldn't find that message.", ephemeral: true });
       }

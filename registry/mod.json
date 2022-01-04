@@ -11,19 +11,19 @@
       "options": [
         {
           "name": "user",
-          "description": "The user to ban",
+          "description": "Who do you want to ban?",
           "type": 6,
           "required": true
         },
         {
           "name": "reason",
-          "description": "Why they are being banned",
+          "description": "Why are they being banned?",
           "type": 3,
           "required": true
         },
         {
           "name": "clean",
-          "description": "Days of messages to remove (default 1)",
+          "description": "How many days of messages should I remove? (Default: 1)",
           "type": 4,
           "required": false
         }
@@ -36,13 +36,13 @@
       "options": [
         {
           "name": "user",
-          "description": "The user to kick",
+          "description": "Who do you want to kick?",
           "type": 6,
           "required": true
         },
         {
           "name": "reason",
-          "description": "Why they are being kicked",
+          "description": "Why are they being kicked?",
           "type": 3,
           "required": true
         }
@@ -55,19 +55,19 @@
       "options": [
         {
           "name": "user",
-          "description": "The user to mute",
+          "description": "Who do you want to mute?",
           "type": 6,
           "required": true
         },
         {
           "name": "reason",
-          "description": "The reason for the mute",
+          "description": "Why are they being muted?",
           "type": 3,
-          "required": false
+          "required": true
         },
         {
           "name": "apply",
-          "description": "Whether to apply a mute to the user (default `true`)",
+          "description": "Do I apply (`true`) or remove (`false`) the mute? (Default: `true`)",
           "type": 5,
           "required": false
         }
@@ -80,13 +80,13 @@
       "options": [
         {
           "name": "user",
-          "description": "The user to note",
+          "description": "Who needs the note?",
           "type": 6,
           "required": true
         },
         {
           "name": "note",
-          "description": "The note",
+          "description": "What is the note?",
           "type": 3,
           "required": true
         }
@@ -99,19 +99,19 @@
       "options": [
         {
           "name": "user",
-          "description": "The user to send to the office",
+          "description": "Who are you sending to the office?",
           "type": 6,
           "required": true
         },
         {
           "name": "reason",
-          "description": "The reason for sending them there",
+          "description": "Why are you sending them there?",
           "type": 3,
-          "required": false
+          "required": true
         },
         {
           "name": "apply",
-          "description": "Whether to let the user back on the playground (default `true`)",
+          "description": "Am I sending them (`true`) or letting them out (`false`)? (Default: `true`)",
           "type": 5,
           "required": false
         }
@@ -119,18 +119,18 @@
     },
     {
       "name": "purge",
-      "description": "Purge the last X messages in the channel",
+      "description": "Purge messages in the channel",
       "type": 1,
       "options": [
         {
-          "name": "number",
-          "description": "The number to purge",
-          "type": 4,
+          "name": "message",
+          "description": "Purge all messages after which message id?",
+          "type": 3,
           "required": true
         },
         {
           "name": "reason",
-          "description": "The purpose of the purge",
+          "description": "Why are you purging?",
           "type": 3,
           "required": true
         }
@@ -143,13 +143,13 @@
       "options": [
         {
           "name": "user",
-          "description": "The user to rename",
+          "description": "Who do you want to rename?",
           "type": 6,
           "required": true
         },
         {
           "name": "name",
-          "description": "The new name to apply",
+          "description": "What name should I apply?",
           "type": 3,
           "required": false
         }
@@ -161,14 +161,20 @@
       "type": 1,
       "options": [
         {
+          "name": "channel",
+          "description": "Which channel needs a slowmode?",
+          "type": 7,
+          "required": false
+        },
+        {
           "name": "duration",
-          "description": "Duration of the slow mode in minutes (default: `10`)",
+          "description": "How many minutes will it last? (Default: `10`)",
           "type": 4,
           "required": false
         },
         {
           "name": "timer",
-          "description": "Time between messages in seconds (default: `15`)",
+          "description": "How many seconds between messages? (Default: `15`)",
           "type": 4,
           "required": false
         }
@@ -181,13 +187,13 @@
       "options": [
         {
           "name": "user",
-          "description": "The user to view",
+          "description": "Whose summary do you want to see?",
           "type": 6,
           "required": true
         },
         {
           "name": "history",
-          "description": "The number of days' history (default `28`)",
+          "description": "How many days history do you need? (Default `28`)",
           "type": 4,
           "required": false
         }
@@ -200,24 +206,24 @@
       "options": [
         {
           "name": "type",
-          "description": "Type of trusting to do",
+          "description": "What type of Trusting is needed?",
           "type": 3,
           "choices": [
-            {"name": "Initial", "value": "initial"},
-            {"name": "Plus", "value": "plus"},
-            {"name": "Watch", "value": "watch"}
+            { "name": "Initial", "value": "initial" },
+            { "name": "Plus", "value": "plus" },
+            { "name": "Watch", "value": "watch" }
           ],
           "required": true
         },
         {
           "name": "user",
-          "description": "The user to trust",
+          "description": "Which user are you applying this to?",
           "type": 6,
           "required": true
         },
         {
           "name": "apply",
-          "description": "Whether to apply the role (default: `true`)",
+          "description": "Should I apply (`true`) or remove (`false`) the role? (Default: `true`)",
           "type": 5,
           "required": false
         }
@@ -230,19 +236,19 @@
       "options": [
         {
           "name": "user",
-          "description": "The user to warn",
+          "description": "Which user do you want to warn?",
           "type": 6,
           "required": true
         },
         {
           "name": "reason",
-          "description": "The reason for the warning",
+          "description": "Why do you need to warn them?",
           "type": 3,
           "required": true
         },
         {
           "name": "value",
-          "description": "The value of the warning (default: `1`)",
+          "description": "What value is the warning? (Default: `1`)",
           "type": 4,
           "required": false
         }

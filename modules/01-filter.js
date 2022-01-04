@@ -2,6 +2,7 @@ const Augur = require("augurbot"),
   banned = require("../data/banned.json"),
   profanityFilter = require("profanity-matcher"),
   u = require("../utils/utils"),
+  sf = require("../config/snowflakes"),
   { MessageActionRow, MessageButton } = require("discord.js");
 
 const bannedWords = new RegExp(banned.words.join("|"), "i"),
@@ -32,7 +33,7 @@ const modActions = [
  * @param {GuildMember} member The guild member that's blocked.
  */
 function blocked(member) {
-  return member.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+  return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
     u.embed({
       author: member,
       color: 0x00ffff,
@@ -63,7 +64,7 @@ function filter(msg, text) {
  */
 function processMessageLanguage(old, msg) {
   if (!msg) msg = old;
-  if (msg.guild?.id != Module.config.ldsg) return false; // Only filter LDSG
+  if (msg.guild?.id != sf.ldsg) return false; // Only filter LDSG
   if (grownups.has(msg.channel.id)) return false; // Don't filter "Grown Up" channel
   if (msg.author.id == msg.client.user.id) return false; // Don't filter yourself
 
@@ -89,7 +90,7 @@ function processMessageLanguage(old, msg) {
       msg.reply({ content: "Looks like that link might have some harsh language. Please be careful!", failIfNotExists: false }).catch(u.noop);
       warnCard(msg, ["Link Language (Auto-Removed)"].concat(match));
       return true;
-    } else if (!msg.webhookId && !msg.author.bot && !msg.member.roles.cache.has(Module.config.roles.trusted)) {
+    } else if (!msg.webhookId && !msg.author.bot && !msg.member.roles.cache.has(sf.roles.trusted)) {
       // General untrusted link flag
       warnCard(msg, "Links prior to being trusted");
     }
@@ -134,7 +135,7 @@ function processDiscordInvites(msg) {
 
     Promise.all(foundInvites).then((invites) => {
       if (invites.length > 0) {
-        const external = invites.reduce((e, i) => (i && i.guild && (i.guild.id != Module.config.ldsg) ? e.concat(`Guild: ${i.guild.name}`, `Channel: ${i.channel.name}`) : e), ["External Discord Server Invite"]);
+        const external = invites.reduce((e, i) => (i && i.guild && (i.guild.id != sf.ldsg) ? e.concat(`Guild: ${i.guild.name}`, `Channel: ${i.channel.name}`) : e), ["External Discord Server Invite"]);
         if (external.length > 1) {
           warnCard(msg, external);
           u.clean(msg, 0);
@@ -174,6 +175,10 @@ async function warnCard(msg, filtered, call) {
     .setDescription((msg.editedAt ? "[Edited]\n" : "") + msg.cleanContent)
     .setURL(msg.url);
 
+    const allowedMentions = {
+      roles: [sf.roles.mod]
+    };
+
     if (Array.isArray(filtered)) filtered = filtered.join(", ");
     if (filtered) embed.addField("Match", filtered);
 
@@ -182,8 +187,8 @@ async function warnCard(msg, filtered, call) {
     .addField("Jump to Post", `[Original Message](${msg.url})`, true);
 
     // Minecraft Filter
-    if (msg.channel.parentId == Module.config.channels.minecraftcategory) {
-      msg.client.channels.cache.get(Module.config.channels.minecraftmods).send({ embeds: [embed] });
+    if (msg.channel.parentId == sf.channels.minecraftcategory) {
+      msg.client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
     }
 
     embed.addField(`Infraction Summary (${infractionSummary.time} Days)`, `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`);
@@ -193,24 +198,32 @@ async function warnCard(msg, filtered, call) {
 
     if (call) {
       u.clean(msg, 0);
-      const ldsg = msg.client.guilds.cache.get(Module.config.ldsg);
-      content = [ldsg.roles.cache.get(Module.config.roles.mod).toString()];
+      const ldsg = msg.client.guilds.cache.get(sf.ldsg);
+      content = [ldsg.roles.cache.get(sf.roles.mod).toString()];
       if (msg.author.bot) {
         content.push("The message has been deleted. The member was *not* muted, on account of being a bot.");
       } else {
-        if (!msg.member.roles.cache.has(Module.config.roles.muted)) {
-          await msg.member.roles.add(ldsg.roles.cache.get(Module.config.roles.muted));
+        if (!msg.member.roles.cache.has(sf.roles.muted)) {
+          await msg.member.roles.add(ldsg.roles.cache.get(sf.roles.muted));
           if (msg.member.voice.channel) {
             msg.member.voice.disconnect("Auto-mute");
           }
-          ldsg.channels.cache.get(Module.config.channels.muted).send(`${msg.member}, you have been auto-muted in ${msg.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`);
+          ldsg.channels.cache.get(sf.channels.muted).send({
+            content: `${msg.member}, you have been auto-muted in ${msg.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`,
+            allowedMentions: { users: [msg.member.id] }
+          });
         }
         content.push("The mute role has been applied and message deleted.");
       }
       content = content.join("\n");
     }
 
-    const card = await msg.client.channels.cache.get(Module.config.channels.modlogs).send({ content, embeds: [embed], components: (msg.author.bot ? undefined : modActions) });
+    const card = await msg.client.channels.cache.get(sf.channels.modlogs).send({
+      content,
+      embeds: [embed],
+      components: (msg.author.bot ? undefined : modActions),
+      allowedMentions: { roles: [sf.roles.mod] }
+    });
 
     if (!msg.author.bot) {
       const infraction = {
@@ -292,7 +305,7 @@ async function processCardAction(interaction) {
       await interaction.update({ embeds: [embed], components: [] });
     } else if (interaction.customId == "modCardLink") {
       // LINK TO #MODDISCUSSION
-      const md = await interaction.client.channels.cache.get(Module.config.channels.moddiscussion);
+      const md = await interaction.client.channels.cache.get(sf.channels.moddiscussion);
       await interaction.reply({ content: `Sending the flag over to ${md}...`, ephemeral: true });
 
       embed.setFooter(`Linked by ${u.escapeText(mod.displayName)}`);
@@ -318,15 +331,18 @@ async function processCardAction(interaction) {
         break;
       case "modCardMute":
         infraction.value = 10;
-        if (member && !member.roles.cache.has(Module.config.roles.muted)) {
+        if (member && !member.roles.cache.has(sf.roles.muted)) {
           // Only mute if they weren't already muted.
           try {
-            await member.roles.add([Module.config.roles.muted, Module.config.roles.untrusted]);
+            await member.roles.add([sf.roles.muted, sf.roles.untrusted]);
             if (member.voice.channel) await member.voice.disconnect("User mute").catch(u.noop);
-            interaction.client.channels.cache.get(Module.config.channels.muted).send(`${member}, you have been muted in ${member.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`).catch(u.noop);
+            interaction.client.channels.cache.get(sf.channels.muted).send({
+              content: `${member}, you have been muted in ${member.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`,
+              allowedMentions: { users: [member.id] }
+            }).catch(u.noop);
           } catch (error) { u.errorHandler(error, "Mute user via card"); }
         } else if (!member) {
-          const roles = (await Module.db.user.fetchUser(infraction.discordId)).roles.concat(Module.config.roles.muted, Module.config.roles.untrusted);
+          const roles = (await Module.db.user.fetchUser(infraction.discordId)).roles.concat(sf.roles.muted, sf.roles.untrusted);
           await Module.db.user.updateRoles({
             id: infraction.discordId,
             roles: {

@@ -1,12 +1,12 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
+  sf = require("../config/snowflakes"),
   config = require("../config/config.json"),
   gb = "<:gb:493084576470663180>",
   ember = "<:ember:512508452619157504>";
 
-const google = require("../config/google_api.json"),
-  { GoogleSpreadsheet } = require("google-spreadsheet"),
-  doc = new GoogleSpreadsheet(google.sheets.games);
+const { GoogleSpreadsheet } = require("google-spreadsheet"),
+  doc = new GoogleSpreadsheet(config.google.sheets.games);
 
 const { customAlphabet } = require("nanoid"),
   chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ",
@@ -16,7 +16,7 @@ let steamGameList;
 
 async function getGameList() {
   try {
-    await doc.useServiceAccountAuth(google.creds);
+    await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
     let games = await doc.sheetsByIndex[0].getRows();
     games = games.filter(g => !g.Recipient).filter(filterUnique);
@@ -28,7 +28,7 @@ function filterUnique(e, i, a) {
   return (a.indexOf(a.find(g => g["Game Title"] == e["Game Title"] && g["System"] == e["System"])) == i);
 }
 
-async function bankGive(interaction) {
+async function slashBankGive(interaction) {
   try {
     const giver = interaction.member;
     const recipient = interaction.options.getMember("recipient", true);
@@ -78,8 +78,8 @@ async function bankGive(interaction) {
       const embed = u.embed({ author: interaction.client.user })
       .addField("Reason", reason)
       .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-      .setDescription(`${giver.toString()} just gave you ${coin}${receipt.value}.`);
-      recipient.send({ embeds: [embed] });
+      .setDescription(`${u.escapeText(giver.toString())} just gave you ${coin}${receipt.value}.`);
+      recipient.send({ embeds: [embed] }).catch(u.noop);
     }
     interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`);
 
@@ -96,21 +96,21 @@ async function bankGive(interaction) {
     const embed = u.embed({ author: interaction.client.user })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-    .setDescription(`You just gave ${coin}${-receipt.value} to ${recipient.toString()}.`);
-    giver.send({ embeds: [embed] });
+    .setDescription(`You just gave ${coin}${-receipt.value} to ${u.escapeText(recipient.displayName)}.`);
+    giver.send({ embeds: [embed] }).catch(u.noop);
 
     if ((currency == "em") && toIcarus) {
-      const hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
+      const hoh = interaction.client.channels.cache.get(sf.channels.headsofhouse);
       const hohEmbed = u.embed()
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
       .addField("Reason", reason)
-      .setDescription(`**${giver.toString()}** gave me ${coin}${value}.`);
-      hoh.send({ content: `<@${Module.config.ownerId}>`, embeds: [hohEmbed] });
+      .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
+      hoh.send({ content: `<@${sf.ownerId}>`, embeds: [hohEmbed] });
     }
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
-async function bankBalance(interaction) {
+async function slashBankBalance(interaction) {
   try {
     const member = interaction.member;
     const gbBalance = await Module.db.bank.getBalance(member, "gb");
@@ -121,7 +121,7 @@ async function bankBalance(interaction) {
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
-async function bankGameList(interaction) {
+async function slashBankGameList(interaction) {
   try {
     await interaction.deferReply({ ephemeral: true });
 
@@ -133,7 +133,7 @@ async function bankGameList(interaction) {
 
     games = games.sort((a, b) => a["Game Title"].localeCompare(b["Game Title"]));
     // Filter Rated M, unless the member has the Rated M Role
-    if (!interaction.member?.roles.cache.has(Module.config.roles.rated_m)) games = games.filter(g => g.Rating.toUpperCase() != "M");
+    if (!interaction.member?.roles.cache.has(sf.roles.rated_m)) games = games.filter(g => g.Rating.toUpperCase() != "M");
 
     // Reply so there's no "interaction failed" error message.
     interaction.editReply(`Watch your DMs for a list of games that can be redeemed with ${gb}!`);
@@ -166,7 +166,7 @@ async function bankGameList(interaction) {
       embed = embeds.shift();
       if (totalLength + embed.length > 6000) {
         try {
-          await interaction.user.send({ embeds: embedsToSend });
+          await interaction.user.send({ embeds: embedsToSend }).catch(u.noop);
         } catch (e) {
           interaction.editReply(`There was an error while sending you the list of games that can be redeemed with ${gb}. Do you have DMs blocked from members of this server? You can check this in your Privacy Settings for the server.`);
           embedsToSend = [];
@@ -185,7 +185,7 @@ async function bankGameList(interaction) {
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
-async function bankGameRedeem(interaction) {
+async function slashBankGameRedeem(interaction) {
   try {
     await interaction.deferReply({ ephemeral: true });
     const games = await getGameList();
@@ -236,25 +236,27 @@ async function bankGameRedeem(interaction) {
     game.Recipient = interaction.user.username;
     game.Date = new Date();
     game.save();
-    interaction.user.send({ embeds: [embed] }).catch(e => u.errorHandler(e, interaction));
+    interaction.user.send({ embeds: [embed] }).catch(() => {
+      interaction.followUp("I wasn't able to send you the game key! Do you have DMs allowed for server members? Please check with a member of Management to get your game key.");
+    });
 
     embed = u.embed({ author: interaction.member })
     .setDescription(`${interaction.user.username} just redeemed a key for a ${game["Game Title"]} (${game.System}) key.`)
     .addField("Cost", gb + game.Cost, true)
     .addField("Balance", gb + (balance.balance - game.Cost), true);
 
-    interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
+    interaction.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
 
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
-async function bankDiscount(interaction) {
+async function slashBankDiscount(interaction) {
   try {
     await interaction.deferReply({ ephemeral: true });
     const amount = interaction.options.getInteger("amount", true);
     const balance = await Module.db.bank.getBalance(interaction.user.id, "gb");
-    if ((amount > balance.balance) || (amount > 0)) {
-      interaction.editReply(`That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${balance.balance}.`);
+    if ((amount > balance.balance) || (amount < 0) || (amount > 1000)) {
+      interaction.editReply(`That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${Math.max(balance.balance, 1000)}.`);
       return;
     }
 
@@ -281,25 +283,28 @@ async function bankDiscount(interaction) {
       };
       const withdraw = await Module.db.bank.addCurrency(withdrawal);
 
-      interaction.editReply("Watch your DMs for the code you just redeemed!");
-      interaction.user.send(`You have redeemed ${gb}${withdraw.value} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance - withdraw.value}.`);
+      await interaction.editReply("Watch your DMs for the code you just redeemed!");
+      interaction.user.send(`You have redeemed ${gb}${withdraw.value} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance + withdraw.value}.`)
+      .catch(() => {
+        interaction.followUp("I wasn't able to send you the code! Do you have DMs allowed for server members? Please check with a member of Management to get your discount code.");
+      });
       const embed = u.embed()
       .setAuthor(interaction.member.displayName, interaction.member.user.displayAvatarURL({ dynamic: true }))
-      .addField("Amount", `${gb}${withdraw.value}\n$${withdraw.value / 100}`)
-      .addField("Balance", `${gb}${balance.balance - withdraw.value}`)
-      .setDescription(`**${interaction.member.toString()}** just redeemed ${gb} for a store coupon code.`);
-      interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [embed] });
+      .addField("Amount", `${gb}${-withdraw.value}\n$${-withdraw.value / 100}`)
+      .addField("Balance", `${gb}${balance.balance + withdraw.value}`)
+      .setDescription(`**${u.escapeText(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
+      interaction.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
     } else {
       interaction.editReply("Sorry, something went wrong. Please try again.");
     }
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
-async function bankAward(interaction) {
+async function slashBankAward(interaction) {
   try {
     const giver = interaction.member;
 
-    if (!giver.roles.cache.has(Module.config.roles.team)) {
+    if (!giver.roles.cache.has(sf.roles.team)) {
       interaction.reply({ content: `*Nice try!* This command is Team-only!`, ephemeral: true });
       return;
     }
@@ -336,18 +341,18 @@ async function bankAward(interaction) {
     let embed = u.embed({ author: interaction.client.user })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-    .setDescription(`${u.escapeText(giver.toString())} just ${value > 0 ? "awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
-    recipient.send({ embeds: [embed] });
+    .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ? "awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
+    recipient.send({ embeds: [embed] }).catch(u.noop);
 
     interaction.reply(`${ember}${value} ${value > 0 ? "awarded to" : "docked from"} ${u.escapeText(recipient.displayName)} for ${reason}`);
 
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
     .addField("Reason", reason)
-    .setDescription(`You just gave ${ember}${receipt.value} to ${recipient.toString()}. This counts toward their House's Points.`);
-    giver.send({ embeds: [embed] });
+    .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
+    giver.send({ embeds: [embed] }).catch(u.noop);
 
-    const hoh = interaction.client.channels.cache.get(Module.config.channels.headsofhouse);
+    const hoh = interaction.client.channels.cache.get(sf.channels.headsofhouse);
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
     .addField("Reason", reason)
@@ -359,27 +364,27 @@ async function bankAward(interaction) {
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "bank",
-  guildId: config.ldsg,
-  commandId: "882719721068331149",
+  guildId: sf.ldsg,
+  commandId: sf.commands.bank,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand(true)) {
     case "give":
-      await bankGive(interaction);
+      await slashBankGive(interaction);
       break;
     case "balance":
-      await bankBalance(interaction);
+      await slashBankBalance(interaction);
       break;
     case "list":
-      await bankGameList(interaction);
+      await slashBankGameList(interaction);
       break;
     case "redeem":
-      await bankGameRedeem(interaction);
+      await slashBankGameRedeem(interaction);
       break;
     case "discount":
-      await bankDiscount(interaction);
+      await slashBankDiscount(interaction);
       break;
     case "award":
-      await bankAward(interaction);
+      await slashBankAward(interaction);
       break;
     }
   }
