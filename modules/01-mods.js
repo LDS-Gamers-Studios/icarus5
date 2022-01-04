@@ -502,6 +502,102 @@ async function slashModSummary(interaction) {
   await interaction.deferReply({ content: `I've put the summary you requested in ${modlogs}.`, ephemeral: true });
 }
 
+async function slashModTrust(interaction) {
+  await interaction.deferReply({ ephemeral: true });
+  const member = interaction.options.getMember("user");
+  const type = interaction.options.getString("type");
+  const apply = interaction.options.getBoolean("apply") ?? true;
+
+  const role = {
+    'initial': Module.config.roles.trusted,
+    'plus': Module.config.roles.trustedplus,
+    'watch': Module.config.roles.untrusted
+  }[type];
+  const channel = {
+    'initial': Module.config.channels.modlogs,
+    'plus': Module.config.channels.modlogs,
+    'watch': Module.config.channels.modlogsplus
+  }[type];
+
+  const embed = u.embed({ author: member });
+
+  if (apply) {
+    switch (type) {
+    case 'initial':
+      member.send(
+        `You have been marked as "Trusted" in ${interaction.guild.name} . `
+        + "This means you are now permitted to post images and links in chat. "
+        + "Please remember to follow the Code of Conduct when doing so.\n"
+        + "<http://ldsgamers.com/code-of-conduct>\n\n"
+        + "If you'd like to join one of our in-server Houses, you can visit <http://3houses.live> to get started!"
+      ).catch(() => blocked(member));
+      embed.setTitle("User Given Trusted")
+        .setDescription(`${interaction.member} trusted ${member}.`);
+      if (member.roles.cache.has(Module.config.roles.untrusted)) {
+        await member.roles.remove(Module.config.roles.untrusted);
+      }
+      break;
+    case 'plus':
+      if (!member.roles.cache.has(Module.config.roles.trusted)) {
+        await interaction.editReply({ content: `${member} needs <@&${Module.config.roles.trusted}> before they can be given <@&${Module.config.roles.trustedplus}>!`, ephemeral: true });
+        return;
+      }
+      member.send(
+        "Congratulations! "
+        + "You've been added to the Trusted+ list in LDSG, allowing you to stream to voice channels!\n\n"
+        + "While streaming, please remember the Streaming Guidelines ( https://goo.gl/Pm3mwS ) and LDSG Code of Conduct ( http://ldsgamers.com/code-of-conduct ). "
+        + "Also, please be aware that LDSG may make changes to the Trusted+ list from time to time at its discretion."
+      ).catch(u.noop);
+      embed.setTitle("User Given Trusted+")
+        .setDescription(`${interaction.member} gave ${member} the <@&${role}> role.`);
+      break;
+    case 'watch':
+      embed.setTitle("User Watch")
+        .setDescription(`${member} (${member.displayName}) has been added to the watch list by ${interaction.member}. Use \`/mod trust watch @user false\` command to remove them.`);
+      break;
+    }
+
+    await member.roles.add(role);
+    interaction.editReply({ content: `${member} has been given the <@&${role}> role!`, ephemeral: true });
+  } else {
+    switch (type) {
+    case 'initial':
+      member.send(
+        `You have been removed from "Trusted" in ${interaction.guild.name}. `
+        + "This means you no longer have the ability to post images. "
+        + "Please remember to follow the Code of Conduct when posting images or links.\n"
+        + "<http://ldsgamers.com/code-of-conduct>"
+      ).catch(() => blocked(member));
+      embed.setTitle("User Trusted Removed")
+        .setDescription(`${interaction.member} untrusted ${member}.`);
+      if (member.roles.cache.has(Module.config.roles.trustedplus)) {
+        await member.roles.remove(Module.config.roles.trustedplus);
+      }
+      await member.roles.add(Module.config.roles.untrusted);
+      break;
+    case 'plus':
+      member.send(
+        `You have been removed from "Trusted+" in ${interaction.guild.name}. `
+        + "This means you no longer have the ability to stream video in the server. "
+        + "Please remember to follow the Code of Conduct.\n"
+        + "<http://ldsgamers.com/code-of-conduct>"
+      ).catch(() => blocked(member));
+      embed.setTitle("User Trusted+ Removed")
+        .setDescription(`${interaction.member} removed the <@&${role}> role from ${member}.`);
+      break;
+    case 'watch':
+      embed.setTitle("User Unwatched")
+        .setDescription(`${member} (${member.displayName}) has been removed from the watch list by ${interaction.member}. Use \`/mod trust watch @user true\` command to re-add them.`);
+      break;
+    }
+
+    await member.roles.remove(role);
+    interaction.editReply({ content: `The <@&${role}> role has been removed from ${member}!`, ephemeral: true });
+  }
+
+  await interaction.guild.channels.cache.get(channel).send({ embeds: [embed] });
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
@@ -539,10 +635,10 @@ const Module = new Augur.Module()
       case "summary":
         await slashModSummary(interaction);
         break;
-      /*
       case "trust":
         await slashModTrust(interaction);
         break;
+      /*
       case "warn":
         await slashModWarn(interaction);
         break;
