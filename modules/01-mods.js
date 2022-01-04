@@ -1,6 +1,6 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
-  config = require("../config/config.json");
+  sf = require("../config/snowflakes.json");
 
 const muteState = new u.Collection();
 
@@ -9,7 +9,7 @@ const muteState = new u.Collection();
  * @param {GuildMember} member The guild member that's blocked.
  */
 function blocked(member) {
-  return member.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+  return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
     u.embed({
       author: member,
       color: 0x00ffff,
@@ -19,15 +19,15 @@ function blocked(member) {
 }
 
 function compareRoles(mod, target) {
-  const modHigh = mod.roles.cache.filter(r => r.id != Module.config.roles.live)
+  const modHigh = mod.roles.cache.filter(r => r.id != sf.roles.live)
     .sort((a, b) => b.comparePositionTo(a)).first();
-  const targetHigh = target.roles.cache.filter(r => r.id != Module.config.roles.live)
+  const targetHigh = target.roles.cache.filter(r => r.id != sf.roles.live)
     .sort((a, b) => b.comparePositionTo(a)).first();
   return (modHigh.comparePositionTo(targetHigh) > 0);
 }
 
 function isMod(interaction) {
-  return interaction.member.roles.cache.some(r => ([Module.config.roles.management, Module.config.roles.mod].includes(r.id)));
+  return interaction.member.roles.cache.some(r => ([sf.roles.management, sf.roles.mod].includes(r.id)));
 }
 
 function nameGen() {
@@ -90,7 +90,7 @@ async function slashModBan(interaction) {
       });
 
       // Save roles
-      targetRoles.set(Module.config.roles.untrusted, null).set(Module.config.roles.muted, null).delete(Module.config.roles.trusted);
+      targetRoles.set(sf.roles.untrusted, null).set(sf.roles.muted, null).delete(sf.roles.trusted);
       const fakeTarget = {
         id: target.id,
         roles: { cache: targetRoles }
@@ -98,7 +98,7 @@ async function slashModBan(interaction) {
       Module.db.user.updateRoles(fakeTarget);
 
       // Log it
-      interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("User Ban")
         .setDescription(`**${interaction.member}** banned **${target}** for:\n${reason}`)
@@ -168,7 +168,7 @@ async function slashModKick(interaction) {
       });
 
       // Save roles
-      targetRoles.set(Module.config.roles.untrusted, null).set(Module.config.roles.muted, null).delete(Module.config.roles.trusted);
+      targetRoles.set(sf.roles.untrusted, null).set(sf.roles.muted, null).delete(sf.roles.trusted);
       const fakeTarget = {
         id: target.id,
         roles: { cache: targetRoles }
@@ -176,7 +176,7 @@ async function slashModKick(interaction) {
       Module.db.user.updateRoles(fakeTarget);
 
       // Log it
-      interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("User Kick")
         .setDescription(`**${interaction.member}** kicked **${target}** for:\n${reason}`)
@@ -222,22 +222,22 @@ async function slashModMute(interaction) {
       });
 
       // Don't mute if muted
-      if (target.roles.cache.has(Module.config.roles.muted)) return;
+      if (target.roles.cache.has(sf.roles.muted)) return;
 
       // Impose Mute
-      await target.roles.add(Module.config.roles.muted);
+      await target.roles.add(sf.roles.muted);
       if (target.voice.channel) await target.voice.disconnect(reason);
       muteState.set(target.id, target.voice.serverMute);
       await target.voice.setMute(true, reason);
 
-      await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("Member Mute")
         .setDescription(`**${interaction.member}** muted **${target}** for:\n${reason}`)
         .setColor(0x0000ff)
       ] });
 
-      await interaction.guild.channels.cache.get(Module.config.channels.muted).send(
+      await interaction.guild.channels.cache.get(sf.channels.muted).send(
         `${target}, you have been muted in ${interaction.guild.name}. `
         + 'Please review our Code of Conduct. '
         + 'A member of the mod team will be available to discuss more details.\n\n'
@@ -250,14 +250,14 @@ async function slashModMute(interaction) {
       });
 
       // Don't unmute if not muted
-      if (!target.roles.cache.has(Module.config.roles.muted)) return;
+      if (!target.roles.cache.has(sf.roles.muted)) return;
 
       // Remove Mute
-      await target.roles.remove(Module.config.roles.muted);
+      await target.roles.remove(sf.roles.muted);
       if (muteState.get(target.id)) await target.voice.setMute(false, "Mute resolved");
       muteState.delete(target.id);
 
-      await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("Member Unmute")
         .setDescription(`**${interaction.member}** unmuted **${target}**`)
@@ -281,7 +281,7 @@ async function slashModNote(interaction) {
     });
     const summary = await Module.db.infraction.getSummary(target.id);
 
-    await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
       u.embed({ author: target })
       .setColor("#0000FF")
       .setDescription(note)
@@ -322,22 +322,22 @@ async function slashModOffice(interaction) {
       });
 
       // Don't bother if it's already done
-      if (target.roles.cache.has(Module.config.roles.ducttape)) return;
+      if (target.roles.cache.has(sf.roles.ducttape)) return;
 
       // Impose "duct tape"
-      await target.roles.add(Module.config.roles.ducttape);
+      await target.roles.add(sf.roles.ducttape);
       // if (target.voice.channel) await target.voice.disconnect(reason);
       // muteState.set(target.id, target.voice.serverMute);
       // await target.voice.setMute(true, reason);
 
-      await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("Member Sent to Office")
         .setDescription(`**${interaction.member}** sent **${target}** to the office for:\n${reason}`)
         .setColor(0x0000ff)
       ] });
 
-      await interaction.guild.channels.cache.get(Module.config.channels.office).send(
+      await interaction.guild.channels.cache.get(sf.channels.office).send(
         `${target}, you have been sent to the office in ${interaction.guild.name}. `
         + 'This allows you and the mods to have a private space to discuss any issues without restricting access to the rest of the server. '
         + 'Please review our Code of Conduct. '
@@ -351,14 +351,14 @@ async function slashModOffice(interaction) {
       });
 
       // Don't bother if it's already done
-      if (!target.roles.cache.has(Module.config.roles.ducttape)) return;
+      if (!target.roles.cache.has(sf.roles.ducttape)) return;
 
       // Remove "duct tape""
-      await target.roles.remove(Module.config.roles.ducttape);
+      await target.roles.remove(sf.roles.ducttape);
       // if (muteState.get(target.id)) await target.voice.setMute(false, "Mute resolved");
       // muteState.delete(target.id);
 
-      await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("Member Released from Office")
         .setDescription(`**${interaction.member}** let **${target}** out of the office.`)
@@ -395,7 +395,7 @@ async function slashModPurge(interaction) {
       if (msgsToDelete.size != fetching) { break; }
     }
     // Log it
-    await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
       u.embed({ author: interaction.member })
       .setTitle("Channel Purge")
       .setDescription(`**${interaction.member}** purged ${number - num} messages in ${interaction.channel}`)
@@ -430,7 +430,7 @@ async function slashModRename(interaction) {
   });
   const summary = await Module.db.infraction.getSummary(target.id);
 
-  interaction.guild.channels.cache.get(Module.config.channels.modLogs).send({ embeds: [
+  interaction.guild.channels.cache.get(sf.channels.modLogs).send({ embeds: [
     u.embed({ author: target })
     .setColor("#0000FF")
     .setDescription(comment)
@@ -475,7 +475,7 @@ async function slashModSlowmode(interaction) {
     });
 
     interaction.editReply(`${timer}-second slowmode activated for ${duration} minute${duration > 1 ? 's' : ''}.`);
-    interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+    interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
       u.embed({ author: interaction.member })
       .setTitle("Channel Slowmode")
       .setDescription(`${interaction.member} set a ${timer}-second slow mode for ${duration} minute${duration > 1 ? 's' : ''} in ${interaction.channel}.`)
@@ -497,7 +497,7 @@ async function slashModSummary(interaction) {
       response.push(`${record.timestamp.toLocaleDateString()} (${record.value} pts, modded by ${mod}): ${record.description}`);
     }
   }
-  const modlogs = await interaction.guild.channels.cache.get(Module.config.channels.modlogs);
+  const modlogs = await interaction.guild.channels.cache.get(sf.channels.modlogs);
   await modlogs.send(response.join("\n"), { split: true });
   await interaction.deferReply({ content: `I've put the summary you requested in ${modlogs}.`, ephemeral: true });
 }
@@ -509,14 +509,14 @@ async function slashModTrust(interaction) {
   const apply = interaction.options.getBoolean("apply") ?? true;
 
   const role = {
-    'initial': Module.config.roles.trusted,
-    'plus': Module.config.roles.trustedplus,
-    'watch': Module.config.roles.untrusted
+    'initial': sf.roles.trusted,
+    'plus': sf.roles.trustedplus,
+    'watch': sf.roles.untrusted
   }[type];
   const channel = {
-    'initial': Module.config.channels.modlogs,
-    'plus': Module.config.channels.modlogs,
-    'watch': Module.config.channels.modlogsplus
+    'initial': sf.channels.modlogs,
+    'plus': sf.channels.modlogs,
+    'watch': sf.channels.modlogsplus
   }[type];
 
   const embed = u.embed({ author: member });
@@ -533,13 +533,13 @@ async function slashModTrust(interaction) {
       ).catch(() => blocked(member));
       embed.setTitle("User Given Trusted")
       .setDescription(`${interaction.member} trusted ${member}.`);
-      if (member.roles.cache.has(Module.config.roles.untrusted)) {
-        await member.roles.remove(Module.config.roles.untrusted);
+      if (member.roles.cache.has(sf.roles.untrusted)) {
+        await member.roles.remove(sf.roles.untrusted);
       }
       break;
     case 'plus':
-      if (!member.roles.cache.has(Module.config.roles.trusted)) {
-        await interaction.editReply({ content: `${member} needs <@&${Module.config.roles.trusted}> before they can be given <@&${Module.config.roles.trustedplus}>!`, ephemeral: true });
+      if (!member.roles.cache.has(sf.roles.trusted)) {
+        await interaction.editReply({ content: `${member} needs <@&${sf.roles.trusted}> before they can be given <@&${sf.roles.trustedplus}>!`, ephemeral: true });
         return;
       }
       member.send(
@@ -570,10 +570,10 @@ async function slashModTrust(interaction) {
       ).catch(() => blocked(member));
       embed.setTitle("User Trusted Removed")
       .setDescription(`${interaction.member} untrusted ${member}.`);
-      if (member.roles.cache.has(Module.config.roles.trustedplus)) {
-        await member.roles.remove(Module.config.roles.trustedplus);
+      if (member.roles.cache.has(sf.roles.trustedplus)) {
+        await member.roles.remove(sf.roles.trustedplus);
       }
-      await member.roles.add(Module.config.roles.untrusted);
+      await member.roles.add(sf.roles.untrusted);
       break;
     case 'plus':
       member.send(
@@ -618,7 +618,7 @@ async function slashModWarn(interaction) {
     .setDescription(reason)
     .addField("Resolved", `${u.escapeText(interaction.user.username)} issued a ${value} point warning.`)
     .setTimestamp();
-  const flag = await interaction.guild.channels.cache.get(Module.config.channels.modLogs).send({ embeds: [embed] });
+  const flag = await interaction.guild.channels.cache.get(sf.channels.modLogs).send({ embeds: [embed] });
 
   await Module.db.infraction.save({
     discordId: member.id,
@@ -639,8 +639,8 @@ async function slashModWarn(interaction) {
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
-  guildId: config.ldsg,
-  commandId: undefined,
+  guildId: sf.ldsg,
+  commandId: sf.commands.mod,
   permissions: isMod,
   process: async (interaction) => {
     try {
