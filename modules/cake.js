@@ -32,11 +32,13 @@ async function testBirthdays() {
     ];
 
     const birthdays = (await Module.db.ign.getList("birthday")).filter(ign => guild.members.cache.has(ign.discordId));
+    const celebrating = [];
     for (const birthday of birthdays) {
       try {
         const date = moment(birthday.ign);
         if (date?.month() == curDate.month() && date?.date() == curDate.date()) {
           const member = guild.members.cache.get(birthday.discordId);
+          celebrating.push(member);
           await guild.channels.cache.get(Module.config.snowflakes.ldsg).send(`:birthday: :confetti_ball: :tada: Happy Birthday, ${member}! :tada: :confetti_ball: :birthday:`);
           const msgs = birthdayLangs.map(lang => member.send(u.rand(flair) + lang));
           Promise.all(msgs).then(() => {
@@ -45,6 +47,11 @@ async function testBirthdays() {
         }
       } catch (e) { u.errorHandler(e, "Birthday Send"); continue; }
     }
+    const embed = u.embed()
+      .setTitle("Happy Birthday!")
+      .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Emoji_u1f389.svg/128px-Emoji_u1f389.svg.png")
+      .setDescription("Happy birthday to these fantastic people!\n" + celebrating.join("\n"));
+    guild.channels.cache.get(Module.config.snowflakes.ldsg).send({ embeds: [embed] });
   } catch (e) { u.errorHandler(e, "Birthday Error"); }
 }
 
@@ -59,6 +66,8 @@ async function testCakeDays() {
     const offsets = await Module.db.user.getUsers({ discordId: { $in: members.keyArray() }, priorTenure: { $gt: 0 } });
 
     const tenureIds = Array.from(tenureCache.values());
+    const celebrating = new u.Collection();
+
     for (const [memberId, member] of members.filter(m => m.roles.cache.has(Module.config.snowflakes.roles.trusted))) {
       try {
         const offset = offsets.find(o => o.discordId == memberId);
@@ -68,10 +77,22 @@ async function testCakeDays() {
           await member.roles.remove(tenureIds).catch(u.noop);
           await member.roles.add(tenure(years)).catch(e => u.errorHandler(e, "Tenure Role Add"));
           if (member.roles.cache.has(Module.config.snowflakes.roles.trusted)) {
-            await guild.channels.cache.get(Module.config.snowflakes.ldsg).send(`${member} has been part of the server for ${years} ${(years > 1 ? "years" : "year")}! Glad you're with us!`);
+            if (celebrating.has(years)) celebrating.get(years).push(member);
+            else celebrating.set(years, [member]);
           }
         }
       } catch (e) { u.errorHandler(e, `Announce Cake Day Error (${member.displayname} - ${memberId})`); continue; }
+    }
+
+    if (celebrating.size > 0) {
+      const embed = u.embed()
+      .setTitle("Cake Days!")
+      .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Emoji_u1f382.svg/128px-Emoji_u1f382.svg.png")
+      .setDescription("The following server members are celebrating their cake days! Glad you're with us!");
+      for (const [years, cakeMembers] of celebrating) {
+        embed.addField(`${years} ${years > 1 ? "Years" : "Year"}`, cakeMembers.join("\n"));
+      }
+      await guild.channels.cache.get(Module.config.snowflakes.ldsg).send({ embeds: [embed] });
     }
   } catch (e) { u.errorHandler(e, "Cake Days"); }
 }
