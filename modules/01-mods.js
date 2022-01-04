@@ -98,7 +98,7 @@ async function slashModBan(interaction) {
       Module.db.user.updateRoles(fakeTarget);
 
       // Log it
-      interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("User Ban")
         .setDescription(`**${interaction.member}** banned **${target}** for:\n${reason}`)
@@ -176,7 +176,7 @@ async function slashModKick(interaction) {
       Module.db.user.updateRoles(fakeTarget);
 
       // Log it
-      interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("User Kick")
         .setDescription(`**${interaction.member}** kicked **${target}** for:\n${reason}`)
@@ -230,14 +230,14 @@ async function slashModMute(interaction) {
       muteState.set(target.id, target.voice.serverMute);
       await target.voice.setMute(true, reason);
 
-      await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("Member Mute")
         .setDescription(`**${interaction.member}** muted **${target}** for:\n${reason}`)
         .setColor(0x0000ff)
       ] });
 
-      await interaction.client.channels.cache.get(Module.config.channels.muted).send(
+      await interaction.guild.channels.cache.get(Module.config.channels.muted).send(
         `${target}, you have been muted in ${interaction.guild.name}. `
         + 'Please review our Code of Conduct. '
         + 'A member of the mod team will be available to discuss more details.\n\n'
@@ -257,7 +257,7 @@ async function slashModMute(interaction) {
       if (muteState.get(target.id)) await target.voice.setMute(false, "Mute resolved");
       muteState.delete(target.id);
 
-      await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("Member Unmute")
         .setDescription(`**${interaction.member}** unmuted **${target}**`)
@@ -281,7 +281,7 @@ async function slashModNote(interaction) {
     });
     const summary = await Module.db.infraction.getSummary(target.id);
 
-    await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+    await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
       u.embed({ author: target })
       .setColor("#0000FF")
       .setDescription(note)
@@ -330,14 +330,14 @@ async function slashModOffice(interaction) {
       // muteState.set(target.id, target.voice.serverMute);
       // await target.voice.setMute(true, reason);
 
-      await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("Member Sent to Office")
         .setDescription(`**${interaction.member}** sent **${target}** to the office for:\n${reason}`)
         .setColor(0x0000ff)
       ] });
 
-      await interaction.client.channels.cache.get(Module.config.channels.office).send(
+      await interaction.guild.channels.cache.get(Module.config.channels.office).send(
         `${target}, you have been sent to the office in ${interaction.guild.name}. `
         + 'This allows you and the mods to have a private space to discuss any issues without restricting access to the rest of the server. '
         + 'Please review our Code of Conduct. '
@@ -358,7 +358,7 @@ async function slashModOffice(interaction) {
       // if (muteState.get(target.id)) await target.voice.setMute(false, "Mute resolved");
       // muteState.delete(target.id);
 
-      await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+      await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
         .setTitle("Member Released from Office")
         .setDescription(`**${interaction.member}** let **${target}** out of the office.`)
@@ -395,7 +395,7 @@ async function slashModPurge(interaction) {
       if (msgsToDelete.size != fetching) { break; }
     }
     // Log it
-    await interaction.client.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
+    await interaction.guild.channels.cache.get(Module.config.channels.modlogs).send({ embeds: [
       u.embed({ author: interaction.member })
       .setTitle("Channel Purge")
       .setDescription(`**${interaction.member}** purged ${number - num} messages in ${interaction.channel}`)
@@ -430,7 +430,7 @@ async function slashModRename(interaction) {
   });
   const summary = await Module.db.infraction.getSummary(target.id);
 
-  interaction.client.channels.cache.get(Module.config.channels.modLogs).send({ embeds: [
+  interaction.guild.channels.cache.get(Module.config.channels.modLogs).send({ embeds: [
     u.embed({ author: target })
     .setColor("#0000FF")
     .setDescription(comment)
@@ -532,7 +532,7 @@ async function slashModTrust(interaction) {
         + "If you'd like to join one of our in-server Houses, you can visit <http://3houses.live> to get started!"
       ).catch(() => blocked(member));
       embed.setTitle("User Given Trusted")
-        .setDescription(`${interaction.member} trusted ${member}.`);
+      .setDescription(`${interaction.member} trusted ${member}.`);
       if (member.roles.cache.has(Module.config.roles.untrusted)) {
         await member.roles.remove(Module.config.roles.untrusted);
       }
@@ -549,11 +549,11 @@ async function slashModTrust(interaction) {
         + "Also, please be aware that LDSG may make changes to the Trusted+ list from time to time at its discretion."
       ).catch(u.noop);
       embed.setTitle("User Given Trusted+")
-        .setDescription(`${interaction.member} gave ${member} the <@&${role}> role.`);
+      .setDescription(`${interaction.member} gave ${member} the <@&${role}> role.`);
       break;
     case 'watch':
       embed.setTitle("User Watch")
-        .setDescription(`${member} (${member.displayName}) has been added to the watch list by ${interaction.member}. Use \`/mod trust watch @user false\` command to remove them.`);
+      .setDescription(`${member} (${member.displayName}) has been added to the watch list by ${interaction.member}. Use \`/mod trust watch @user false\` command to remove them.`);
       break;
     }
 
@@ -569,7 +569,7 @@ async function slashModTrust(interaction) {
         + "<http://ldsgamers.com/code-of-conduct>"
       ).catch(() => blocked(member));
       embed.setTitle("User Trusted Removed")
-        .setDescription(`${interaction.member} untrusted ${member}.`);
+      .setDescription(`${interaction.member} untrusted ${member}.`);
       if (member.roles.cache.has(Module.config.roles.trustedplus)) {
         await member.roles.remove(Module.config.roles.trustedplus);
       }
@@ -583,11 +583,11 @@ async function slashModTrust(interaction) {
         + "<http://ldsgamers.com/code-of-conduct>"
       ).catch(() => blocked(member));
       embed.setTitle("User Trusted+ Removed")
-        .setDescription(`${interaction.member} removed the <@&${role}> role from ${member}.`);
+      .setDescription(`${interaction.member} removed the <@&${role}> role from ${member}.`);
       break;
     case 'watch':
       embed.setTitle("User Unwatched")
-        .setDescription(`${member} (${member.displayName}) has been removed from the watch list by ${interaction.member}. Use \`/mod trust watch @user true\` command to re-add them.`);
+      .setDescription(`${member} (${member.displayName}) has been removed from the watch list by ${interaction.member}. Use \`/mod trust watch @user true\` command to re-add them.`);
       break;
     }
 
