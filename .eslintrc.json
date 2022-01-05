@@ -7,6 +7,9 @@
 	"parserOptions": {
 		"ecmaVersion": 2021
 	},
+	"plugins": [
+		"jsdoc"
+	],
 	"rules": {
 		"arrow-spacing": ["warn", { "before": true, "after": true }],
 		"brace-style": ["warn", "1tbs", { "allowSingleLine": true }],
@@ -43,6 +46,7 @@
 		"space-infix-ops": "warn",
 		"space-unary-ops": "warn",
 		"spaced-comment": ["warn", "always", {"exceptions": ["*"]}],
-		"yoda": "error"
+		"yoda": "error",
+		"jsdoc/no-undefined-types": 1
 	}
 }
