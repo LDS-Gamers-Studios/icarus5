@@ -107,6 +107,7 @@ const utils = {
    * @param {number} t The length of time to wait before deletion, in milliseconds.
    */
   cleanInteraction: async function(interaction, t = 20000) {
+    if (interaction.ephemeral) { return; } // Can't delete ephemeral interactions.
     await utils.wait(t);
     interaction.deleteReply();
   },
@@ -142,7 +143,7 @@ const utils = {
     });
 
     const confirm = await interaction.channel.awaitMessageComponent({
-      filter: (int) => int.user.id === interaction.member.id && (interaction.customId === confirmTrue || interaction.customId === confirmFalse),
+      filter: (int) => int.user.id === interaction.member.id && (int.customId === confirmTrue || int.customId === confirmFalse),
       componentType: "BUTTON",
       time: 60000
     }).catch(() => ({ customId: "confirmTimeout" }));

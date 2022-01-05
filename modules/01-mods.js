@@ -226,9 +226,11 @@ async function slashModMute(interaction) {
 
       // Impose Mute
       await target.roles.add(sf.roles.muted);
-      if (target.voice.channel) await target.voice.disconnect(reason);
+      if (target.voice.channel) { 
+        await target.voice.disconnect(reason);
+        await target.voice.setMute(true, reason);
+      }
       muteState.set(target.id, target.voice.serverMute);
-      await target.voice.setMute(true, reason);
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
@@ -254,7 +256,7 @@ async function slashModMute(interaction) {
 
       // Remove Mute
       await target.roles.remove(sf.roles.muted);
-      if (muteState.get(target.id)) await target.voice.setMute(false, "Mute resolved");
+      if (muteState.get(target.id) && target.voice.channel) await target.voice.setMute(false, "Mute resolved");
       muteState.delete(target.id);
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
@@ -499,7 +501,7 @@ async function slashModSummary(interaction) {
   }
   const modlogs = await interaction.guild.channels.cache.get(sf.channels.modlogs);
   await modlogs.send(response.join("\n"), { split: true });
-  await interaction.deferReply({ content: `I've put the summary you requested in ${modlogs}.`, ephemeral: true });
+  await interaction.editReply({ content: `I've put the summary you requested in ${modlogs}.`, ephemeral: true });
 }
 
 async function slashModTrust(interaction) {
