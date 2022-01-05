@@ -1,7 +1,7 @@
-const Augur = require("augubor"),
+const Augur = require("augurbot"),
   moment = require("moment"),
   u = require("../utils/utils"),
-  snowflakes = require("../config/snowflakes.json");
+  sf = require("../config/snowflakes.json");
 
 function celebrate() {
   if (moment().hours() == 15) {
@@ -19,7 +19,7 @@ function tenure(n) {
 async function testBirthdays() {
   // Send Birthday Messages, if saved by member
   try {
-    const guild = Module.client.guilds.cache.get(snowflakes.ldsg);
+    const guild = Module.client.guilds.cache.get(sf.ldsg);
     const curDate = moment();
 
     // Birthday Blast
@@ -47,11 +47,13 @@ async function testBirthdays() {
         }
       } catch (e) { u.errorHandler(e, `Birthday Send - Discord Id: ${birthday.discordId}`); continue; }
     }
-    const embed = u.embed()
-      .setTitle("Happy Birthday!")
-      .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Emoji_u1f389.svg/128px-Emoji_u1f389.svg.png")
-      .setDescription("Happy birthday to these fantastic people!\n" + celebrating.join("\n"));
-    guild.channels.cache.get(snowflakes.ldsg).send({ embeds: [embed] });
+    if (celebrating.length > 0) {
+      const embed = u.embed()
+        .setTitle("Happy Birthday!")
+        .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Emoji_u1f389.svg/128px-Emoji_u1f389.svg.png")
+        .setDescription("Happy birthday to these fantastic people!\n\n" + celebrating.join("\n"));
+      guild.channels.cache.get(sf.channels.general).send({ embeds: [embed] });
+    }
   } catch (e) { u.errorHandler(e, "Birthday Error"); }
 }
 
@@ -59,16 +61,16 @@ async function testCakeDays() {
   // Add tenure roles on member cake days
 
   try {
-    const guild = Module.client.guilds.cache.get(snowflakes.ldsg);
+    const guild = Module.client.guilds.cache.get(sf.ldsg);
     const curDate = moment();
 
     const members = await guild.members.fetch();
-    const offsets = await Module.db.user.getUsers({ discordId: { $in: members.keyArray() }, priorTenure: { $gt: 0 } });
+    const offsets = await Module.db.user.getUsers({ discordId: { $in: Array.from(members.keys()) }, priorTenure: { $gt: 0 } });
 
     const tenureIds = Array.from(tenureCache.values());
     const celebrating = new u.Collection();
 
-    for (const [memberId, member] of members.filter(m => m.roles.cache.has(snowflakes.roles.trusted))) {
+    for (const [memberId, member] of members.filter(m => m.roles.cache.has(sf.roles.trusted))) {
       try {
         const offset = offsets.find(o => o.discordId == memberId);
         const join = moment(member.joinedAt).subtract(offset?.priorTenure || 0, "days");
@@ -76,7 +78,7 @@ async function testCakeDays() {
           const years = curDate.year() - join.year();
           await member.roles.remove(tenureIds).catch(u.noop);
           await member.roles.add(tenure(years)).catch(e => u.errorHandler(e, `Tenure Role Add (${member.displayName} - ${memberId})`));
-          if (member.roles.cache.has(snowflakes.roles.trusted)) {
+          if (member.roles.cache.has(sf.roles.trusted)) {
             if (celebrating.has(years)) celebrating.get(years).push(member);
             else celebrating.set(years, [member]);
           }
@@ -92,7 +94,7 @@ async function testCakeDays() {
       for (const [years, cakeMembers] of celebrating) {
         embed.addField(`${years} ${years > 1 ? "Years" : "Year"}`, cakeMembers.join("\n"));
       }
-      await guild.channels.cache.get(snowflakes.ldsg).send({ embeds: [embed] });
+      await guild.channels.cache.get(sf.channels.general).send({ embeds: [embed] });
     }
   } catch (e) { u.errorHandler(e, "Cake Days"); }
 }
@@ -100,7 +102,7 @@ async function testCakeDays() {
 const Module = new Augur.Module()
 .addEvent("ready", () => {
   // Populate tenureCache
-  const guild = Module.client.guilds.cache.get(snowflakes.ldsg);
+  const guild = Module.client.guilds.cache.get(sf.ldsg);
   const exp = /Member - (\d+) Years?/;
   const roles = guild.roles.cache.filter(r => exp.test(r.name));
 
