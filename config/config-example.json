@@ -10,7 +10,7 @@
     34
   ],
   "db": {
-    "model": "utils/dbModels.js",
+    "model": "database/dbControllers.js",
     "db": "",
     "settings": {
       "useNewUrlParser": true,
