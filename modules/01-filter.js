@@ -1,5 +1,6 @@
 const Augur = require("augurbot"),
   banned = require("../data/banned.json"),
+  Discord = require("discord.js"),
   profanityFilter = require("profanity-matcher"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes"),
@@ -30,7 +31,7 @@ const modActions = [
 
 /**
  * Give the mods a heads up that someone isn't getting their DMs.
- * @param {GuildMember} member The guild member that's blocked.
+ * @param {Discord.GuildMember} member The guild member that's blocked.
  */
 function blocked(member) {
   return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
@@ -174,10 +175,6 @@ async function warnCard(msg, filtered, call) {
     const embed = u.embed({ color: 0xff0000, author: msg.member, timestamp: (msg.editedAt ?? msg.createdAt) })
     .setDescription((msg.editedAt ? "[Edited]\n" : "") + msg.cleanContent)
     .setURL(msg.url);
-
-    const allowedMentions = {
-      roles: [sf.roles.mod]
-    };
 
     if (Array.isArray(filtered)) filtered = filtered.join(", ");
     if (filtered) embed.addField("Match", filtered);
