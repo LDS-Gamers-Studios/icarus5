@@ -216,13 +216,14 @@ async function slashModMute(interaction) {
         return;
       }
 
+      muteState.set(target.id, target.voice.serverMute);
+
       // Impose Mute
       await target.roles.add(sf.roles.muted);
       if (target.voice.channel) { 
         await target.voice.disconnect(reason);
         await target.voice.setMute(true, reason);
       }
-      muteState.set(target.id, target.voice.serverMute);
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
@@ -252,7 +253,7 @@ async function slashModMute(interaction) {
 
       // Remove Mute
       await target.roles.remove(sf.roles.muted);
-      if (muteState.get(target.id) && target.voice.channel) await target.voice.setMute(false, "Mute resolved");
+      if (!muteState.get(target.id) && target.voice.channel) await target.voice.setMute(false, "Mute resolved");
       muteState.delete(target.id);
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
@@ -384,6 +385,8 @@ async function slashModPurge(interaction) {
 
   const channel = interaction.channel;
   if (num > 0) {
+    await interaction.editReply({content: `Deleting ${num} messages...`});
+
     // Use bulkDelete() first
     while (num > 0) {
       const deleting = Math.min(num, 50);
@@ -409,7 +412,7 @@ async function slashModPurge(interaction) {
       .setColor(0x00ff00)
     ] });
 
-    await interaction.editReply({ content: `${number - num} messages deleted.` });
+    await interaction.followUp({ content: `${number - num} messages deleted.`, ephemeral: true });
   } else {
     await interaction.editReply({ content: `You need to tell me how many to delete!` });
   }
@@ -511,10 +514,13 @@ async function slashModSummary(interaction) {
     }
   }
 
+  let text = response.join("\n");
+  text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
+
   await interaction.editReply({ embeds: [
     u.embed({ author: interaction.member })
     .setTitle("Infraction Summary")
-    .setDescription(response.join("\n"))
+    .setDescription(text)
     .setColor(0x00ff00)
   ] });
 }

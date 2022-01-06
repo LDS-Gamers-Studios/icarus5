@@ -143,7 +143,7 @@ const utils = {
     });
 
     const confirm = await interaction.channel.awaitMessageComponent({
-      filter: (int) => int.user.id === interaction.member.id && (int.customId === confirmTrue || int.customId === confirmFalse),
+      filter: (button) => button.user.id === interaction.member.id && (button.customId === confirmTrue || button.customId === confirmFalse),
       componentType: "BUTTON",
       time: 60000
     }).catch(() => ({ customId: "confirmTimeout" }));
