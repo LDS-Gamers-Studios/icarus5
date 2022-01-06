@@ -2,6 +2,7 @@ const Discord = require("discord.js"),
   config = require("../config/config.json");
 
 const errorLog = new Discord.WebhookClient(config.error);
+const { nanoid } = require("nanoid");
 
 /**
  * @typedef {Object} ParsedInteraction
@@ -105,7 +106,8 @@ const utils = {
    * @param {Discord.Interaction} interaction The interaction to delete.
    * @param {number} t The length of time to wait before deletion, in milliseconds.
    */
-  cleanInteraction: async function(interaction, t = 2000) {
+  cleanInteraction: async function(interaction, t = 20000) {
+    if (interaction.ephemeral) { return; } // Can't delete ephemeral interactions.
     await utils.wait(t);
     interaction.deleteReply();
   },
@@ -113,6 +115,47 @@ const utils = {
    * Shortcut to Discord.Collection. See docs there for reference.
    */
   Collection: Discord.Collection,
+  /**
+   * Confirm Dialog
+   * @function confirmInteraction
+   * @param {Discord.Interaction} interaction The interaction to confirm
+   * @param {String} prompt The prompt for the confirmation
+   * @returns {Boolean}
+   */
+  confirmInteraction: async (interaction, prompt = "Are you sure?", title = "Confirmation Dialog") => {
+    const reply = (interaction.deferred || interaction.replied) ? "editReply" : "reply";
+    const embed = utils.embed({ author: interaction.member || interaction.user })
+      .setColor(0xff0000)
+      .setTitle(title)
+      .setDescription(prompt);
+    const confirmTrue = utils.customId(),
+      confirmFalse = utils.customId();
+
+    await interaction[reply]({
+      embeds: [embed],
+      components: [
+        new Discord.MessageActionRow().addComponents(
+          new Discord.MessageButton().setCustomId(confirmTrue).setEmoji("✅").setLabel("Confirm").setStyle("SUCCESS"),
+          new Discord.MessageButton().setCustomId(confirmFalse).setEmoji("⛔").setLabel("Cancel").setStyle("DANGER")
+        )
+      ],
+      ephemeral: true
+    });
+
+    const confirm = await interaction.channel.awaitMessageComponent({
+      filter: (button) => button.user.id === interaction.member.id && (button.customId === confirmTrue || button.customId === confirmFalse),
+      componentType: "BUTTON",
+      time: 60000
+    }).catch(() => ({ customId: "confirmTimeout" }));
+
+    if (confirm.customId === confirmTrue) return true;
+    else if (confirm.customId === confirmFalse) return false;
+    else return null;
+  },
+  /**
+   * Shortcut to nanoid. See docs there for reference.
+   */
+  customId: nanoid,
   /**
    * Shortcut to Discord.Util.escapeMarkdown. See docs there for reference.
    */
