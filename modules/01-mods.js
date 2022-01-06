@@ -456,6 +456,11 @@ async function slashModSlowmode(interaction) {
   const timer = interaction.options.getInteger("timer") || 15;
   const ch = interaction.options.getChannel("channel") || interaction.channel;
 
+  if ([ "GUILD_VOICE", "GUILD_CATEGORY", "GUILD_STORE", "GUILD_STAGE_VOICE", "UNKNOWN" ].includes(ch.type)) {
+    interaction.editReply("You can't set slowmode in that channel.");
+    return;
+  }
+
   if (duration == 0) {
     ch.edit({ rateLimitPerUser: 0 }).catch(e => u.errorHandler(e, interaction));
 
@@ -536,6 +541,11 @@ async function slashModTrust(interaction) {
   if (apply) {
     switch (type) {
     case 'initial':
+      if (member.roles.cache.has(sf.roles.trusted)) {
+        interaction.editReply({ content: `${member} is already trusted.` });
+        return;
+      }
+
       member.send(
         `You have been marked as "Trusted" in ${interaction.guild.name} . `
         + "This means you are now permitted to post images and links in chat. "
@@ -550,6 +560,10 @@ async function slashModTrust(interaction) {
       }
       break;
     case 'plus':
+      if (member.roles.cache.has(sf.roles.trustedplus)) {
+        interaction.editReply({ content: `${member} is already trusted+.` });
+        return;
+      }
       if (!member.roles.cache.has(sf.roles.trusted)) {
         await interaction.editReply({ content: `${member} needs <@&${sf.roles.trusted}> before they can be given <@&${sf.roles.trustedplus}>!` });
         return;
@@ -564,6 +578,10 @@ async function slashModTrust(interaction) {
       .setDescription(`${interaction.member} gave ${member} the <@&${role}> role.`);
       break;
     case 'watch':
+      if (member.roles.cache.has(sf.roles.untrusted)) {
+        interaction.editReply({ content: `${member} is already watched.` });
+        return;
+      }
       embed.setTitle("User Watch")
       .setDescription(`${member} (${member.displayName}) has been added to the watch list by ${interaction.member}. Use \`/mod trust watch @user false\` command to remove them.`);
       break;
@@ -574,6 +592,10 @@ async function slashModTrust(interaction) {
   } else {
     switch (type) {
     case 'initial':
+      if (!member.roles.cache.has(sf.roles.trusted)) {
+        interaction.editReply({ content: `${member} in't trusted already.` });
+        return;
+      }
       member.send(
         `You have been removed from "Trusted" in ${interaction.guild.name}. `
         + "This means you no longer have the ability to post images. "
@@ -588,6 +610,10 @@ async function slashModTrust(interaction) {
       await member.roles.add(sf.roles.untrusted);
       break;
     case 'plus':
+      if (!member.roles.cache.has(sf.roles.trustedplus)) {
+        interaction.editReply({ content: `${member} in't trusted+ already.` });
+        return;
+      }
       member.send(
         `You have been removed from "Trusted+" in ${interaction.guild.name}. `
         + "This means you no longer have the ability to stream video in the server. "
@@ -598,6 +624,10 @@ async function slashModTrust(interaction) {
       .setDescription(`${interaction.member} removed the <@&${role}> role from ${member}.`);
       break;
     case 'watch':
+      if (!member.roles.cache.has(sf.roles.untrusted)) {
+        interaction.editReply({ content: `${member} in't watched already.` });
+        return;
+      }
       embed.setTitle("User Unwatched")
       .setDescription(`${member} (${member.displayName}) has been removed from the watch list by ${interaction.member}. Use \`/mod trust watch @user true\` command to re-add them.`);
       break;
@@ -630,7 +660,7 @@ async function slashModWarn(interaction) {
     .setDescription(reason)
     .addField("Resolved", `${u.escapeText(interaction.user.username)} issued a ${value} point warning.`)
     .setTimestamp();
-  const flag = await interaction.guild.channels.cache.get(sf.channels.modLogs).send({ embeds: [embed] });
+  const flag = await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
 
   await Module.db.infraction.save({
     discordId: member.id,
@@ -639,13 +669,14 @@ async function slashModWarn(interaction) {
     message: interaction.id,
     flag: flag.id,
     channel: interaction.channel.id,
-    mod: interaction.author.id
+    mod: interaction.member.id
   });
 
   const summary = await Module.db.infraction.getSummary(member.id);
   embed.addField(`Infraction Summary (${summary.time} Days) `, `Infractions: ${summary.count}\nPoints: ${summary.points}`);
 
   flag.edit({ embeds: [embed] });
+  interaction.editReply(`${member} has been warned **${value}** points for reason \`${reason}\``);
 }
 
 const Module = new Augur.Module()
