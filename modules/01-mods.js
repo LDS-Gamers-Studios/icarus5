@@ -37,7 +37,7 @@ function nameGen() {
   return result;
 }
 
-function getSummaryEmbed(member, time, guild) {
+async function getSummaryEmbed(member, time, guild) {
   const data = await Module.db.infraction.getSummary(member.id, time);
   const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
   if ((data.count > 0) && (data.detail.length > 0)) {
@@ -144,7 +144,7 @@ async function slashModFullInfo(interaction) {
 
   let userDoc = await Module.db.user.fetchUser(member.id);
 
-  let e = getSummaryEmbed(member, time, interaction.guild);
+  let e = await getSummaryEmbed(member, time, interaction.guild);
 
   await interaction.editReply({ embeds: [
     e.addField("ID", member.id, true)
@@ -262,7 +262,7 @@ async function slashModMute(interaction) {
 
       // Impose Mute
       await target.roles.add(sf.roles.muted);
-      if (target.voice.channel) { 
+      if (target.voice.channel) {
         await target.voice.disconnect(reason);
         await target.voice.setMute(true, reason);
       }
@@ -545,7 +545,7 @@ async function slashModSummary(interaction) {
   await interaction.deferReply({ ephemeral: true });
   const member = interaction.options.getMember("user");
   const time = interaction.options.getInteger("history") ?? 28;
-  let e = getSummaryEmbed(member, time, interaction.guild);
+  let e = await getSummaryEmbed(member, time, interaction.guild);
   await interaction.editReply({ embeds: [ e ] });
 }
 
