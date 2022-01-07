@@ -1,5 +1,5 @@
 const Augur = require("augurbot"),
-  Rank = require("../utils/RankInfo"),
+  Rank = require("../utils/rankInfo"),
   sf = require("../config/snowflakes"),
   u = require("../utils/utils");
 
