@@ -1,6 +1,7 @@
 // This file is a place for all the publicly visible bot diagnostic commands usable primarily only by the head bot dev.
 
 const Augur = require("augurbot"),
+  p = require("../utils/perms"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes");
 
@@ -57,20 +58,20 @@ const Module = new Augur.Module()
   category: "Bot Admin",
   hidden: true,
   aliases: ["q", "restart"],
+  permissions: p.isAdmin,
   process: async function(msg) {
     try {
       await msg.react("🛏");
       await msg.client.destroy();
       process.exit();
     } catch (e) { u.errorHandler(e, msg); }
-  },
-  permissions: (msg) => sf.adminId.includes(msg.author.id)
+  }
 })
 .addCommand({ name: "ping",
   category: "Bot Admin",
   description: "Gets the current total ping time for the bot.",
   hidden: true,
-  permissions: (msg) => (msg.author.id === sf.ownerId) || msg.member?.roles.cache.some(r => [sf.roles.mod, sf.roles.management, sf.roles.team].includes(r.id)),
+  permissions: (msg) => p.isOwner(msg) || p.isMod(msg) || p.isTeam(msg),
   process: async (msg) => {
     const sent = await msg.reply({ content: 'Pinging...', allowedMentions: { repliedUser: false } });
     sent.edit({ content: `Pong! Took ${sent.createdTimestamp - (msg.editedTimestamp ? msg.editedTimestamp : msg.createdTimestamp)}ms`, allowedMentions: { repliedUser: false } });
@@ -80,6 +81,7 @@ const Module = new Augur.Module()
   category: "Bot Admin",
   description: "Pull bot updates from git",
   hidden: true,
+  permissions: p.isOwner,
   process: (msg) => {
     const spawn = require("child_process").spawn;
 
@@ -104,14 +106,13 @@ const Module = new Augur.Module()
         msg.channel.send(`ERROR CODE ${code}:\n${stderr.join("\n")}`).then(u.clean);
       }
     });
-  },
-  permissions: (msg) => (sf.ownerId === (msg.author.id))
+  }
 })
 .addCommand({ name: "pulse",
   category: "Bot Admin",
   hidden: true,
   description: "The pulse command get basic information about the bot's current health and uptime for each shard (if applicable).",
-  permissions: (msg) => (sf.ownerId === msg.author.id),
+  permissions: p.isOwner,
   process: async function(msg) {
     try {
       const client = msg.client;
@@ -155,6 +156,7 @@ const Module = new Augur.Module()
   description: "This command reloads one or more modules. Good for loading in small fixes.",
   info: "Use the command without a suffix to reload all command files.\n\nUse the command with the module name (including the `.js`) to reload a specific file.",
   parseParams: true,
+  permissions: p.isAdmin,
   process: (msg, ...files) => {
     u.clean(msg);
     const fs = require("fs"),
@@ -167,8 +169,7 @@ const Module = new Augur.Module()
       } catch (error) { msg.client.errorHandler(error, msg); }
     }
     msg.react("👌").catch(u.noop);
-  },
-  permissions: (msg) => sf.adminId.includes(msg.author.id)
+  }
 })
 // When the bot is fully online, fetch all the ldsg members, since it will only autofetch for small servers and we want them all.
 .addEvent("ready", () => {
