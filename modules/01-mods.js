@@ -711,7 +711,7 @@ const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
   guildId: sf.ldsg,
-  commandId: sf.commands.mod,
+  commandId: sf.commands.modSlash,
   permissions: p.isMod,
   process: async (interaction) => {
     try {

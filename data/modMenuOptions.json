@@ -1,0 +1,16 @@
+{
+  "flagMsg": {
+    "label": "mandatory",
+    "value": "flagMsg",
+    "description": "optional",
+    "emoji": "optional",
+    "default": false
+  },
+  "flagUser": {
+    "label": "",
+    "value": "flagUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  }
+}
