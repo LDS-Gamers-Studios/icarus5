@@ -1,4 +1,5 @@
 const Augur = require("augurbot"),
+  Discord = require("discord.js"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes.json");
 
@@ -6,7 +7,7 @@ const muteState = new u.Collection();
 
 /**
  * Give the mods a heads up that someone isn't getting their DMs.
- * @param {GuildMember} member The guild member that's blocked.
+ * @param {Discord.GuildMember} member The guild member that's blocked.
  */
 function blocked(member) {
   return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
@@ -44,7 +45,7 @@ async function getSummaryEmbed(member, time, guild) {
     data.detail = data.detail.reverse(); // Newest to oldest is what we want
     for (const record of data.detail) {
       const mod = guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
-      let pointsPart = record.value === 0 && mod.id !== Module.client.user.id ? "Note" : `${record.value} pts`;
+      const pointsPart = record.value === 0 && mod.id !== Module.client.user.id ? "Note" : `${record.value} pts`;
       response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
     }
   }
@@ -135,16 +136,16 @@ async function slashModBan(interaction) {
 }
 
 async function slashModFullInfo(interaction) {
-  await interaction.deferReply({ephemeral: true});
+  await interaction.deferReply({ ephemeral: true });
   const member = interaction.options.getMember("user") ?? interaction.member;
   const time = interaction.options.getInteger("history") ?? 28;
 
   let roleString = member.roles.cache.sort((a, b) => b.comparePositionTo(a)).map(role => role.name).join(", ");
   if (roleString.length > 1024) roleString = roleString.substr(0, roleString.indexOf(", ", 1000)) + " ...";
 
-  let userDoc = await Module.db.user.fetchUser(member.id);
+  const userDoc = await Module.db.user.fetchUser(member.id);
 
-  let e = await getSummaryEmbed(member, time, interaction.guild);
+  const e = await getSummaryEmbed(member, time, interaction.guild);
 
   await interaction.editReply({ embeds: [
     e.addField("ID", member.id, true)
@@ -427,7 +428,7 @@ async function slashModPurge(interaction) {
 
   const channel = interaction.channel;
   if (num > 0) {
-    await interaction.editReply({content: `Deleting ${num} messages...`});
+    await interaction.editReply({ content: `Deleting ${num} messages...` });
 
     // Use bulkDelete() first
     while (num > 0) {
@@ -545,7 +546,7 @@ async function slashModSummary(interaction) {
   await interaction.deferReply({ ephemeral: true });
   const member = interaction.options.getMember("user");
   const time = interaction.options.getInteger("history") ?? 28;
-  let e = await getSummaryEmbed(member, time, interaction.guild);
+  const e = await getSummaryEmbed(member, time, interaction.guild);
   await interaction.editReply({ embeds: [ e ] });
 }
 
