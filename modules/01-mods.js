@@ -37,6 +37,27 @@ function nameGen() {
   return result;
 }
 
+function getSummaryEmbed(member, time, guild) {
+  const data = await Module.db.infraction.getSummary(member.id, time);
+  const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
+  if ((data.count > 0) && (data.detail.length > 0)) {
+    data.detail = data.detail.reverse(); // Newest to oldest is what we want
+    for (const record of data.detail) {
+      const mod = guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
+      let pointsPart = record.value === 0 && mod.id !== Module.client.user.id ? "Note" : `${record.value} pts`;
+      response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
+    }
+  }
+
+  let text = response.join("\n");
+  text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
+
+  return u.embed({ author: member })
+    .setTitle("Infraction Summary")
+    .setDescription(text)
+    .setColor(0x00ff00);
+}
+
 async function slashModBan(interaction) {
   try {
     await interaction.deferReply({ ephemeral: true });
@@ -111,6 +132,27 @@ async function slashModBan(interaction) {
     }
     u.cleanInteraction(interaction);
   } catch (error) { u.errorHandler(error, interaction); }
+}
+
+async function slashModFullInfo(interaction) {
+  await interaction.deferReply({ephemeral: true});
+  const member = interaction.options.getMember("user") ?? interaction.member;
+  const time = interaction.options.getInteger("history") ?? 28;
+
+  let roleString = member.roles.cache.sort((a, b) => b.comparePositionTo(a)).map(role => role.name).join(", ");
+  if (roleString.length > 1024) roleString = roleString.substr(0, roleString.indexOf(", ", 1000)) + " ...";
+
+  let userDoc = await Module.db.user.fetchUser(member.id);
+
+  let e = getSummaryEmbed(member, time, interaction.guild);
+
+  await interaction.editReply({ embeds: [
+    e.addField("ID", member.id, true)
+    .addField("Activity", `Posts: ${userDoc.posts}`, true)
+    .addField("Roles", roleString)
+    .addField("Joined", member.joinedAt.toUTCString(), true)
+    .addField("Account Created", member.user.createdAt.toUTCString(), true)
+  ] });
 }
 
 async function slashModKick(interaction) {
@@ -503,26 +545,8 @@ async function slashModSummary(interaction) {
   await interaction.deferReply({ ephemeral: true });
   const member = interaction.options.getMember("user");
   const time = interaction.options.getInteger("history") ?? 28;
-
-  const data = await Module.db.infraction.getSummary(member.id, time);
-  const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
-  if ((data.count > 0) && (data.detail.length > 0)) {
-    for (const record of data.detail) {
-      const mod = interaction.guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
-      let pointsPart = record.value === 0 && mod.id !== Module.client.user.id ? "Note" : `${record.value} pts`;
-      response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
-    }
-  }
-
-  let text = response.join("\n");
-  text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
-
-  await interaction.editReply({ embeds: [
-    u.embed({ author: interaction.member })
-    .setTitle("Infraction Summary")
-    .setDescription(text)
-    .setColor(0x00ff00)
-  ] });
+  let e = getSummaryEmbed(member, time, interaction.guild);
+  await interaction.editReply({ embeds: [ e ] });
 }
 
 async function slashModTrust(interaction) {
@@ -685,42 +709,6 @@ async function slashModWarn(interaction) {
   interaction.editReply(`${member} has been warned **${value}** points for reason \`${reason}\``);
 }
 
-async function slashModFullInfo(interaction) {
-  await interaction.deferReply({ephemeral: true});
-  const member = interaction.options.getMember("user") ?? interaction.member;
-  const time = interaction.options.getInteger("history") ?? 28;
-
-  let roleString = member.roles.cache.sort((a, b) => b.comparePositionTo(a)).map(role => role.name).join(", ");
-  if (roleString.length > 1024) roleString = roleString.substr(0, roleString.indexOf(", ", 1000)) + " ...";
-
-  let userDoc = await Module.db.user.fetchUser(member.id);
-
-  const data = await Module.db.infraction.getSummary(member.id, time);
-  const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
-  if ((data.count > 0) && (data.detail.length > 0)) {
-    for (const record of data.detail) {
-      const mod = interaction.guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
-      let pointsPart = record.value === 0 && mod.id !== Module.client.user.id ? "Note" : `${record.value} pts`;
-      response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
-    }
-  }
-
-  let text = response.join("\n");
-  text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
-
-  await interaction.editReply({ embeds: [
-    u.embed({ author: member })
-    .setTitle("Infraction Summary")
-    .setDescription(text)
-    .setColor(0x00ff00)
-    .addField("ID", member.id, true)
-    .addField("Activity", `Posts: ${userDoc.posts}`, true)
-    .addField("Roles", roleString)
-    .addField("Joined", member.joinedAt.toUTCString(), true)
-    .addField("Account Created", member.user.createdAt.toUTCString(), true)
-  ] });
-}
-
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
@@ -733,6 +721,9 @@ const Module = new Augur.Module()
       switch (subcommand) {
       case "ban":
         await slashModBan(interaction);
+        break;
+      case "fullinfo":
+        await slashModFullInfo(interaction);
         break;
       case "kick":
         await slashModKick(interaction);
@@ -763,9 +754,6 @@ const Module = new Augur.Module()
         break;
       case "warn":
         await slashModWarn(interaction);
-        break;
-      case "fullinfo":
-        await slashModFullInfo(interaction);
         break;
       default:
         u.errorHandler(Error("Unknown Interaction Subcommand"), interaction);
