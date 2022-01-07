@@ -30,6 +30,25 @@
       ]
     },
     {
+      "name": "fullinfo",
+      "description": "Check when a user joined the server and rank information",
+      "type": 1,
+      "options": [
+        {
+          "name": "user",
+          "description": "Which user do you want info about?",
+          "type": 6,
+          "required": false
+        },
+        {
+          "name": "history",
+          "description": "How many days history do you need? (Default `28`)",
+          "type": 4,
+          "required": false
+        }
+      ]
+    },
+    {
       "name": "kick",
       "description": "Kick a user",
       "type": 1,
@@ -123,9 +142,9 @@
       "type": 1,
       "options": [
         {
-          "name": "message",
-          "description": "Purge all messages after which message id?",
-          "type": 3,
+          "name": "number",
+          "description": "How many messages should I delete?",
+          "type": 4,
           "required": true
         },
         {

@@ -21,7 +21,7 @@ async function getGameList() {
     let games = await doc.sheetsByIndex[0].getRows();
     games = games.filter(g => !g.Recipient).filter(filterUnique);
     return games;
-  } catch (e) { e.errorHandler(e, "Fetch Game List"); }
+  } catch (e) { u.errorHandler(e, "Fetch Game List"); }
 }
 
 function filterUnique(e, i, a) {
@@ -78,7 +78,7 @@ async function slashBankGive(interaction) {
       const embed = u.embed({ author: interaction.client.user })
       .addField("Reason", reason)
       .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-      .setDescription(`${u.escapeText(giver.displayName)} just gave you ${coin}${receipt.value}.`);
+      .setDescription(`${u.escapeText(giver.toString())} just gave you ${coin}${receipt.value}.`);
       recipient.send({ embeds: [embed] }).catch(u.noop);
     }
     interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`);
@@ -356,7 +356,7 @@ async function slashBankAward(interaction) {
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
     .addField("Reason", reason)
-    .setDescription(`**${u.escapeText(giver.displayName)}** ${value > 0 ? "awarded" : "docked"} ${u.escapeText(recipient.displayName)} ${ember}${value}.`);
+    .setDescription(`**${giver.toString()}** ${value > 0 ? "awarded" : "docked"} ${recipient.toString()} ${ember}${value}.`);
     hoh.send({ embeds: [embed] });
   } catch (e) { u.errorHandler(e, interaction); }
 }

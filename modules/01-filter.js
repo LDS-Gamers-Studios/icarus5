@@ -180,10 +180,11 @@ async function warnCard(msg, filtered, call) {
     if (filtered) embed.addField("Match", filtered);
 
     embed.addField("Channel", msg.channel?.toString(), true)
+    .addField("User", msg.author.toString(), true)
     .addField("Jump to Post", `[Original Message](${msg.url})`, true);
 
     // Minecraft Filter
-    if (msg.channel.id == sf.channels.minecraftchat) {
+    if (msg.channel.parentId == sf.channels.minecraftcategory) {
       msg.client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
     }
 
@@ -195,7 +196,10 @@ async function warnCard(msg, filtered, call) {
     if (call) {
       u.clean(msg, 0);
       const ldsg = msg.client.guilds.cache.get(sf.ldsg);
-      content = [ldsg.roles.cache.get(sf.roles.mod).toString()];
+      content = [];
+      if (!msg.member.roles.cache.has(sf.roles.muted)) {
+        content.push(ldsg.roles.cache.get(sf.roles.mod).toString());
+      }
       if (msg.author.bot) {
         content.push("The message has been deleted. The member was *not* muted, on account of being a bot.");
       } else {
@@ -271,10 +275,10 @@ async function processCardAction(interaction) {
       const userDoc = await Module.db.user.fetchUser(member);
 
       const infractionSummary = await Module.db.infraction.getSummary(member.id);
-      let infractionDescription = [`**${u.escapeText(member.displayName)}** has had **${infractionSummary.count}** infraction(s) in the last **${infractionSummary.time}** days, totaling **${infractionSummary.points}** points.`];
+      let infractionDescription = [`**${member.toString()}** has had **${infractionSummary.count}** infraction(s) in the last **${infractionSummary.time}** days, totaling **${infractionSummary.points}** points.`];
       for (const record of infractionSummary.detail) {
         const recordMod = await interaction.guild.members.fetch(record.mod);
-        infractionDescription.push(`${record.timestamp.toLocaleDateString()} (${record.value} pts, modded by ${u.escapeText(recordMod?.displayName ?? "Some Unknown Mod")}): ${record.description}`);
+        infractionDescription.push(`${record.timestamp.toLocaleDateString()} (${record.value} pts, modded by ${recordMod?.toString() ?? "Some Unknown Mod"}): ${record.description}`);
       }
 
       infractionDescription = infractionDescription.join("\n");
@@ -295,7 +299,7 @@ async function processCardAction(interaction) {
 
       await Module.db.infraction.remove(flag);
       embed.setColor(0x00FF00)
-      .addField("Resolved", `${u.escapeText(mod.displayName)} cleared the flag.`);
+      .addField("Resolved", `${mod.toString()} cleared the flag.`);
       embed.fields = embed.fields.filter(f => !f.name.startsWith("Jump"));
 
       await interaction.update({ embeds: [embed], components: [] });
@@ -315,15 +319,15 @@ async function processCardAction(interaction) {
       switch (interaction.customId) {
       case "modCardVerbal":
         infraction.value = 0;
-        embed.setColor(0x00FFFF).addField("Resolved", `${u.escapeText(mod.displayName)} issued a verbal warning.`);
+        embed.setColor(0x00FFFF).addField("Resolved", `${mod.toString()} issued a verbal warning.`);
         break;
       case "modCardMinor":
         infraction.value = 1;
-        embed.addField("Resolved", `${u.escapeText(mod.displayName)} issued a 1 point warning.`);
+        embed.addField("Resolved", `${mod.toString()} issued a 1 point warning.`);
         break;
       case "modCardMajor":
         infraction.value = 5;
-        embed.addField("Resolved", `${u.escapeText(mod.displayName)} issued a 5 point warning.`);
+        embed.addField("Resolved", `${mod.toString()} issued a 5 point warning.`);
         break;
       case "modCardMute":
         infraction.value = 10;
@@ -346,7 +350,7 @@ async function processCardAction(interaction) {
             }
           });
         }
-        embed.addField("Resolved", `${u.escapeText(mod.displayName)} muted the member.`);
+        embed.addField("Resolved", `${mod.toString()} muted the member.`);
         break;
       }
       await Module.db.infraction.update(infraction);
@@ -360,8 +364,8 @@ async function processCardAction(interaction) {
 
         const response = (
           (infraction.value == 0) ?
-            `The LDSG Mods would like to speak with you about the following post. It may be that they're looking for some additional context or just want to handle things informally.\n\n**${mod.displayName}** will be reaching out to you shortly, if they haven't already.` :
-            `We have received one or more complaints regarding content you posted. We have reviewed the content in question and have determined, in our sole discretion, that it is against our code of conduct (<https://ldsgamers.com/code-of-conduct>). This content was removed on your behalf. As a reminder, if we believe that you are frequently in breach of our code of conduct or are otherwise acting inconsistently with the letter or spirit of the code, we may limit, suspend or terminate your access to the LDSG Discord server.\n\n**${u.escapeText(mod.displayName)}** has issued this warning.`
+            `The LDSG Mods would like to speak with you about the following post. It may be that they're looking for some additional context or just want to handle things informally.\n\n**${mod.toString()}** will be reaching out to you shortly, if they haven't already.` :
+            `We have received one or more complaints regarding content you posted. We have reviewed the content in question and have determined, in our sole discretion, that it is against our code of conduct (<https://ldsgamers.com/code-of-conduct>). This content was removed on your behalf. As a reminder, if we believe that you are frequently in breach of our code of conduct or are otherwise acting inconsistently with the letter or spirit of the code, we may limit, suspend or terminate your access to the LDSG Discord server.\n\n**${mod.toString()}** has issued this warning.`
         );
 
         member.send({ content: response, embeds: [quote] }).catch(() => blocked(member));
