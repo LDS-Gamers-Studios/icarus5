@@ -509,7 +509,7 @@ async function slashModSummary(interaction) {
   if ((data.count > 0) && (data.detail.length > 0)) {
     for (const record of data.detail) {
       const mod = interaction.guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
-      let pointsPart = record.value === 0 && mod.id !== Module.client.id ? "Note" : `${record.value} pts`;
+      let pointsPart = record.value === 0 && mod.id !== Module.client.user.id ? "Note" : `${record.value} pts`;
       response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
     }
   }
@@ -700,7 +700,7 @@ async function slashModFullInfo(interaction) {
   if ((data.count > 0) && (data.detail.length > 0)) {
     for (const record of data.detail) {
       const mod = interaction.guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
-      let pointsPart = record.value === 0 && mod.id !== Module.client.id ? "Note" : `${record.value} pts`;
+      let pointsPart = record.value === 0 && mod.id !== Module.client.user.id ? "Note" : `${record.value} pts`;
       response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
     }
   }
