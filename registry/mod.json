@@ -253,6 +253,25 @@
           "required": false
         }
       ]
+    },
+    {
+      "name": "fullinfo",
+      "description": "Check when a user joined the server and rank information",
+      "type": 1,
+      "options": [
+        {
+          "name": "user",
+          "description": "Which user do you want info about?",
+          "type": 6,
+          "required": false
+        },
+        {
+          "name": "history",
+          "description": "How many days history do you need? (Default `28`)",
+          "type": 4,
+          "required": false
+        }
+      ]
     }
   ]
 }

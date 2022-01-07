@@ -685,6 +685,42 @@ async function slashModWarn(interaction) {
   interaction.editReply(`${member} has been warned **${value}** points for reason \`${reason}\``);
 }
 
+async function slashModFullInfo(interaction) {
+  await interaction.deferReply({ephemeral: true});
+  const member = interaction.options.getMember("user") ?? interaction.member;
+  const time = interaction.options.getInteger("history") ?? 28;
+
+  let roleString = member.roles.cache.sort((a, b) => b.comparePositionTo(a)).map(role => role.name).join(", ");
+  if (roleString.length > 1024) roleString = roleString.substr(0, roleString.indexOf(", ", 1000)) + " ...";
+
+  let userDoc = await Module.db.user.fetchUser(member.id);
+
+  const data = await Module.db.infraction.getSummary(member.id, time);
+  const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
+  if ((data.count > 0) && (data.detail.length > 0)) {
+    for (const record of data.detail) {
+      const mod = interaction.guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
+      let pointsPart = record.value === 0 && mod.id !== Module.client.id ? "Note" : `${record.value} pts`;
+      response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
+    }
+  }
+
+  let text = response.join("\n");
+  text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
+
+  await interaction.editReply({ embeds: [
+    u.embed({ author: member })
+    .setTitle("Infraction Summary")
+    .setDescription(text)
+    .setColor(0x00ff00)
+    .addField("ID", member.id, true)
+    .addField("Activity", `Posts: ${userDoc.posts}`, true)
+    .addField("Roles", roleString)
+    .addField("Joined", member.joinedAt.toUTCString(), true)
+    .addField("Account Created", member.user.createdAt.toUTCString(), true)
+  ] });
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
@@ -727,6 +763,9 @@ const Module = new Augur.Module()
         break;
       case "warn":
         await slashModWarn(interaction);
+        break;
+      case "fullinfo":
+        await slashModFullInfo(interaction);
         break;
       default:
         u.errorHandler(Error("Unknown Interaction Subcommand"), interaction);
