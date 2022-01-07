@@ -1,7 +1,8 @@
 const Augur = require("augurbot"),
   Discord = require("discord.js"),
   u = require("../utils/utils"),
-  sf = require("../config/snowflakes.json");
+  sf = require("../config/snowflakes.json"),
+  p = require("../utils/perms");
 
 const muteState = new u.Collection();
 
@@ -25,10 +26,6 @@ function compareRoles(mod, target) {
   const targetHigh = target.roles.cache.filter(r => r.id != sf.roles.live)
     .sort((a, b) => b.comparePositionTo(a)).first();
   return (modHigh.comparePositionTo(targetHigh) > 0);
-}
-
-function isMod(interaction) {
-  return interaction.member.roles.cache.some(r => ([sf.roles.management, sf.roles.mod].includes(r.id)));
 }
 
 function nameGen() {
@@ -715,7 +712,7 @@ const Module = new Augur.Module()
   name: "mod",
   guildId: sf.ldsg,
   commandId: sf.commands.mod,
-  permissions: isMod,
+  permissions: p.isMod,
   process: async (interaction) => {
     try {
       const subcommand = interaction.options.getSubcommand(true);
