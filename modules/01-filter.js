@@ -238,7 +238,7 @@ async function warnCard(msg, filtered, call) {
       await Module.db.infraction.save(infraction);
     }
 
-  } catch (error) { u.errorHandler(error, "Mod Card Reaction"); }
+  } catch (error) { u.errorHandler(error, "Mod Card Creation"); }
 }
 
 /**
