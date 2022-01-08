@@ -11,7 +11,7 @@ const isMgr = 1 << 2;
 
 function permCheck(inter) {
   return (
-    inter.isContextMenu() * isMsg |
+    (inter.targetType === "MESSAGE") * isMsg |
     p.isMod(inter) * isMod |
     p.isManager(inter) * isMgr
   );
