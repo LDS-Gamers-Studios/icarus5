@@ -47,7 +47,7 @@ const models = {
     discordId = discordId.id ?? discordId;
     let user = await User.findOne({ discordId }).exec();
     if (!user) {
-      user = await models.user.newUser(discordId);
+      user = await models.newUser(discordId);
     }
     return user;
   },
@@ -85,7 +85,7 @@ const models = {
     // Get requested user
     const hasMember = records.some(r => r.discordId == member);
     if (member && !hasMember) {
-      const record = await models.user.getRank(member, members);
+      const record = await models.getRank(member, members);
       if (!season) record.rank = record.lifetime;
       if (record) records.push(record);
     }
