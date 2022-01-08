@@ -197,7 +197,7 @@ async function warnCard(msg, filtered, call) {
       u.clean(msg, 0);
       const ldsg = msg.client.guilds.cache.get(sf.ldsg);
       content = [];
-      if (!msg.member.roles.cache.has(sf.roles.muted)) {
+      if (!msg.member?.roles.cache.has(sf.roles.muted)) {
         content.push(ldsg.roles.cache.get(sf.roles.mod).toString());
       }
       if (msg.author.bot) {
