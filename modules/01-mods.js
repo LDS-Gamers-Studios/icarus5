@@ -2,7 +2,8 @@ const Augur = require("augurbot"),
   Discord = require("discord.js"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes.json"),
-  p = require("../utils/perms");
+  p = require("../utils/perms"),
+  c = require("../utils/modCommon");
 
 const muteState = new u.Collection();
 

@@ -11,7 +11,7 @@ const isMgr = 1 << 2;
 
 function permCheck(inter) {
   return (
-    inter.isMessageContextMenu() * isMsg |
+    inter.isContextMenu() * isMsg |
     p.isMod(inter) * isMod |
     p.isManager(inter) * isMgr
   );
@@ -21,7 +21,7 @@ async function flagUser() {
   // Stuff goes here
 }
 
-const allMenuItems = u.Collection()
+const allMenuItems = new u.Collection()
 .set('flagUser', { key: 0, data: menuOptions.flagUser, process: flagUser });
 
 async function modMenu(inter) {
