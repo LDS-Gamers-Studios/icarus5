@@ -158,14 +158,34 @@ const utils = {
       .setTitle("Awaiting Response")
       .setDescription(msg)
       .addField("Important", "Please reply to this message to respond.")
+      .setFooter("Times out in 60 seconds.")
+      .setColor("RED")
     ] });
 
     const collected = await message.channel.awaitMessages({
-      filter: (m) => m.reference.messageId === message.id, max: 1,
-      time: 60000, errors: ['time']
+      filter: (m) => m?.reference?.messageId === message.id, max: 1,
+      time: 60000
     });
 
-    return collected.size > 0 ? collected.first() : null;
+    if (collected.size === 0) {
+      await message.edit({ embeds: [
+        utils.embed()
+        .setTitle("Awaited Response")
+        .setDescription(msg)
+        .setFooter("Timed out. Please see original message.")
+        .setColor("PURPLE")
+      ] });
+      return null;
+    } else {
+      await message.edit({ embeds: [
+        utils.embed()
+        .setTitle("Awaited Response")
+        .setDescription(`Got your response! Please see original message.\n\n\`\`\`\n${collected.first()}\n\`\`\``)
+        .setFooter(`Question was \`${msg}\``)
+        .setColor("PURPLE")
+      ] });
+      return collected.first();
+    }
   },
   /**
    * Shortcut to nanoid. See docs there for reference.
@@ -208,7 +228,7 @@ const utils = {
 
     console.error(Date());
 
-    const embed = utils.embed().setTitle(error.name);
+    const embed = utils.embed().setTitle(error?.name?.toString() ?? "Error");
 
     if (message instanceof Discord.Message) {
       const loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
