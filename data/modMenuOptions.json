@@ -1,14 +1,140 @@
 {
-  "flagMsg": {
+  "flagUser": {
+    "label": "",
+    "value": "flagUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "userInfo": {
+    "label": "",
+    "value": "userInfo",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "userAvatar": {
+    "label": "",
+    "value": "userAvatar",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "flagMessage": {
     "label": "mandatory",
-    "value": "flagMsg",
+    "value": "flagMessage",
     "description": "optional",
     "emoji": "optional",
     "default": false
   },
-  "flagUser": {
+  "pinMessage": {
     "label": "",
-    "value": "flagUser",
+    "value": "pinMessage",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "fullinfo": {
+    "label": "",
+    "value": "fullinfo",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "summary": {
+    "label": "",
+    "value": "summary",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "noteUser": {
+    "label": "",
+    "value": "noteUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "renameUser": {
+    "label": "",
+    "value": "renameUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "trustUser": {
+    "label": "",
+    "value": "trustUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "trustPlusUser": {
+    "label": "",
+    "value": "trustPlusUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "watchUser": {
+    "label": "",
+    "value": "watchUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "warnUser": {
+    "label": "",
+    "value": "warnUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "muteUser": {
+    "label": "",
+    "value": "muteUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "timeoutUser": {
+    "label": "",
+    "value": "timeoutUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "kickUser": {
+    "label": "",
+    "value": "kickUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "banUser": {
+    "label": "",
+    "value": "banUser",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "warnMessage": {
+    "label": "",
+    "value": "warnMessage",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "purgeChannel": {
+    "label": "",
+    "value": "purgeChannel",
+    "description": "",
+    "emoji": "",
+    "default": false
+  },
+  "announceMessage": {
+    "label": "",
+    "value": "announceMessage",
     "description": "",
     "emoji": "",
     "default": false
