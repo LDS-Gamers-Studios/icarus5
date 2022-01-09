@@ -1,7 +1,8 @@
 const Augur = require("augurbot"),
   p = require("../utils/perms"),
   sf = require("../config/snowflakes"),
-  u = require("../utils/utils");
+  u = require("../utils/utils"),
+  Discord = require("discord.js");
 
 const menuOptions = require("../data/modMenuOptions");
 
@@ -13,69 +14,72 @@ function permCheck(inter) {
   return (
     (inter.targetType === "MESSAGE") * isMsg |
     p.isMod(inter) * isMod |
-    p.isManager(inter) * isMgr
+    p.isAdmin(inter) * isMgr
   );
 }
 
 const processes = {
-  flagUser: async function() {
+  flagUser: async function(interaction, target) {
     // Stuff goes here
   },
-  userInfo: async function() {
+  userInfo: async function(interaction, target) {
     // Stuff goes here
   },
-  userAvatar: async function() {
+  userAvatar: async function(interaction, target) {
     // Stuff goes here
   },
-  flagMessage: async function() {
+  flagMessage: async function(interaction, target) {
     // Stuff goes here
   },
-  pinMessage: async function() {
+  pinMessage: async function(interaction, target) {
+    target.pin();
+    await interaction.editReply({ embeds: [
+      u.embed().setTitle("Message pinned.")
+    ] });
+  },
+  fullinfo: async function(interaction, target) {
     // Stuff goes here
   },
-  fullinfo: async function() {
+  summary: async function(interaction, target) {
     // Stuff goes here
   },
-  summary: async function() {
+  noteUser: async function(interaction, target) {
     // Stuff goes here
   },
-  noteUser: async function() {
+  renameUser: async function(interaction, target) {
     // Stuff goes here
   },
-  renameUser: async function() {
+  trustUser: async function(interaction, target) {
     // Stuff goes here
   },
-  trustUser: async function() {
+  trustPlusUser: async function(interaction, target) {
     // Stuff goes here
   },
-  trustPlusUser: async function() {
+  watchUser: async function(interaction, target) {
     // Stuff goes here
   },
-  watchUser: async function() {
+  warnUser: async function(interaction, target) {
     // Stuff goes here
   },
-  warnUser: async function() {
+  muteUser: async function(interaction, target) {
     // Stuff goes here
   },
-  muteUser: async function() {
+  timeoutUser: async function(interaction, target) {
     // Stuff goes here
   },
-  timeoutUser: async function() {
+  kickUser: async function(interaction, target) {
     // Stuff goes here
   },
-  kickUser: async function() {
+  banUser: async function(interaction, target) {
     // Stuff goes here
   },
-  banUser: async function() {
+  warnMessage: async function(interaction, target) {
     // Stuff goes here
   },
-  warnMessage: async function() {
+  purgeChannel: async function(interaction, target) {
     // Stuff goes here
   },
-  purgeChannel: async function() {
-    // Stuff goes here
-  },
-  announceMessage: async function() {
+  announceMessage: async function(interaction, target) {
     // Stuff goes here
   }
 };
@@ -88,23 +92,51 @@ const allMenuItems = new u.Collection()
 .set(isMod + isMsg, ['warnMessage', 'purgeChannel'])
 .set(isMgr + isMsg, ['announceMessage']);
 
+/**
+   * @param {Discord.ContextMenuInteraction} inter
+   */
 async function modMenu(inter) {
+  await inter.deferReply({ ephemeral: false });
   const includeKey = permCheck(inter);
-  const options = [];
+  /* let optio ns = [];
   for (const [key, item] of allMenuItems) {
     if (includeKey & key == key) options.push(menuOptions[item]);
+  } */
+  const options = Array.from(allMenuItems.filter((val, key) => (key & includeKey) == key).values())
+    .flat().map(o => menuOptions[o])
+    .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
+
+  // Present menu to user
+  const selectId = u.customId();
+  const row = new Discord.MessageActionRow()
+    .addComponents(
+      new Discord.MessageSelectMenu()
+        .setCustomId(selectId)
+        .setPlaceholder('Nothing Selected')
+        .addOptions(options),
+    );
+
+  const target = inter.targetType === "MESSAGE" ? inter.options.getMessage("message") : inter.options.getUser("user");
+
+  const e = u.embed({ author: target.member ?? target.author ?? target }).setColor("RED");
+  let embeds = [ e ];
+  if (inter.targetType === "MESSAGE") {
+    e.setTitle("Select An Action On This Message");
+    e.setDescription(target.content);
+    embeds = embeds.concat(target.embeds);
+  } else {
+    e.setTitle("Select An Action On This User");
   }
 
-  // Sort menu items (alphabetically?)
-  // Present menu to user
+  await inter.editReply({ embeds, components: [ row ] });
 
-  // const menuSelect = await inter.channel.awaitMessageComponent(filter, componentType, time);
-  // const selection = menuSelect.values.first();
-
-  // Issue confirm dialog? Or should this (where applicable) be in the process function?
-  // const confirm = u.confirmInteraction(inter, "Do you want to do the thing?");
-  // Call function based on selection
-  // await processes[selection]()
+  const filter = (c) => c.customId === selectId && c.user.id === inter.member.id;
+  const menuSelect = await inter.channel.awaitMessageComponent({ filter, time: 60000 });
+  await menuSelect.deferReply();
+  embeds[0].setTitle("Action Selected").setColor("GREEN");
+  await inter.editReply({ embeds, components: [ ] });
+  const selection = menuSelect.values[0];
+  await processes[selection](menuSelect, target);
 }
 
 const Module = new Augur.Module()

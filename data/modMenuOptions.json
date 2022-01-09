@@ -1,142 +1,142 @@
 {
   "flagUser": {
-    "label": "",
+    "label": "Flag User",
     "value": "flagUser",
     "description": "",
-    "emoji": "",
+    "emoji": "🚩",
     "default": false
   },
   "userInfo": {
-    "label": "",
+    "label": "Get User Info",
     "value": "userInfo",
     "description": "",
-    "emoji": "",
+    "emoji": "ℹ",
     "default": false
   },
   "userAvatar": {
-    "label": "",
+    "label": "Get User Avatar",
     "value": "userAvatar",
     "description": "",
-    "emoji": "",
+    "emoji": "📷",
     "default": false
   },
   "flagMessage": {
-    "label": "mandatory",
+    "label": "Flag Message",
     "value": "flagMessage",
-    "description": "optional",
-    "emoji": "optional",
+    "description": "",
+    "emoji": "🚩",
     "default": false
   },
   "pinMessage": {
-    "label": "",
+    "label": "Pin Message",
     "value": "pinMessage",
     "description": "",
-    "emoji": "",
+    "emoji": "📌",
     "default": false
   },
   "fullinfo": {
-    "label": "",
+    "label": "Get User Info (Full)",
     "value": "fullinfo",
     "description": "",
-    "emoji": "",
+    "emoji": "ℹ",
     "default": false
   },
   "summary": {
-    "label": "",
+    "label": "Get User Infraction Summary",
     "value": "summary",
     "description": "",
-    "emoji": "",
+    "emoji": "🖨️",
     "default": false
   },
   "noteUser": {
-    "label": "",
+    "label": "Note User",
     "value": "noteUser",
     "description": "",
-    "emoji": "",
+    "emoji": "📓",
     "default": false
   },
   "renameUser": {
-    "label": "",
+    "label": "Rename User",
     "value": "renameUser",
     "description": "",
-    "emoji": "",
+    "emoji": "©",
     "default": false
   },
   "trustUser": {
-    "label": "",
+    "label": "Trust User",
     "value": "trustUser",
     "description": "",
-    "emoji": "",
+    "emoji": "👍",
     "default": false
   },
   "trustPlusUser": {
-    "label": "",
+    "label": "Trust+ User",
     "value": "trustPlusUser",
     "description": "",
-    "emoji": "",
+    "emoji": "💚",
     "default": false
   },
   "watchUser": {
-    "label": "",
+    "label": "Watch User",
     "value": "watchUser",
     "description": "",
-    "emoji": "",
+    "emoji": "👀",
     "default": false
   },
   "warnUser": {
-    "label": "",
+    "label": "Warn User",
     "value": "warnUser",
     "description": "",
-    "emoji": "",
+    "emoji": "😱",
     "default": false
   },
   "muteUser": {
-    "label": "",
+    "label": "Mute User",
     "value": "muteUser",
     "description": "",
-    "emoji": "",
+    "emoji": "🔇",
     "default": false
   },
   "timeoutUser": {
-    "label": "",
+    "label": "Timeout User",
     "value": "timeoutUser",
     "description": "",
-    "emoji": "",
+    "emoji": "🕑",
     "default": false
   },
   "kickUser": {
-    "label": "",
+    "label": "Kick User",
     "value": "kickUser",
     "description": "",
-    "emoji": "",
+    "emoji": "🥾",
     "default": false
   },
   "banUser": {
-    "label": "",
+    "label": "Ban User",
     "value": "banUser",
     "description": "",
-    "emoji": "",
+    "emoji": "🔨",
     "default": false
   },
   "warnMessage": {
-    "label": "",
+    "label": "Warn User For Message",
     "value": "warnMessage",
     "description": "",
-    "emoji": "",
+    "emoji": "😱",
     "default": false
   },
   "purgeChannel": {
-    "label": "",
+    "label": "Purge Channel",
     "value": "purgeChannel",
     "description": "",
-    "emoji": "",
+    "emoji": "❌",
     "default": false
   },
   "announceMessage": {
-    "label": "",
+    "label": "Announce Message",
     "value": "announceMessage",
     "description": "",
-    "emoji": "",
+    "emoji": "📣",
     "default": false
   }
 }
