@@ -55,27 +55,8 @@ const modCommon = {
       .setColor(0x00ff00);
   },
 
-  ban: async (interaction) => {
+  ban: async (interaction, target, reason, days) => {
     try {
-      if (!interaction.deffered && !interaction.replied) {
-        await interaction.deferReply({ ephemeral: true });
-      }
-      const target = interaction.options.getMember("user");
-      let reason = interaction.options.getString("reason");
-      const days = interaction.options.getInteger("clean") ?? 1;
-
-      if (!reason) {
-        const dm = await u.awaitDM("What is the reason for this ban?", interaction.member);
-        if (!dm) {
-          await interaction.editReply({ embeds: [
-            u.embed({ author: interaction.member }).setColor(0x0000ff)
-            .setDescription(`Ban cancelled`)
-          ] });
-          return;
-        }
-        reason = dm.content;
-      }
-
       if (!modCommon.compareRoles(interaction.member, target)) {
         await interaction.editReply({
           content: `You have insufficient permissions to ban ${target}!`

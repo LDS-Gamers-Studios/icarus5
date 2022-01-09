@@ -58,7 +58,28 @@ async function getSummaryEmbed(member, time, guild) {
 }
 
 async function slashModBan(interaction) {
-  c.ban(interaction);
+  await interaction.deferReply({ ephemeral: true });
+
+  const target = interaction.options.getMember("user");
+  let reason = interaction.options.getString("reason");
+  const days = interaction.options.getInteger("clean") ?? 1;
+
+  // This isn't useful in slash commands where the reason is required.
+  // But will be used in the context menu commands where it can't be provided.
+  if (!reason) {
+    await interaction.editReply("Please check your DMs from me.");
+    const dm = await u.awaitDM("What is the reason for this ban?", interaction.member);
+    if (!dm) {
+      await interaction.editReply({ embeds: [
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
+        .setDescription(`Ban cancelled`)
+      ], content: "" });
+      return;
+    }
+    reason = dm.content;
+  }
+
+  c.ban(interaction, target, reason, days);
 }
 
 async function slashModFullInfo(interaction) {

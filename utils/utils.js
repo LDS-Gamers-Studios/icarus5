@@ -139,7 +139,8 @@ const utils = {
           new Discord.MessageButton().setCustomId(confirmFalse).setEmoji("⛔").setLabel("Cancel").setStyle("DANGER")
         )
       ],
-      ephemeral: true
+      ephemeral: true,
+      content: ""
     });
 
     const confirm = await interaction.channel.awaitMessageComponent({
@@ -167,22 +168,22 @@ const utils = {
       time: 60000
     });
 
+    const response = utils.embed()
+      .setTitle("Awaited Response")
+      .setColor("PURPLE");
+
     if (collected.size === 0) {
       await message.edit({ embeds: [
-        utils.embed()
-        .setTitle("Awaited Response")
+        response
         .setDescription(msg)
         .setFooter("Timed out. Please see original message.")
-        .setColor("PURPLE")
       ] });
       return null;
     } else {
       await message.edit({ embeds: [
-        utils.embed()
-        .setTitle("Awaited Response")
+        response
         .setDescription(`Got your response! Please see original message.\n\n\`\`\`\n${collected.first()}\n\`\`\``)
         .setFooter(`Question was \`${msg}\``)
-        .setColor("PURPLE")
       ] });
       return collected.first();
     }
