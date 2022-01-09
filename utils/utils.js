@@ -140,7 +140,7 @@ const utils = {
         )
       ],
       ephemeral: true,
-      content: ""
+      content: null
     });
 
     const confirm = await interaction.channel.awaitMessageComponent({
