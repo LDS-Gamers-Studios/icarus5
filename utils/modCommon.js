@@ -60,11 +60,20 @@ const modCommon = {
   ban: async (interaction) => {
     try {
       if (!interaction.deffered && !interaction.replied) {
-        interaction.deferReply(true);
+        await interaction.deferReply({ ephemeral: true });
       }
       const target = interaction.options.getMember("user");
-      const reason = interaction.options.getString("reason");
+      let reason = interaction.options.getString("reason");
       const days = interaction.options.getInteger("clean") ?? 1;
+
+      if (!reason) {
+        const dm = await u.awaitDM("What is the reason for this ban?", interaction.member);
+        if (!dm) {
+          await interaction.editReply({ content: "Ban cancelled." });
+          return;
+        }
+        reason = dm.content;
+      }
 
       if (!compareRoles(interaction.member, target)) {
         await interaction.editReply({

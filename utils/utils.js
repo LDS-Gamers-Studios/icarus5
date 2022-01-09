@@ -152,6 +152,21 @@ const utils = {
     else if (confirm.customId === confirmFalse) return false;
     else return null;
   },
+  awaitDM: async (msg, user) => {
+    const message = await user.send({ embeds: [
+      utils.embed()
+      .setTitle("Awaiting Response")
+      .setDescription(msg)
+      .addField("Important", "Please reply to this message to respond.")
+    ] });
+
+    const collected = await message.channel.awaitMessages({
+      filter: (m) => m.reference.messageId === message.id, max: 1,
+      time: 60000, errors: ['time']
+    });
+
+    return collected.size > 0 ? collected.first() : null;
+  },
   /**
    * Shortcut to nanoid. See docs there for reference.
    */
