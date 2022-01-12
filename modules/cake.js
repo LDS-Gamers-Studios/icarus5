@@ -103,7 +103,7 @@ const Module = new Augur.Module()
 .addEvent("ready", () => {
   // Populate tenureCache
   const guild = Module.client.guilds.cache.get(sf.ldsg);
-  const exp = /Member - (\d+) Years?/;
+  const exp = /^Member - (\d+) Years?$/;
   const roles = guild.roles.cache.filter(r => exp.test(r.name));
 
   for (const [roleId, role] of roles) {
