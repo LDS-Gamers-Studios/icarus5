@@ -108,14 +108,11 @@ const allMenuItems = new u.Collection()
    * @param {Discord.ContextMenuInteraction} inter
    */
 async function modMenu(inter) {
-  await inter.deferReply({ ephemeral: false });
+  await inter.deferReply({ ephemeral: true });
   const includeKey = permCheck(inter);
-  /* let optio ns = [];
-  for (const [key, item] of allMenuItems) {
-    if (includeKey & key == key) options.push(menuOptions[item]);
-  } */
-  const options = Array.from(allMenuItems.filter((val, key) => (key & includeKey) == key).values())
-    .flat().map(o => menuOptions[o])
+  const options = allMenuItems.filter((v, k) => (includeKey & k) == k)
+    .reduce((a, v) => a.concat(v), [])
+    .map((v) => menuOptions[v])
     .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
 
   // Present menu to user
@@ -130,7 +127,8 @@ async function modMenu(inter) {
 
   const target = inter.targetType === "MESSAGE" ? inter.options.getMessage("message") : inter.options.getMember("user");
 
-  const e = u.embed({ author: target.member ?? target.author ?? target }).setColor("RED");
+  const e = u.embed({ author: target.member ?? target.author ?? target })
+    .setColor("RED");
   let embeds = [ e ];
   if (inter.targetType === "MESSAGE") {
     e.setTitle("Select An Action On This Message");
@@ -155,7 +153,9 @@ async function modMenu(inter) {
 
   const selection = menuSelect.values[0];
   await menuSelect.deferReply();
-  embeds[0].setTitle("Action Selected").setColor("GREEN").setFooter(options.filter(o => o.value === selection)[0].label);
+  embeds[0].setTitle("Action Selected")
+    .setColor("GREEN")
+    .setFooter(options.filter(o => o.value === selection)[0].label);
   await inter.editReply({ embeds, components: [ ] });
   await processes[selection](menuSelect, target);
 }

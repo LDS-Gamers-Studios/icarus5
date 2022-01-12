@@ -55,7 +55,7 @@ const modCommon = {
       .setColor(0x00ff00);
   },
 
-  ban: async (interaction, target, reason, days) => {
+  ban: async function(interaction, target, reason, days) {
     try {
       if (!modCommon.compareRoles(interaction.member, target)) {
         await interaction.editReply({
