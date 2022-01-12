@@ -76,8 +76,12 @@ async function testCakeDays() {
         const join = moment(member.joinedAt).subtract(offset?.priorTenure || 0, "days");
         if ((join?.month() == curDate.month()) && (join?.date() == curDate.date()) && (join?.year() < curDate.year())) {
           const years = curDate.year() - join.year();
-          await member.roles.remove(tenureIds).catch(u.noop);
-          await member.roles.add(tenure(years)).catch(e => u.errorHandler(e, `Tenure Role Add (${member.displayName} - ${memberId})`));
+
+          let roles = Array.from(member.roles.cache.keys());
+          roles = roles.filter((r) => !tenureIds.includes(r));
+          roles.push(tenure(years));
+          await member.roles.set(roles).catch(e => u.errorHandler(e, `Tenure Role Add (${member.displayName} - ${memberId})`));
+
           if (member.roles.cache.has(sf.roles.trusted)) {
             if (celebrating.has(years)) celebrating.get(years).push(member);
             else celebrating.set(years, [member]);
