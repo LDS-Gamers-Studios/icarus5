@@ -79,11 +79,11 @@ const processes = {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Ban cancelled`)
-      ], content: "" });
+      ], content: null });
       return;
     }
 
-    c.ban(interaction, target, dm.content, 1);
+    c.ban(interaction, target.member ?? target.author ?? target, dm.content, 1);
   },
   warnMessage: async function(interaction, target) {
     // Stuff goes here
