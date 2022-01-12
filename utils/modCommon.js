@@ -1,10 +1,6 @@
-const Augur = require("augurbot"),
-  Discord = require("discord.js"),
+const Discord = require("discord.js"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes.json");
-
-const Module = new Augur.Module(); // Probably a better way to do this,
-// this is purely for db access later
 
 const modCommon = {
   /**
@@ -37,13 +33,13 @@ const modCommon = {
   },
 
   getSummaryEmbed: async (member, time, guild) => {
-    const data = await Module.db.infraction.getSummary(member.id, time);
+    const data = await member.client.db.infraction.getSummary(member.id, time);
     const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
     if ((data.count > 0) && (data.detail.length > 0)) {
       data.detail = data.detail.reverse(); // Newest to oldest is what we want
       for (const record of data.detail) {
         const mod = guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
-        const pointsPart = record.value === 0 && mod.id !== Module.client.user.id ? "Note" : `${record.value} pts`;
+        const pointsPart = record.value === 0 && mod.id !== member.client.user.id ? "Note" : `${record.value} pts`;
         response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
       }
     }
@@ -93,7 +89,7 @@ const modCommon = {
         });
 
         // Save infraction
-        Module.db.infraction.save({
+        interaction.client.db.infraction.save({
           discordId: target.id,
           description: `[User Ban]: ${reason}`,
           value: 30,
@@ -106,7 +102,7 @@ const modCommon = {
           id: target.id,
           roles: { cache: targetRoles }
         };
-        Module.db.user.updateRoles(fakeTarget);
+        interaction.client.db.user.updateRoles(fakeTarget);
 
         // Log it
         interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
