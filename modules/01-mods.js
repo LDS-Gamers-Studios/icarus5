@@ -73,7 +73,7 @@ async function slashModBan(interaction) {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Ban cancelled`)
-      ], content: "" });
+      ], content: null });
       return;
     }
     reason = dm.content;

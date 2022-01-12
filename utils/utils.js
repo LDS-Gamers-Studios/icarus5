@@ -158,13 +158,12 @@ const utils = {
       utils.embed()
       .setTitle("Awaiting Response")
       .setDescription(msg)
-      .addField("Important", "Please reply to this message to respond.")
       .setFooter("Times out in 60 seconds.")
       .setColor("RED")
     ] });
 
     const collected = await message.channel.awaitMessages({
-      filter: (m) => m?.reference?.messageId === message.id, max: 1,
+      filter: (m) => !m.startsWith("!") && !m.startsWith("/"), max: 1,
       time: 60000
     });
 
