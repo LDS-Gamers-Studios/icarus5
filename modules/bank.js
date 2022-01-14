@@ -81,7 +81,7 @@ async function slashBankGive(interaction) {
       .setDescription(`${u.escapeText(giver.toString())} just gave you ${coin}${receipt.value}.`);
       recipient.send({ embeds: [embed] }).catch(u.noop);
     }
-    interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`);
+    interaction.reply({ content: `${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`, ephemeral: true });
 
     const withdrawal = {
       currency,
