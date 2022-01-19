@@ -1,0 +1,23 @@
+{
+  "name": "vote",
+  "description": "Create a vote",
+  "options": [
+    {
+      "type": 3,
+      "name": "options",
+      "description": "A list of options to vote for, separated by commas.",
+      "required": true
+    },
+    {
+      "type": 3,
+      "name": "title",
+      "description": "The title of the vote.",
+      "required": true
+    },
+    {
+      "type": 10,
+      "name": "duration",
+      "description": "Active voting time, in minutes, before the vote closes. Default is 60."
+    }
+  ]
+}
