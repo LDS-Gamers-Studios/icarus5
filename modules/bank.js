@@ -81,7 +81,7 @@ async function slashBankGive(interaction) {
       .setDescription(`${u.escapeText(giver.toString())} just gave you ${coin}${receipt.value}.`);
       recipient.send({ embeds: [embed] }).catch(u.noop);
     }
-    interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`);
+    interaction.reply({ content: `${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`, ephemeral: true });
 
     const withdrawal = {
       currency,
@@ -344,7 +344,7 @@ async function slashBankAward(interaction) {
     .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ? "awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
     recipient.send({ embeds: [embed] }).catch(u.noop);
 
-    interaction.reply(`${ember}${value} ${value > 0 ? "awarded to" : "docked from"} ${u.escapeText(recipient.displayName)} for ${reason}`);
+    interaction.reply({ content: `${ember}${value} ${value > 0 ? "awarded to" : "docked from"} ${u.escapeText(recipient.displayName)} for ${reason}`, ephemeral: true });
 
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
