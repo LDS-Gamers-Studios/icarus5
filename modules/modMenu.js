@@ -19,6 +19,10 @@ function permCheck(inter) {
   );
 }
 
+function getTargetUser(target) {
+  return target.member ?? target.author ?? target;
+}
+
 const processes = {
   flagUser: async function(interaction, target) {
     // Stuff goes here
@@ -83,7 +87,7 @@ const processes = {
       return;
     }
 
-    c.ban(interaction, target.member ?? target.author ?? target, dm.content, 1);
+    c.ban(interaction, getTargetUser(target), dm.content, 1);
   },
   warnMessage: async function(interaction, target) {
     // Stuff goes here
@@ -127,7 +131,7 @@ async function modMenu(inter) {
 
   const target = inter.targetType === "MESSAGE" ? inter.options.getMessage("message") : inter.options.getMember("user");
 
-  const e = u.embed({ author: target.member ?? target.author ?? target })
+  const e = u.embed({ author: getTargetUser(target) })
     .setColor("RED");
   let embeds = [ e ];
   if (inter.targetType === "MESSAGE") {
