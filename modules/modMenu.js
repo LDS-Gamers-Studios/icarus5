@@ -96,7 +96,15 @@ const processes = {
     // Stuff goes here
   },
   announceMessage: async function(interaction, target) {
-    // Stuff goes here
+    const author = target.member;
+    const embed = u.embed({ author })
+      .setTimestamp(target.createdAt)
+      .setDescription(target.content);
+    if (target.attachments && (target.attachments.size > 0)) {
+      embed.attachFiles([target.attachments.first().proxyURL]);
+    }
+    await interaction.client.channels.cache.get(sf.channels.announcements).send({ embeds: [embed] });
+    await interaction.editReply({ content: "Message announced!", ephemeral: true });
   }
 };
 
@@ -156,7 +164,7 @@ async function modMenu(inter) {
   }
 
   const selection = menuSelect.values[0];
-  await menuSelect.deferReply();
+  await menuSelect.deferReply({ ephemeral: true });
   embeds[0].setTitle("Action Selected")
     .setColor("GREEN")
     .setFooter(options.filter(o => o.value === selection)[0].label);
