@@ -342,7 +342,7 @@ async function slashBankAward(interaction) {
     let embed = u.embed({ author: interaction.client.user })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-    .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ? "awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
+    .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ? `awarded you ${ember}${receipt.value}` : `docked you ${ember}${-receipt.value}`}! This counts toward your House's Points.`);
     recipient.send({ embeds: [embed] }).catch(u.noop);
 
     await interaction.reply(ember + (value > 0 ? `${value} awarded to` : `${-value} docked from`) + ` ${u.escapeText(recipient.displayName)} for ${reason}`);
