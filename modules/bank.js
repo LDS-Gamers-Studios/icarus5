@@ -106,7 +106,7 @@ async function slashBankGive(interaction) {
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
       .addField("Reason", reason)
       .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
-      hoh.send({ content: `<@${sf.ownerId}>`, embeds: [hohEmbed] });
+      hoh.send({ content: `<@${sf.roles.manager}>`, embeds: [hohEmbed] });
     }
   } catch (e) { u.errorHandler(e, interaction); }
 }
