@@ -354,12 +354,12 @@ async function slashBankAward(interaction) {
     .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
     giver.send({ embeds: [embed] }).catch(u.noop);
 
-    const hoh = interaction.client.channels.cache.get(sf.channels.headsofhouse);
+    const mopbucket = interaction.client.channels.cache.get(sf.channels.mopbucketawards);
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
     .addField("Reason", reason)
-    .setDescription(`**${giver.toString()}** ${value > 0 ? "awarded" : "docked"} ${recipient.toString()} ${ember}${value}.`);
-    hoh.send({ embeds: [embed] });
+    .setDescription(`**${giver}** ${value > 0 ? `awarded ${recipient} ${ember}${value}.` : `docked ${recipient} ${ember}${-value}.`}`);
+    mopbucket.send({ embeds: [embed] });
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
