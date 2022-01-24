@@ -15,7 +15,7 @@ function blocked(member) {
     u.embed({
       author: member,
       color: 0x00ffff,
-      title: `${member} has me blocked. *sadface*`
+      description: `${member} has me blocked. *sadface*`
     })
   ] });
 }
