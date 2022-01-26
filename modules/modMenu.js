@@ -83,7 +83,17 @@ const processes = {
     // Stuff goes here
   },
   kickUser: async function(interaction, target) {
-    // Stuff goes here
+    await interaction.editReply("Please check your DMs from me.");
+    const dm = await u.awaitDM("What is the reason for this kick?", interaction.member);
+    if (!dm) {
+      await interaction.editReply({ embeds: [
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
+        .setDescription(`Kick cancelled`)
+      ], content: null });
+      return;
+    }
+
+    await c.kick(interaction, getTargetUser(target), dm.content);
   },
   banUser: async function(interaction, target) {
 

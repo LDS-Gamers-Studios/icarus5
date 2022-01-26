@@ -94,72 +94,7 @@ async function slashModKick(interaction) {
     const target = interaction.options.getMember("user");
     const reason = interaction.options.getString("reason");
 
-    if (!compareRoles(interaction.member, target)) {
-      await interaction.editReply({
-        content: `You have insufficient permissions to kick ${target}!`
-      });
-      return;
-    } else if (!target.kickable) {
-      await interaction.editReply({
-        content: `I have insufficient permissions to kick ${target}!`
-      });
-      return;
-    }
-
-    const confirm = await u.confirmInteraction(interaction, `Kick ${target} for:\n${reason}?`, `Confirm Kick on ${u.escapeText(target.displayName)}`);
-    if (confirm) {
-      // Do the kick!
-
-      // The actual kick part
-      const targetRoles = target.roles.cache.clone();
-      await target.send({ embeds: [
-        u.embed()
-        .setTitle("User Kick")
-        .setDescription(`You have been kicked in ${interaction.guild.name} for:\n${reason}`)
-      ] }).catch(() => blocked(target));
-      await target.kick({ reason });
-
-      // Edit interaction
-      await interaction.editReply({
-        embeds: [
-          u.embed({ author: target })
-          .setColor(0x00ff00)
-          .setDescription(`${target.toString()} kicked for:\n${reason}`)
-        ],
-        components: []
-      });
-
-      // Save infraction
-      Module.db.infraction.save({
-        discordId: target.id,
-        description: `[User Kick]: ${reason}`,
-        value: 30,
-        mod: interaction.member.id
-      });
-
-      // Save roles
-      targetRoles.set(sf.roles.untrusted, null).set(sf.roles.muted, null).delete(sf.roles.trusted);
-      const fakeTarget = {
-        id: target.id,
-        roles: { cache: targetRoles }
-      };
-      Module.db.user.updateRoles(fakeTarget);
-
-      // Log it
-      interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: target })
-        .setTitle("User Kick")
-        .setDescription(`**${interaction.member}** kicked **${target}** for:\n${reason}`)
-        .setColor(0x0000ff)
-      ] });
-    } else {
-      // Never mind
-      await interaction.editReply({
-        embeds: [u.embed({ author: target }).setColor(0x0000ff).setDescription(`Kick ${confirm === false ? "cancelled" : "timed out"}`)],
-        components: []
-      });
-    }
-    u.cleanInteraction(interaction);
+    await c.kick(interaction, target, reason);
   } catch (error) { u.errorHandler(error, interaction); }
 }
 
