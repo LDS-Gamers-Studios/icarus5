@@ -251,24 +251,7 @@ async function slashModNote(interaction) {
     const target = interaction.options.getMember("user");
     const note = interaction.options.getString("note");
 
-    Module.db.infraction.save({
-      discordId: target.id,
-      value: 0,
-      description: note,
-      mod: interaction.user.id
-    });
-    const summary = await Module.db.infraction.getSummary(target.id);
-
-    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-      u.embed({ author: target })
-      .setColor("#0000FF")
-      .setDescription(note)
-      .addField("Resolved", `${u.escapeText(interaction.user.username)} added a note.`)
-      .addField(`Infraction Summary (${summary.time} Days)`, `Infractions: ${summary.count}\nPoints: ${summary.points}`)
-      .setTimestamp()
-    ] });
-
-    await interaction.editReply({ content: `Note added for user ${target.toString()}.` });
+    await c.note(interaction, target, note);
   } catch (error) { u.errorHandler(error, interaction); }
 }
 

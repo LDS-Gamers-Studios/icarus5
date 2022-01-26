@@ -49,7 +49,17 @@ const processes = {
     // Stuff goes here
   },
   noteUser: async function(interaction, target) {
-    // Stuff goes here
+    await interaction.editReply("Please check your DMs from me.");
+    const dm = await u.awaitDM("What is the note would you like to add?", interaction.member);
+    if (!dm) {
+      await interaction.editReply({ embeds: [
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
+        .setDescription(`Note cancelled`)
+      ], content: null });
+      return;
+    }
+
+    await c.note(interaction, getTargetUser(target), dm.content);
   },
   renameUser: async function(interaction, target) {
     // Stuff goes here
