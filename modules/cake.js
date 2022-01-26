@@ -52,7 +52,7 @@ async function testBirthdays() {
         .setTitle("Happy Birthday!")
         .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Emoji_u1f389.svg/128px-Emoji_u1f389.svg.png")
         .setDescription("Happy birthday to these fantastic people!\n\n" + celebrating.join("\n"));
-      guild.channels.cache.get(sf.channels.general).send({ embeds: [embed] });
+      guild.channels.cache.get(sf.channels.general).send({ content: celebrating.join(" "), embeds: [embed] });
     }
   } catch (e) { u.errorHandler(e, "Birthday Error"); }
 }
@@ -98,7 +98,8 @@ async function testCakeDays() {
       for (const [years, cakeMembers] of celebrating) {
         embed.addField(`${years} ${years > 1 ? "Years" : "Year"}`, cakeMembers.join("\n"));
       }
-      await guild.channels.cache.get(sf.channels.general).send({ embeds: [embed] });
+      const allMentions = celebrating.reduce((t, v) => t.concat(v), []);
+      await guild.channels.cache.get(sf.channels.general).send({ content: allMentions.join(" "), embeds: [embed] });
     }
   } catch (e) { u.errorHandler(e, "Cake Days"); }
 }
