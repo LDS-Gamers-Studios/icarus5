@@ -2,36 +2,36 @@ const Discord = require("discord.js"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes.json");
 
-const modCommon = {
-  /**
+/**
   * Give the mods a heads up that someone isn't getting their DMs.
   * @param {Discord.GuildMember} member The guild member that's blocked.
   */
-  blocked: (member) => {
-    return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-      u.embed({
-        author: member,
-        color: 0x00ffff,
-        title: `${member} has me blocked. *sadface*`
-      })
-    ] });
-  },
+function blocked(member) {
+  return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+    u.embed({
+      author: member,
+      color: 0x00ffff,
+      title: `${member} has me blocked. *sadface*`
+    })
+  ] });
+}
 
-  compareRoles: (mod, target) => {
-    const modHigh = mod.roles.cache.filter(r => r.id != sf.roles.live)
-      .sort((a, b) => b.comparePositionTo(a)).first();
-    const targetHigh = target.roles.cache.filter(r => r.id != sf.roles.live)
-      .sort((a, b) => b.comparePositionTo(a)).first();
-    return (modHigh.comparePositionTo(targetHigh) > 0);
-  },
+function compareRoles(mod, target) {
+  const modHigh = mod.roles.cache.filter(r => r.id != sf.roles.live)
+    .sort((a, b) => b.comparePositionTo(a)).first();
+  const targetHigh = target.roles.cache.filter(r => r.id != sf.roles.live)
+    .sort((a, b) => b.comparePositionTo(a)).first();
+  return (modHigh.comparePositionTo(targetHigh) > 0);
+}
 
-  nameGen: () => {
-    const { names, colors, adjectives } = require("../data/nameParts.json");
-    let result = u.rand(adjectives) + " " + u.rand(colors) + " " + u.rand(names);
-    while (result.length > 32) { result = u.rand(adjectives) + " " + u.rand(colors) + " " + u.rand(names); }
-    return result;
-  },
+function nameGen() {
+  const { names, colors, adjectives } = require("../data/nameParts.json");
+  let result = u.rand(adjectives) + " " + u.rand(colors) + " " + u.rand(names);
+  while (result.length > 32) { result = u.rand(adjectives) + " " + u.rand(colors) + " " + u.rand(names); }
+  return result;
+}
 
+const modCommon = {
   getSummaryEmbed: async (member, time, guild) => {
     const data = await member.client.db.infraction.getSummary(member.id, time);
     const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
@@ -53,7 +53,7 @@ const modCommon = {
 
   ban: async function(interaction, target, reason, days) {
     try {
-      if (!modCommon.compareRoles(interaction.member, target)) {
+      if (!compareRoles(interaction.member, target)) {
         await interaction.editReply({
           content: `You have insufficient permissions to ban ${target}!`
         });
@@ -75,7 +75,7 @@ const modCommon = {
           u.embed()
           .setTitle("User Ban")
           .setDescription(`You have been banned in ${interaction.guild.name} for:\n${reason}`)
-        ] }).catch(() => modCommon.blocked(target));
+        ] }).catch(() => blocked(target));
         await target.ban({ days, reason });
 
         // Edit interaction
