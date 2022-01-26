@@ -163,7 +163,7 @@ const utils = {
     ] });
 
     const collected = await message.channel.awaitMessages({
-      filter: (m) => !m.startsWith("!") && !m.startsWith("/"), max: 1,
+      filter: (m) => !m.content.startsWith("!") && !m.content.startsWith("/"), max: 1,
       time: 60000
     });
 

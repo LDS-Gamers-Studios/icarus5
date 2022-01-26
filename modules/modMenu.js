@@ -87,7 +87,7 @@ const processes = {
       return;
     }
 
-    c.ban(interaction, getTargetUser(target), dm.content, 1);
+    await c.ban(interaction, getTargetUser(target), dm.content, 1);
   },
   warnMessage: async function(interaction, target) {
     // Stuff goes here
