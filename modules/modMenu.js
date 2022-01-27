@@ -77,7 +77,11 @@ const processes = {
     // Stuff goes here
   },
   muteUser: async function(interaction, target) {
-    // Stuff goes here
+    const reason = target.cleanContent ?? "Violating the Code of Conduct";
+    await c.mute(interaction, getTargetUser(target), reason);
+  },
+  unmuteUser: async function(interaction, target) {
+    await c.unmute(interaction, getTargetUser(target));
   },
   timeoutUser: async function(interaction, target) {
     // Stuff goes here
@@ -96,7 +100,6 @@ const processes = {
     await c.kick(interaction, getTargetUser(target), dm.content);
   },
   banUser: async function(interaction, target) {
-
     await interaction.editReply("Please check your DMs from me.");
     const dm = await u.awaitDM("What is the reason for this ban?", interaction.member);
     if (!dm) {
@@ -132,7 +135,7 @@ const allMenuItems = new u.Collection()
 .set(0, ['flagUser', 'userInfo', 'userAvatar'])
 .set(isMsg, ['flagMessage', 'pinMessage'])
 .set(isMod, ['fullinfo', 'summary', 'noteUser', 'renameUser', 'trustUser', 'trustPlusUser', 'watchUser', 'warnUser',
-  'muteUser', 'timeoutUser', 'kickUser', 'banUser'])
+  'muteUser', 'unmuteUser', 'timeoutUser', 'kickUser', 'banUser'])
 .set(isMod + isMsg, ['warnMessage', 'purgeChannel'])
 .set(isMgr + isMsg, ['announceMessage']);
 

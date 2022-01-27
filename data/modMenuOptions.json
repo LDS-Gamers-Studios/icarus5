@@ -97,6 +97,13 @@
     "emoji": "🔇",
     "default": false
   },
+  "unmuteUser": {
+    "label": "Unmute User",
+    "value": "unmuteUser",
+    "description": "",
+    "emoji": "🔊",
+    "default": false
+  },
   "timeoutUser": {
     "label": "Timeout User",
     "value": "timeoutUser",

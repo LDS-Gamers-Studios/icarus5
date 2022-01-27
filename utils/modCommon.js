@@ -192,6 +192,45 @@ const modCommon = {
     } catch (error) { u.errorHandler(error, interaction); }
   },
 
+  mute: async function(interaction, target, reason) {
+    try {
+      // Don't mute if muted
+      if (target.roles.cache.has(sf.roles.muted)) {
+        await interaction.editReply({
+          content: `They are already muted.`,
+        });
+        return;
+      }
+
+      // muteState.set(target.id, target.voice.serverMute);
+
+      // Impose Mute
+      await target.roles.add(sf.roles.muted);
+      if (target.voice.channel) {
+        await target.voice.disconnect(reason);
+        await target.voice.setMute(true, reason);
+      }
+
+      await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+        u.embed({ author: target })
+        .setTitle("Member Mute")
+        .setDescription(`**${interaction.member}** muted **${target}** for:\n${reason}`)
+        .setColor(0x0000ff)
+      ] });
+
+      await interaction.guild.channels.cache.get(sf.channels.muted).send(
+        `${target}, you have been muted in ${interaction.guild.name}. `
+      + 'Please review our Code of Conduct. '
+      + 'A member of the mod team will be available to discuss more details.\n\n'
+      + 'http://ldsgamers.com/code-of-conduct'
+      );
+
+      await interaction.editReply({
+        content: `Muted ${target}.`,
+      });
+    } catch (error) { u.errorHandler(error, interaction); }
+  },
+
   note: async function(interaction, target, note) {
     try {
       await interaction.client.db.infraction.save({
@@ -212,6 +251,34 @@ const modCommon = {
       ] });
 
       await interaction.editReply({ content: `Note added for user ${target.toString()}.` });
+    } catch (error) { u.errorHandler(error, interaction); }
+  },
+
+  unmute: async function(interaction, target) {
+    try {
+      // Don't unmute if not muted
+      if (!target.roles.cache.has(sf.roles.muted)) {
+        await interaction.editReply({
+          content: `${target} isn't muted.`,
+        });
+        return;
+      }
+
+      // Remove Mute
+      await target.roles.remove(sf.roles.muted);
+      if (target.voice.channel /* && !muteState.get(target.id)*/) await target.voice.setMute(false, "Mute resolved");
+      // muteState.delete(target.id);
+
+      await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+        u.embed({ author: target })
+        .setTitle("Member Unmute")
+        .setDescription(`**${interaction.member}** unmuted **${target}**`)
+        .setColor(0x00ff00)
+      ] });
+
+      await interaction.editReply({
+        content: `Unmuted ${target}.`,
+      });
     } catch (error) { u.errorHandler(error, interaction); }
   }
 };

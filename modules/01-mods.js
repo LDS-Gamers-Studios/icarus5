@@ -118,64 +118,9 @@ async function slashModMute(interaction) {
     }
 
     if (apply) { // Mute 'em
-      // Don't mute if muted
-      if (target.roles.cache.has(sf.roles.muted)) {
-        await interaction.editReply({
-          content: `They are already muted.`,
-        });
-        return;
-      }
-
-      muteState.set(target.id, target.voice.serverMute);
-
-      // Impose Mute
-      await target.roles.add(sf.roles.muted);
-      if (target.voice.channel) {
-        await target.voice.disconnect(reason);
-        await target.voice.setMute(true, reason);
-      }
-
-      await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: target })
-        .setTitle("Member Mute")
-        .setDescription(`**${interaction.member}** muted **${target}** for:\n${reason}`)
-        .setColor(0x0000ff)
-      ] });
-
-      await interaction.guild.channels.cache.get(sf.channels.muted).send(
-        `${target}, you have been muted in ${interaction.guild.name}. `
-        + 'Please review our Code of Conduct. '
-        + 'A member of the mod team will be available to discuss more details.\n\n'
-        + 'http://ldsgamers.com/code-of-conduct'
-      );
-
-      await interaction.editReply({
-        content: `Muted ${target}.`,
-      });
+      await c.mute(interaction, target, reason);
     } else { // Remove mute
-      // Don't unmute if not muted
-      if (!target.roles.cache.has(sf.roles.muted)) {
-        await interaction.editReply({
-          content: `${target} isn't muted.`,
-        });
-        return;
-      }
-
-      // Remove Mute
-      await target.roles.remove(sf.roles.muted);
-      if (!muteState.get(target.id) && target.voice.channel) await target.voice.setMute(false, "Mute resolved");
-      muteState.delete(target.id);
-
-      await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: target })
-        .setTitle("Member Unmute")
-        .setDescription(`**${interaction.member}** unmuted **${target}**`)
-        .setColor(0x00ff00)
-      ] });
-
-      await interaction.editReply({
-        content: `Unmuted ${target}.`,
-      });
+      await c.unmute(interaction, target);
     }
   } catch (error) { u.errorHandler(error, interaction); }
 }
