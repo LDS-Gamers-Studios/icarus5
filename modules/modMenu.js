@@ -37,10 +37,29 @@ const processes = {
     // Stuff goes here
   },
   pinMessage: async function(interaction, target) {
-    target.pin();
-    await interaction.editReply({ embeds: [
-      u.embed().setTitle("Message pinned.")
-    ] });
+    try {
+      const user = interaction.user;
+      if (target.channel.permissionsFor(user).has("MANAGE_MESSAGES")) {
+        const messages = await target.channel.messages.fetchPinned().catch(u.noop);
+        if (messages?.size == 50) {interaction.editReply(`${user}, I was unable to pin the message since the channel pin limit has been reached.`);} else {
+          await target.pin();
+          await interaction.editReply("Message pinned.");
+        }
+      } else {
+        const embed = u.embed()
+        .setTimestamp()
+        .setAuthor(target.member.displayName + " 📌", target.member.user.displayAvatarURL())
+        .setDescription(target.cleanContent)
+        .addField("Pin Requested By", user.toString())
+        .addField("Channel", target.channel.toString())
+        .addField("Jump to Post", `[Original Message](${target.url})`);
+
+        if (target.attachments?.size > 0) {embed.setImage(target.attachments?.first()?.url);}
+
+        await target.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
+        await interaction.editReply("Pin request sent.");
+      }
+    } catch (error) { u.errorHandler(error, interaction); }
   },
   fullinfo: async function(interaction, target) {
     // Stuff goes here
