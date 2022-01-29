@@ -52,7 +52,7 @@ async function testBirthdays() {
         .setTitle("Happy Birthday!")
         .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Emoji_u1f389.svg/128px-Emoji_u1f389.svg.png")
         .setDescription("Happy birthday to these fantastic people!\n\n" + celebrating.join("\n"));
-      guild.channels.cache.get(sf.channels.general).send({ embeds: [embed] });
+      guild.channels.cache.get(sf.channels.general).send({ content: celebrating.join(" "), embeds: [embed] });
     }
   } catch (e) { u.errorHandler(e, "Birthday Error"); }
 }
@@ -76,8 +76,12 @@ async function testCakeDays() {
         const join = moment(member.joinedAt).subtract(offset?.priorTenure || 0, "days");
         if ((join?.month() == curDate.month()) && (join?.date() == curDate.date()) && (join?.year() < curDate.year())) {
           const years = curDate.year() - join.year();
-          await member.roles.remove(tenureIds).catch(u.noop);
-          await member.roles.add(tenure(years)).catch(e => u.errorHandler(e, `Tenure Role Add (${member.displayName} - ${memberId})`));
+
+          let roles = Array.from(member.roles.cache.keys());
+          roles = roles.filter((r) => !tenureIds.includes(r));
+          roles.push(tenure(years));
+          await member.roles.set(roles).catch(e => u.errorHandler(e, `Tenure Role Add (${member.displayName} - ${memberId})`));
+
           if (member.roles.cache.has(sf.roles.trusted)) {
             if (celebrating.has(years)) celebrating.get(years).push(member);
             else celebrating.set(years, [member]);
@@ -94,7 +98,8 @@ async function testCakeDays() {
       for (const [years, cakeMembers] of celebrating) {
         embed.addField(`${years} ${years > 1 ? "Years" : "Year"}`, cakeMembers.join("\n"));
       }
-      await guild.channels.cache.get(sf.channels.general).send({ embeds: [embed] });
+      const allMentions = celebrating.reduce((t, v) => t.concat(v), []);
+      await guild.channels.cache.get(sf.channels.general).send({ content: allMentions.join(" "), embeds: [embed] });
     }
   } catch (e) { u.errorHandler(e, "Cake Days"); }
 }

@@ -105,12 +105,7 @@ async function slashModMute(interaction) {
     const reason = interaction.options.getString("reason") || "Violating the Code of Conduct";
     const apply = interaction.options.getBoolean("apply") ?? true;
 
-    if (!compareRoles(interaction.member, target)) {
-      await interaction.editReply({
-        content: `You have insufficient permissions to mute ${target}!`
-      });
-      return;
-    } else if (!target.manageable) {
+    if (!target.manageable) {
       await interaction.editReply({
         content: `I have insufficient permissions to mute ${target}!`
       });
@@ -142,12 +137,7 @@ async function slashModOffice(interaction) {
     const reason = interaction.options.getString("reason") || "No reason provided";
     const apply = interaction.options.getBoolean("apply") ?? true;
 
-    if (!compareRoles(interaction.member, target)) {
-      await interaction.editReply({
-        content: `You have insufficient permissions to put ${target} in the office!`
-      });
-      return;
-    } else if (!target.manageable) {
+    if (!target.manageable) {
       await interaction.editReply({
         content: `I have insufficient permissions to put ${target} in the office!`
       });
