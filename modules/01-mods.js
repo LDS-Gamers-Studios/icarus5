@@ -105,13 +105,6 @@ async function slashModMute(interaction) {
     const reason = interaction.options.getString("reason") || "Violating the Code of Conduct";
     const apply = interaction.options.getBoolean("apply") ?? true;
 
-    if (!target.manageable) {
-      await interaction.editReply({
-        content: `I have insufficient permissions to mute ${target}!`
-      });
-      return;
-    }
-
     if (apply) { // Mute 'em
       await c.mute(interaction, target, reason);
     } else { // Remove mute

@@ -193,6 +193,13 @@ const modCommon = {
   },
 
   mute: async function(interaction, target, reason) {
+    if (!target.manageable) {
+      await interaction.editReply({
+        content: `I have insufficient permissions to mute ${target}!`
+      });
+      return;
+    }
+
     try {
       // Don't mute if muted
       if (target.roles.cache.has(sf.roles.muted)) {
