@@ -31,7 +31,11 @@ const processes = {
     // Stuff goes here
   },
   userAvatar: async function(interaction, target) {
-    // Stuff goes here
+    const user = getTargetUser(target);
+    const embed = u.embed({ author: user })
+    .setDescription(`${u.escapeText(user.displayName ?? user.username)}'s Avatar`)
+    .setImage(user.displayAvatarURL({ size: 512, dynamic: true }));
+    interaction.editReply({ embeds: [embed] });
   },
   flagMessage: async function(interaction, target) {
     // Stuff goes here
