@@ -81,7 +81,7 @@ const processes = {
     await c.note(interaction, getTargetUser(target), dm.content);
   },
   renameUser: async function(interaction, target) {
-    // Stuff goes here
+    await c.rename(interaction, getTargetUser(target));
   },
   trustUser: async function(interaction, target) {
     // Stuff goes here

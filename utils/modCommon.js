@@ -254,6 +254,40 @@ const modCommon = {
     } catch (error) { u.errorHandler(error, interaction); }
   },
 
+  rename: async function(interaction, target) {
+    const newNick = interaction.options?.getString("name") || nameGen();
+    const oldNick = target.displayName;
+
+    if (!target.manageable) {
+      await interaction.editReply(`I have insufficient permissions to rename ${target}!`);
+      return;
+    }
+    await target.setNickname(newNick);
+
+    const comment = `Set nickname to ${u.escapeText(newNick)} from ${u.escapeText(oldNick)}.`;
+
+    await interaction.client.db.infraction.save({
+      discordId: target.id,
+      value: 0,
+      description: comment,
+      message: interaction.id,
+      channel: interaction.channel.id,
+      mod: interaction.member.id
+    });
+    const summary = await interaction.client.db.infraction.getSummary(target.id);
+
+    interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+      u.embed({ author: target })
+      .setColor("#0000FF")
+      .setDescription(comment)
+      .addField("Resolved", `${interaction.member} changed ${target}'s nickname from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.`)
+      .addField(`Infraction Summary (${summary.time} Days) `, `Infractions: ${summary.count}\nPoints: ${summary.points}`)
+      .setTimestamp()
+    ] });
+
+    await interaction.editReply({ content: `${target}'s nickname changed from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.` });
+  },
+
   unmute: async function(interaction, target) {
     try {
       // Don't unmute if not muted
