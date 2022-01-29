@@ -15,7 +15,7 @@ function permCheck(inter) {
   return (
     (inter.targetType === "MESSAGE") * isMsg |
     p.isMod(inter) * isMod |
-    p.isAdmin(inter) * isMgr
+    p.isMgr(inter) * isMgr
   );
 }
 
