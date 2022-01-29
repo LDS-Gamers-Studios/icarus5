@@ -155,11 +155,11 @@ const processes = {
 };
 
 const allMenuItems = new u.Collection()
-.set(0, ['flagUser', 'userInfo', 'userAvatar'])
-.set(isMsg, ['flagMessage', 'pinMessage'])
-.set(isMod, ['fullinfo', 'summary', 'noteUser', 'renameUser', 'trustUser', 'trustPlusUser', 'watchUser', 'warnUser',
-  'muteUser', 'unmuteUser', 'timeoutUser', 'kickUser', 'banUser'])
-.set(isMod + isMsg, ['warnMessage', 'purgeChannel'])
+.set(0, ['userAvatar']) // 'flagUser', 'userInfo',
+.set(isMsg, ['pinMessage']) // 'flagMessage',
+.set(isMod, ['banUser', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
+  'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'trustUser', 'trustPlusUser', 'warnUser', 'watchUser',
+// .set(isMod + isMsg, ['purgeChannel', 'warnMessage'])
 .set(isMgr + isMsg, ['announceMessage']);
 
 /**
