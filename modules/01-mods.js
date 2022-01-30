@@ -5,8 +5,6 @@ const Augur = require("augurbot"),
   p = require("../utils/perms"),
   c = require("../utils/modCommon");
 
-const muteState = new u.Collection();
-
 /**
  * Give the mods a heads up that someone isn't getting their DMs.
  * @param {Discord.GuildMember} member The guild member that's blocked.
@@ -19,21 +17,6 @@ function blocked(member) {
       title: `${member} has me blocked. *sadface*`
     })
   ] });
-}
-
-function compareRoles(mod, target) {
-  const modHigh = mod.roles.cache.filter(r => r.id != sf.roles.live)
-    .sort((a, b) => b.comparePositionTo(a)).first();
-  const targetHigh = target.roles.cache.filter(r => r.id != sf.roles.live)
-    .sort((a, b) => b.comparePositionTo(a)).first();
-  return (modHigh.comparePositionTo(targetHigh) > 0);
-}
-
-function nameGen() {
-  const { names, colors, adjectives } = require("../data/nameParts.json");
-  let result = u.rand(adjectives) + " " + u.rand(colors) + " " + u.rand(names);
-  while (result.length > 32) { result = u.rand(adjectives) + " " + u.rand(colors) + " " + u.rand(names); }
-  return result;
 }
 
 async function getSummaryEmbed(member, time, guild) {
