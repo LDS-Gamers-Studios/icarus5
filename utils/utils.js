@@ -96,7 +96,7 @@ const utils = {
     await utils.wait(t);
     if (msg instanceof Discord.CommandInteraction) {
       msg.deleteReply().catch(utils.noop);
-    } else if ((msg instanceof Discord.Message) && (msg.deletable && !msg.deleted)) {
+    } else if ((msg instanceof Discord.Message) && msg.deletable) {
       msg.delete().catch(utils.noop);
     }
     return Promise.resolve(msg);
