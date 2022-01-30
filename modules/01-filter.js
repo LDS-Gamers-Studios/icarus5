@@ -189,7 +189,7 @@ async function warnCard(msg, filtered, call) {
     }
 
     embed.addField(`Infraction Summary (${infractionSummary.time} Days)`, `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`);
-    if (msg.author.bot) embed.setFooter("The user is a bot and the flag likely originated elsewhere. No action will be processed.");
+    if (msg.author.bot) embed.setFooter({ text: "The user is a bot and the flag likely originated elsewhere. No action will be processed." });
 
     let content;
 
@@ -308,7 +308,7 @@ async function processCardAction(interaction) {
       const md = await interaction.client.channels.cache.get(sf.channels.moddiscussion);
       await interaction.reply({ content: `Sending the flag over to ${md}...`, ephemeral: true });
 
-      embed.setFooter(`Linked by ${u.escapeText(mod.displayName)}`);
+      embed.setFooter({ text: `Linked by ${u.escapeText(mod.displayName)}` });
       md.send({ embeds: [embed] }).catch(u.noop);
     } else {
       await interaction.deferUpdate();

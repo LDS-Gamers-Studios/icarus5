@@ -22,7 +22,7 @@ async function slashRankLeaderboard(interaction) {
     .setThumbnail(interaction.guild.iconURL({ format: "png" }))
     .setURL("https://my.ldsgamers.com/leaderboard")
     .setDescription("Current season chat rankings:\n" + records.join("\n"))
-    .setFooter("Use `/rank track` to join the leaderboard!");
+    .setFooter({ text: "Use `/rank track` to join the leaderboard!" });
 
     await interaction.editReply({ embeds: [embed] });
   } catch (error) { u.errorHandler(error, interaction); }
@@ -56,7 +56,7 @@ async function slashRankView(interaction) {
       const embed = u.embed({ author: member })
       .setTitle("LDSG Season Chat Ranking")
       .setURL("https://my.ldsgamers.com/leaderboard")
-      .setFooter("https://my.ldsgamers.com/leaderboard")
+      .setFooter({ text: "https://my.ldsgamers.com/leaderboard" })
       .addField("Rank", `Season: ${record.rank} / ${members.size}\nLifetime: ${record.lifetime} / ${members.size}`, true)
       .addField("Level", `Current Level: ${level.toLocaleString()}\nNext Level: ${nextLevel} XP`, true)
       .addField("Exp.", `Season: ${record.currentXP.toLocaleString()} XP\nLifetime: ${record.totalXP.toLocaleString()} XP`, true);
