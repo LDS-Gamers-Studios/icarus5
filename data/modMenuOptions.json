@@ -2,7 +2,7 @@
   "flagUser": {
     "label": "Flag User",
     "value": "flagUser",
-    "description": "",
+    "description": "Bring this user to the attention of LDSG's Discord Moderators",
     "emoji": "🚩",
     "default": false
   },
@@ -14,23 +14,23 @@
     "default": false
   },
   "userAvatar": {
-    "label": "Get User Avatar",
+    "label": "View User Avatar",
     "value": "userAvatar",
-    "description": "",
+    "description": "See a larger version of this user's avatar",
     "emoji": "📷",
     "default": false
   },
   "flagMessage": {
     "label": "Flag Message",
     "value": "flagMessage",
-    "description": "",
+    "description": "Bring this message to the attention of LDSG's Discord Moderators",
     "emoji": "🚩",
     "default": false
   },
   "pinMessage": {
     "label": "Pin Message",
     "value": "pinMessage",
-    "description": "",
+    "description": "Request a message pin (or, depending on permissions, pin the message)",
     "emoji": "📌",
     "default": false
   },
@@ -51,14 +51,14 @@
   "noteUser": {
     "label": "Note User",
     "value": "noteUser",
-    "description": "",
+    "description": "Make a moderation note about this user",
     "emoji": "📓",
     "default": false
   },
   "renameUser": {
     "label": "Rename User",
     "value": "renameUser",
-    "description": "",
+    "description": "Assign this user a randomly-generated nickname",
     "emoji": "©",
     "default": false
   },
@@ -93,14 +93,14 @@
   "muteUser": {
     "label": "Mute User",
     "value": "muteUser",
-    "description": "",
+    "description": "Mute this user",
     "emoji": "🔇",
     "default": false
   },
   "unmuteUser": {
     "label": "Unmute User",
     "value": "unmuteUser",
-    "description": "",
+    "description": "Unmute this user",
     "emoji": "🔊",
     "default": false
   },
@@ -114,14 +114,14 @@
   "kickUser": {
     "label": "Kick User",
     "value": "kickUser",
-    "description": "",
+    "description": "Kick this user from LDSG",
     "emoji": "🥾",
     "default": false
   },
   "banUser": {
     "label": "Ban User",
     "value": "banUser",
-    "description": "",
+    "description": "Ban this user from LDSG",
     "emoji": "🔨",
     "default": false
   },
@@ -142,7 +142,7 @@
   "announceMessage": {
     "label": "Announce Message",
     "value": "announceMessage",
-    "description": "",
+    "description": "Repost this message in #announcements",
     "emoji": "📣",
     "default": false
   }
