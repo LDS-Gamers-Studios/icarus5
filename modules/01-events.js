@@ -93,7 +93,7 @@ const Module = new Augur.Module()
       const user = await Module.db.user.fetchUser(newMember).catch(u.noop);
       const embed = u.embed({ author: oldUser })
       .setTitle("User Update")
-      .setFooter(`${user.posts} Posts in ${moment(newMember?.joinedTimestamp).fromNow(true)}`);
+      .setFooter({ text: `${user.posts} Posts in ${moment(newMember?.joinedTimestamp).fromNow(true)}` });
       if (oldUser.tag !== newUser.tag) {
         embed.addField("**Username Update**", `**Old:** ${u.escapeText(oldUser.tag)}\n**New:** ${u.escapeText(newUser.tag)}`);
       }
