@@ -206,14 +206,6 @@ const processes = {
   }
 };
 
-const allMenuItems = new u.Collection()
-.set(0, ['userAvatar']) // 'flagUser', 'userInfo',
-.set(isMsg, ['pinMessage']) // 'flagMessage',
-.set(isMod, ['banUser', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
-  'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'trustUser', 'trustPlusUser', 'warnUser', 'watchUser',
-// .set(isMod + isMsg, ['purgeChannel', 'warnMessage'])
-.set(isMgr + isMsg, ['announceMessage']);
-
 /**
    * @param {Discord.ContextMenuInteraction} inter
    */
@@ -222,6 +214,13 @@ async function modMenu(inter) {
   const includeKey = permCheck(inter);
   const target = inter.targetType === "MESSAGE" ? inter.options.getMessage("message") : inter.options.getMember("user");
 
+  const allMenuItems = new u.Collection()
+  .set(0, ['flagUser', 'userAvatar']) // 'userInfo',
+  .set(isMsg, ['pinMessage']) // 'flagMessage',
+  .set(isMod, ['banUser', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
+    'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'trustUser', 'trustPlusUser', 'warnUser', 'watchUser',
+  // .set(isMod + isMsg, ['purgeChannel', 'warnMessage'])
+  .set(isMgr + isMsg, ['announceMessage']);
 
   const menuItems = getMenuItems(menuOptions, allMenuItems, includeKey);
   const menuSelect = await menu(menuItems, inter, target);
