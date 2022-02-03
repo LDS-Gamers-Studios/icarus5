@@ -242,7 +242,7 @@ async function slashModSlowmode(interaction) {
     return;
   }
 
-  if (duration == 0) {
+  if (duration <= 0) {
     ch.edit({ rateLimitPerUser: 0 }).catch(e => u.errorHandler(e, interaction));
 
     if (molasses.has(ch.id)) {
