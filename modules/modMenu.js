@@ -5,7 +5,8 @@ const Augur = require("augurbot"),
   c = require("../utils/modCommon"),
   Discord = require("discord.js");
 
-const menuOptions = require("../data/modMenuOptions");
+const menuOptions = require("../data/modMenuOptions"),
+  menuFlagOptions = require("../data/modMenuFlagOptions");
 
 const isMsg = 1 << 0;
 const isMod = 1 << 1;
@@ -77,7 +78,36 @@ async function menu(options, interaction, target) {
 
 const processes = {
   flagUser: async function(interaction, target) {
-    // Stuff goes here
+    const flagMenuItems = new u.Collection()
+    .set(0, ['badVibes', 'harassment', 'modAbuse', 'nominate'])
+    .set(isMsg, ['debate', 'inappropriate', 'offensive', 'promotion', 'scam', 'spam']);
+
+    const includeKey = (target instanceof Discord.Message) ? 1 : 0;
+    const menuItems = getMenuItems(menuFlagOptions, flagMenuItems, includeKey);
+
+    const menuSelect = await menu(menuItems, interaction, target);
+    if (!menuSelect) return;
+    const reason = menuItems.find(o => o.value === menuSelect.values[0]).label;
+
+    const targetUser = getTargetUser(target);
+    const embed = u.embed({ author: targetUser });
+    if (target instanceof Discord.Message) {
+      embed.setDescription((target.editedAt ? "[Edited]\n" : "") + target.cleanContent)
+      .addField("Channel", target.channel?.toString(), true)
+      .addField("User", target.author.toString(), true)
+      .addField("Jump to Post", `[Original Message](${target.url})`, true);
+    }
+
+    const infractionSummary = await Module.db.infraction.getSummary(targetUser);
+    embed.addField(`Infraction Summary (${infractionSummary.time} Days)`, `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`);
+
+    embed.addField("Flagged By", interaction.member.toString());
+    embed.addField("Reason", reason);
+
+    const modLogs = interaction.guild.channels.cache.get(sf.channels.modlogs);
+    await modLogs.send({ embeds: [embed] });
+
+    await menuSelect.editReply("Thank you for sharing your concern. I've put this in front of the mods.");
   },
   userInfo: async function(interaction, target) {
     // Stuff goes here
