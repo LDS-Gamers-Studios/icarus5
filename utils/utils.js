@@ -139,7 +139,8 @@ const utils = {
           new Discord.MessageButton().setCustomId(confirmFalse).setEmoji("⛔").setLabel("Cancel").setStyle("DANGER")
         )
       ],
-      ephemeral: true
+      ephemeral: true,
+      content: null
     });
 
     const confirm = await interaction.channel.awaitMessageComponent({
@@ -151,6 +152,40 @@ const utils = {
     if (confirm.customId === confirmTrue) return true;
     else if (confirm.customId === confirmFalse) return false;
     else return null;
+  },
+  awaitDM: async (msg, user) => {
+    const message = await user.send({ embeds: [
+      utils.embed()
+      .setTitle("Awaiting Response")
+      .setDescription(msg)
+      .setFooter("Times out in 60 seconds.")
+      .setColor("RED")
+    ] });
+
+    const collected = await message.channel.awaitMessages({
+      filter: (m) => !m.content.startsWith("!") && !m.content.startsWith("/"), max: 1,
+      time: 60000
+    });
+
+    const response = utils.embed()
+      .setTitle("Awaited Response")
+      .setColor("PURPLE");
+
+    if (collected.size === 0) {
+      await message.edit({ embeds: [
+        response
+        .setDescription(msg)
+        .setFooter("Timed out. Please see original message.")
+      ] });
+      return null;
+    } else {
+      await message.edit({ embeds: [
+        response
+        .setDescription(`Got your response! Please see original message.\n\n\`\`\`\n${collected.first()}\n\`\`\``)
+        .setFooter(`Question was \`${msg}\``)
+      ] });
+      return collected.first();
+    }
   },
   /**
    * Shortcut to nanoid. See docs there for reference.
@@ -193,7 +228,7 @@ const utils = {
 
     console.error(Date());
 
-    const embed = utils.embed().setTitle(error.name);
+    const embed = utils.embed().setTitle(error?.name?.toString() ?? "Error");
 
     if (message instanceof Discord.Message) {
       const loc = (message.guild ? `${message.guild?.name} > ${message.channel?.name}` : "DM");
