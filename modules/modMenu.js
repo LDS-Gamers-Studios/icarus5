@@ -23,6 +23,58 @@ function getTargetUser(target) {
   return target.member ?? target.author ?? target;
 }
 
+function getMenuItems(rawItems, permsMap, includeKey) {
+  const options = permsMap.filter((v, k) => (includeKey & k) == k)
+    .reduce((a, v) => a.concat(v), [])
+    .map((v) => rawItems[v])
+    .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
+
+  return options;
+}
+
+async function menu(options, interaction, target) {
+  const selectId = u.customId();
+  const row = new Discord.MessageActionRow()
+    .addComponents(
+      new Discord.MessageSelectMenu()
+        .setCustomId(selectId)
+        .setPlaceholder('Nothing Selected')
+        .addOptions(options),
+    );
+
+  const e = u.embed({ author: getTargetUser(target) })
+    .setColor("RED");
+  let embeds = [ e ];
+  if (target instanceof Discord.Message) {
+    e.setTitle("Select An Action On This Message");
+    e.setDescription(target.content);
+    embeds = embeds.concat(target.embeds);
+  } else {
+    e.setTitle("Select An Action On This User");
+  }
+
+  await interaction.editReply({ embeds, components: [ row ] });
+
+  const filter = (comp) => comp.customId === selectId && comp.user.id === interaction.member.id;
+  let menuSelect;
+  menuSelect = await interaction.channel.awaitMessageComponent({ filter, time: 60000 })
+    .catch(() => menuSelect = null);
+
+  if (!menuSelect) {
+    embeds[0].setTitle("Action Timed Out").setColor("BLUE");
+    await interaction.editReply({ embeds, components: [ ] });
+    return;
+  }
+  await menuSelect.deferReply({ ephemeral: true });
+
+  embeds[0].setTitle("Action Selected")
+  .setColor("GREEN")
+  .addField("Selection", options.find(o => o.value === menuSelect.values[0]).label);
+  await interaction.editReply({ embeds, components: [ ] });
+
+  return menuSelect;
+}
+
 const processes = {
   flagUser: async function(interaction, target) {
     // Stuff goes here
@@ -168,54 +220,14 @@ const allMenuItems = new u.Collection()
 async function modMenu(inter) {
   await inter.deferReply({ ephemeral: true });
   const includeKey = permCheck(inter);
-  const options = allMenuItems.filter((v, k) => (includeKey & k) == k)
-    .reduce((a, v) => a.concat(v), [])
-    .map((v) => menuOptions[v])
-    .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
-
-  // Present menu to user
-  const selectId = u.customId();
-  const row = new Discord.MessageActionRow()
-    .addComponents(
-      new Discord.MessageSelectMenu()
-        .setCustomId(selectId)
-        .setPlaceholder('Nothing Selected')
-        .addOptions(options),
-    );
-
   const target = inter.targetType === "MESSAGE" ? inter.options.getMessage("message") : inter.options.getMember("user");
 
-  const e = u.embed({ author: getTargetUser(target) })
-    .setColor("RED");
-  let embeds = [ e ];
-  if (inter.targetType === "MESSAGE") {
-    e.setTitle("Select An Action On This Message");
-    e.setDescription(target.content);
-    embeds = embeds.concat(target.embeds);
-  } else {
-    e.setTitle("Select An Action On This User");
-  }
 
-  await inter.editReply({ embeds, components: [ row ] });
+  const menuItems = getMenuItems(menuOptions, allMenuItems, includeKey);
+  const menuSelect = await menu(menuItems, inter, target);
+  if (!menuSelect) return;
 
-  let menuSelect;
-  const filter = (comp) => comp.customId === selectId && comp.user.id === inter.member.id;
-  menuSelect = await inter.channel.awaitMessageComponent({ filter, time: 60000 })
-    .catch(() => menuSelect = null);
-
-  if (!menuSelect) {
-    embeds[0].setTitle("Action Timed Out").setColor("BLUE");
-    await inter.editReply({ embeds, components: [ ] });
-    return;
-  }
-
-  const selection = menuSelect.values[0];
-  await menuSelect.deferReply({ ephemeral: true });
-  embeds[0].setTitle("Action Selected")
-    .setColor("GREEN")
-    .setFooter(options.filter(o => o.value === selection)[0].label);
-  await inter.editReply({ embeds, components: [ ] });
-  await processes[selection](menuSelect, target);
+  await processes[menuSelect.values[0]](menuSelect, target);
 }
 
 const Module = new Augur.Module()
