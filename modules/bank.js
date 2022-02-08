@@ -1,4 +1,5 @@
 const Augur = require("augurbot"),
+  p = require("../utils/perms"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes"),
   config = require("../config/config.json"),
@@ -305,8 +306,8 @@ async function slashBankAward(interaction) {
   try {
     const giver = interaction.member;
 
-    if (!giver.roles.cache.has(sf.roles.team)) {
-      interaction.reply({ content: `*Nice try!* This command is Team-only!`, ephemeral: true });
+    if (!p.isTeam(interaction) && !giver.roles.cache.has(sf.roles.volunteer)) {
+      interaction.reply({ content: `*Nice try!* This command is for Team and Volunteers only!`, ephemeral: true });
       return;
     }
 
