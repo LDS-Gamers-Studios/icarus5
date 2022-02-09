@@ -1,8 +1,8 @@
 {
-  "flagUser": {
-    "label": "Flag User",
-    "value": "flagUser",
-    "description": "Bring this user to the attention of LDSG's Discord Moderators",
+  "flag": {
+    "label": "Flag Message/User",
+    "value": "flag",
+    "description": "Bring this to the attention of LDSG's Discord Moderators",
     "emoji": "🚩",
     "default": false
   },
@@ -18,13 +18,6 @@
     "value": "userAvatar",
     "description": "See a larger version of this user's avatar",
     "emoji": "📷",
-    "default": false
-  },
-  "flagMessage": {
-    "label": "Flag Message",
-    "value": "flagMessage",
-    "description": "Bring this message to the attention of LDSG's Discord Moderators",
-    "emoji": "🚩",
     "default": false
   },
   "pinMessage": {

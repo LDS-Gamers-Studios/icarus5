@@ -119,9 +119,6 @@ const processes = {
     .setImage(user.displayAvatarURL({ size: 512, dynamic: true }));
     interaction.editReply({ embeds: [embed] });
   },
-  flagMessage: async function(interaction, target) {
-    // Stuff goes here
-  },
   pinMessage: async function(interaction, target) {
     try {
       const user = interaction.user;
@@ -245,8 +242,8 @@ async function modMenu(inter) {
   const target = inter.targetType === "MESSAGE" ? inter.options.getMessage("message") : inter.options.getMember("user");
 
   const allMenuItems = new u.Collection()
-  .set(0, ['flagUser', 'userAvatar']) // 'userInfo',
-  .set(isMsg, ['pinMessage']) // 'flagMessage',
+  .set(0, ['flag', 'userAvatar']) // 'userInfo',
+  .set(isMsg, ['pinMessage'])
   .set(isMod, ['banUser', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
     'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'trustUser', 'trustPlusUser', 'warnUser', 'watchUser',
   // .set(isMod + isMsg, ['purgeChannel', 'warnMessage'])
