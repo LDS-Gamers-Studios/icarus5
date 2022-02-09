@@ -66,7 +66,7 @@ async function menu(options, interaction, target) {
     await interaction.editReply({ embeds, components: [ ] });
     return;
   }
-  await menuSelect.deferReply({ ephemeral: true });
+  await menuSelect.deferUpdate({ ephemeral: true });
 
   embeds[0].setTitle("Action Selected")
   .setColor("GREEN")
