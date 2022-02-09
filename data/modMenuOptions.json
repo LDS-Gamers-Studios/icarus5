@@ -58,14 +58,14 @@
   "trustUser": {
     "label": "Trust User",
     "value": "trustUser",
-    "description": "",
+    "description": "Give this user the Trusted role",
     "emoji": "👍",
     "default": false
   },
   "trustPlusUser": {
     "label": "Trust+ User",
     "value": "trustPlusUser",
-    "description": "",
+    "description": "Give this user the Trusted+ role",
     "emoji": "💚",
     "default": false
   },

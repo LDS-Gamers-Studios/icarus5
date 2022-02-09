@@ -310,23 +310,8 @@ async function slashModTrust(interaction) {
       await c.trust(interaction, member);
       return;
     case 'plus':
-      if (member.roles.cache.has(sf.roles.trustedplus)) {
-        interaction.editReply({ content: `${member} is already trusted+.` });
-        return;
-      }
-      if (!member.roles.cache.has(sf.roles.trusted)) {
-        await interaction.editReply({ content: `${member} needs <@&${sf.roles.trusted}> before they can be given <@&${sf.roles.trustedplus}>!` });
-        return;
-      }
-      member.send(
-        "Congratulations! "
-        + "You've been added to the Trusted+ list in LDSG, allowing you to stream to voice channels!\n\n"
-        + "While streaming, please remember the Streaming Guidelines ( https://goo.gl/Pm3mwS ) and LDSG Code of Conduct ( http://ldsgamers.com/code-of-conduct ). "
-        + "Also, please be aware that LDSG may make changes to the Trusted+ list from time to time at its discretion."
-      ).catch(u.noop);
-      embed.setTitle("User Given Trusted+")
-      .setDescription(`${interaction.member} gave ${member} the <@&${role}> role.`);
-      break;
+      await c.trustPlus(interaction, member);
+      return;
     case 'watch':
       if (member.roles.cache.has(sf.roles.untrusted)) {
         interaction.editReply({ content: `${member} is already watched.` });
