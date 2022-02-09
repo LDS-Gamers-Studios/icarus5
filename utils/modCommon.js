@@ -295,6 +295,32 @@ const modCommon = {
     await interaction.editReply({ content: `${target}'s nickname changed from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.` });
   },
 
+  trust: async function(interaction, target) {
+    if (target.roles.cache.has(sf.roles.trusted)) {
+      interaction.editReply({ content: `${target} is already trusted.` });
+      return;
+    }
+
+    target.send(
+      `You have been marked as "Trusted" in ${interaction.guild.name} . `
+      + "This means you are now permitted to post images and links in chat. "
+      + "Please remember to follow the Code of Conduct when doing so.\n"
+      + "<http://ldsgamers.com/code-of-conduct>\n\n"
+      + "If you'd like to join one of our in-server Houses, you can visit <http://3houses.live> to get started!"
+    ).catch(() => blocked(target));
+
+    const embed = u.embed({ author: target })
+    .setTitle("User Given Trusted")
+    .setDescription(`${interaction.member} trusted ${target}.`);
+    if (target.roles.cache.has(sf.roles.untrusted)) {
+      await target.roles.remove(sf.roles.untrusted);
+    }
+
+    await target.roles.add(sf.roles.trusted);
+    await interaction.editReply({ content: `${target} has been given the <@&${sf.roles.trusted}> role!` });
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
+  },
+
   unmute: async function(interaction, target) {
     try {
       // Don't unmute if not muted

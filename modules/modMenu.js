@@ -167,7 +167,7 @@ const processes = {
     await c.rename(interaction, getTargetUser(target));
   },
   trustUser: async function(interaction, target) {
-    // Stuff goes here
+    await c.trust(interaction, getTargetUser(target));
   },
   trustPlusUser: async function(interaction, target) {
     // Stuff goes here
@@ -245,7 +245,7 @@ async function modMenu(inter) {
   .set(0, ['flag', 'userAvatar']) // 'userInfo',
   .set(isMsg, ['pinMessage'])
   .set(isMod, ['banUser', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
-    'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'trustUser', 'trustPlusUser', 'warnUser', 'watchUser',
+    'trustUser', 'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'trustPlusUser', 'warnUser', 'watchUser',
   // .set(isMod + isMsg, ['purgeChannel', 'warnMessage'])
   .set(isMgr + isMsg, ['announceMessage']);
 

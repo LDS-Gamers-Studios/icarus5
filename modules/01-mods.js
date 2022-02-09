@@ -307,24 +307,8 @@ async function slashModTrust(interaction) {
   if (apply) {
     switch (type) {
     case 'initial':
-      if (member.roles.cache.has(sf.roles.trusted)) {
-        interaction.editReply({ content: `${member} is already trusted.` });
-        return;
-      }
-
-      member.send(
-        `You have been marked as "Trusted" in ${interaction.guild.name} . `
-        + "This means you are now permitted to post images and links in chat. "
-        + "Please remember to follow the Code of Conduct when doing so.\n"
-        + "<http://ldsgamers.com/code-of-conduct>\n\n"
-        + "If you'd like to join one of our in-server Houses, you can visit <http://3houses.live> to get started!"
-      ).catch(() => blocked(member));
-      embed.setTitle("User Given Trusted")
-      .setDescription(`${interaction.member} trusted ${member}.`);
-      if (member.roles.cache.has(sf.roles.untrusted)) {
-        await member.roles.remove(sf.roles.untrusted);
-      }
-      break;
+      await c.trust(interaction, member);
+      return;
     case 'plus':
       if (member.roles.cache.has(sf.roles.trustedplus)) {
         interaction.editReply({ content: `${member} is already trusted+.` });
