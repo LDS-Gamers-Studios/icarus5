@@ -73,6 +73,61 @@ async function slashRankView(interaction) {
   } catch (error) { u.errorHandler(error, interaction); }
 }
 
+async function rankClockwork(client) {
+  try {
+    const response = await Module.db.user.addXp(active);
+    if (response.users.length > 0) {
+      const ldsg = client.guilds.cache.get(sf.ldsg);
+      for (const user of response.users) {
+        const member = ldsg.members.cache.get(user.discordId) ?? await ldsg.members.fetch(user.discordId).catch(u.noop);
+        if (!member) continue;
+
+        try {
+          // Remind mods to trust people!
+          if ((user.posts % 25 == 0) && !member.roles.cache.has(sf.roles.trusted) && !member.roles.cache.has(sf.roles.untrusted)) {
+            const modLogs = ldsg.channels.cache.get(sf.channels.modlogs);
+            modLogs.send({
+              content: `${member} has posted ${user.posts} times in chat without being trusted!`,
+              embeds: [
+                u.embed({ author: member })
+              .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+              .addField("ID", member.id, true)
+              .addField("Activity", `Posts: ${user.posts}`, true)
+              .addField("Roles", member.roles.cache.map(r => r.name).join(", "))
+              .addField("Joined", `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>`)
+              .addField("Account Created", `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`)
+              ]
+            });
+          }
+
+          // Grant ranked rewards, if appropriate
+          if (!user.excludeXP) {
+            const lvl = Rank.level(user.totalXP);
+            const oldLvl = Rank.level(user.totalXP - response.xp);
+
+            if (lvl != oldLvl) {
+              let message = `${u.rand(Rank.messages)} ${u.rand(Rank.levelPhrase).replace("%LEVEL%", lvl)}`;
+
+              if (Rank.rewards.has(lvl)) {
+                const reward = ldsg.roles.cache.get(Rank.rewards.get(lvl).id);
+                const roles = new Set(member.roles.cache.keys());
+                for (const [, rewardInfo] of Rank.rewards) { roles.delete(rewardInfo.id); }
+                roles.add(reward.id);
+                await member.roles.set(Array.from(roles.values()));
+                message += `\n\nYou have been awarded the ${reward.name} role!`;
+              }
+              member.send(message).catch(u.noop);
+            }
+          }
+        } catch (error) { u.errorHandler(error, `Member Rank processing (${member.displayName} - ${member.id})`); }
+      }
+    }
+    active.clear();
+  } catch (error) {
+    u.errorHandler(error, "Rank inner clockwork");
+  }
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "rank",
@@ -121,58 +176,7 @@ const Module = new Augur.Module()
 })
 .setClockwork(() => {
   try {
-    return setInterval(async function(client) {
-      try {
-        const response = await Module.db.user.addXp(active);
-        if (response.users.length > 0) {
-          const ldsg = client.guilds.cache.get(sf.ldsg);
-          for (const user of response.users) {
-            const member = ldsg.members.cache.get(user.discordId) ?? await ldsg.members.fetch(user.discordId).catch(u.noop);
-            if (!member) continue;
-
-            // Remind mods to trust people!
-            if ((user.posts % 25 == 0) && !member.roles.cache.has(sf.roles.trusted) && !member.roles.cache.has(sf.roles.untrusted)) {
-              const modLogs = ldsg.channels.cache.get(sf.channels.modlogs);
-              modLogs.send({
-                content: `${member} has posted ${user.posts} times in chat without being trusted!`,
-                embeds: [
-                  u.embed({ author: member })
-                  .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-                  .addField("ID", member.id, true)
-                  .addField("Activity", `Posts: ${user.posts}`, true)
-                  .addField("Roles", member.roles.cache.map(r => r.name).join(", "))
-                  .addField("Joined", `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>`)
-                  .addField("Account Created", `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`)
-                ]
-              });
-            }
-
-            // Grant ranked rewards, if appropriate
-            if (!user.excludeXP) {
-              const lvl = Rank.level(user.totalXP);
-              const oldLvl = Rank.level(user.totalXP - response.xp);
-
-              if (lvl != oldLvl) {
-                let message = `${u.rand(Rank.messages)} ${u.rand(Rank.levelPhrase).replace("%LEVEL%", lvl)}`;
-
-                if (Rank.rewards.has(lvl)) {
-                  const reward = ldsg.roles.cache.get(Rank.rewards.get(lvl).id);
-                  const roles = new Set(member.roles.cache.filter(r => !r.managed).keys());
-                  for (const [, rewardInfo] of Rank.rewards) { roles.delete(rewardInfo.id); }
-                  roles.add(reward.id);
-                  await member.roles.set(Array.from(roles.values()));
-                  message += `\n\nYou have been awarded the ${reward.name} role!`;
-                }
-                member.send(message).catch(u.noop);
-              }
-            }
-          }
-        }
-        active.clear();
-      } catch (error) {
-        u.errorHandler(error, "Rank inner clockwork");
-      }
-    }, 60000, Module.client);
+    return setInterval(rankClockwork, 60000, Module.client);
   } catch (error) {
     u.errorHandler(error, "Rank outer clockwork");
   }
