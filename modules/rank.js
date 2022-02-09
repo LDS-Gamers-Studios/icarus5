@@ -110,7 +110,7 @@ async function rankClockwork(client) {
 
               if (Rank.rewards.has(lvl)) {
                 const reward = ldsg.roles.cache.get(Rank.rewards.get(lvl).id);
-                const roles = new Set(member.roles.cache.filter(r => !r.managed).keys());
+                const roles = new Set(member.roles.cache.keys());
                 for (const [, rewardInfo] of Rank.rewards) { roles.delete(rewardInfo.id); }
                 roles.add(reward.id);
                 await member.roles.set(Array.from(roles.values()));
