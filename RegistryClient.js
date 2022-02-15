@@ -5,7 +5,7 @@ const client = new Discord.Client({
   intents: 0
 });
 
-const package = {client};
+const package = { client };
 
 client.on("ready", () => {
   console.log(`Client for ${client.user.username} is ready!`);
