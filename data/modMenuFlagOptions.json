@@ -1,8 +1,8 @@
 {
   "badVibes": {
-    "label": "Bad Vibes",
+    "label": "General Concern",
     "value": "badVibes",
-    "description": "This user gives off bad vibes",
+    "description": "This person makes me feel uncomfortable",
     "emoji": "😳",
     "default": false
   },
