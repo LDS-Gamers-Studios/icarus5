@@ -44,8 +44,8 @@
   "nominate": {
     "label": "Nominate for an Award",
     "value": "nominate",
-    "description": "This user deserves to be awarded :ember:",
-    "emoji": "⭐",
+    "description": "This user deserves to be awarded Ember",
+    "emoji": "<:ember:512508452619157504>",
     "default": false
   },
   "promotion": {
