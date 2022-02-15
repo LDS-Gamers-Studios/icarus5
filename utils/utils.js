@@ -153,18 +153,18 @@ const utils = {
     else if (confirm.customId === confirmFalse) return false;
     else return null;
   },
-  awaitDM: async (msg, user) => {
+  awaitDM: async (msg, user, timeout = 60) => {
     const message = await user.send({ embeds: [
       utils.embed()
       .setTitle("Awaiting Response")
       .setDescription(msg)
-      .setFooter({ text: "Times out in 60 seconds." })
+      .setFooter({ text: `Times out in ${timeout} seconds.` })
       .setColor("RED")
     ] });
 
     const collected = await message.channel.awaitMessages({
       filter: (m) => !m.content.startsWith("!") && !m.content.startsWith("/"), max: 1,
-      time: 60000
+      time: timeout * 1000
     });
 
     const response = utils.embed()
