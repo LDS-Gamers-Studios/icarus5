@@ -77,9 +77,9 @@ async function menu(options, interaction, target) {
 }
 
 const processes = {
-  flagUser: async function(interaction, target) {
+  flag: async function(interaction, target) {
     const flagMenuItems = new u.Collection()
-    .set(0, ['badVibes', 'harassment', 'modAbuse', 'nominate'])
+    .set(0, ['badVibes', 'harassment', 'modAbuse']) // , 'nominate'
     .set(isMsg, ['debate', 'inappropriate', 'offensive', 'promotion', 'scam', 'spam']);
 
     const includeKey = (target instanceof Discord.Message) ? 1 : 0;
