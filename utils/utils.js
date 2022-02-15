@@ -158,7 +158,7 @@ const utils = {
       utils.embed()
       .setTitle("Awaiting Response")
       .setDescription(msg)
-      .setFooter("Times out in 60 seconds.")
+      .setFooter({ text: "Times out in 60 seconds." })
       .setColor("RED")
     ] });
 
@@ -175,14 +175,14 @@ const utils = {
       await message.edit({ embeds: [
         response
         .setDescription(msg)
-        .setFooter("Timed out. Please see original message.")
+        .setFooter({ text: "Timed out. Please see original message." })
       ] });
       return null;
     } else {
       await message.edit({ embeds: [
         response
         .setDescription(`Got your response! Please see original message.\n\n\`\`\`\n${collected.first()}\n\`\`\``)
-        .setFooter(`Question was \`${msg}\``)
+        .setFooter({ text: `Question was \`${msg}\`` })
       ] });
       return collected.first();
     }
