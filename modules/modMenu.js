@@ -186,7 +186,29 @@ const processes = {
     await c.unmute(interaction, getTargetUser(target));
   },
   timeoutUser: async function(interaction, target) {
-    // Stuff goes here
+    await interaction.editReply("Please check your DMs from me.");
+    const dm = await u.awaitDM("What is the reason for this timeout?", interaction.member);
+    if (!dm) {
+      await interaction.editReply({ embeds: [
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
+        .setDescription(`Timeout cancelled`)
+      ], content: null });
+      return;
+    }
+
+    const targetUser = getTargetUser(target);
+
+    // Log it
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+      u.embed({ author: interaction.member })
+      .setTitle("Channel Purge")
+      .setDescription(`**${interaction.member}** timed out ${targetUser}`)
+      .addField('Reason', dm.content)
+      .setColor(0x00ff00)
+    ] });
+
+    // Do it
+    await targetUser.timeout(10 * 60 * 1000, dm.content);
   },
   kickUser: async function(interaction, target) {
     await interaction.editReply("Please check your DMs from me.");

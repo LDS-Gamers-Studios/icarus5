@@ -100,7 +100,7 @@
   "timeoutUser": {
     "label": "Timeout User",
     "value": "timeoutUser",
-    "description": "",
+    "description": "Time this user out for 10 minutes",
     "emoji": "🕑",
     "default": false
   },
