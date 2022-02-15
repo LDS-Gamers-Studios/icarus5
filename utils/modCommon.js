@@ -295,6 +295,20 @@ const modCommon = {
     await interaction.editReply({ content: `${target}'s nickname changed from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.` });
   },
 
+  timeout: async function(interaction, target, reason) {
+    // Log it
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+      u.embed({ author: interaction.member })
+      .setTitle("Channel Purge")
+      .setDescription(`**${interaction.member}** timed out ${target}`)
+      .addField('Reason', reason)
+      .setColor(0x00ff00)
+    ] });
+
+    // Do it
+    await target.timeout(10 * 60 * 1000, reason);
+  },
+
   trust: async function(interaction, target) {
     if (target.roles.cache.has(sf.roles.trusted)) {
       interaction.editReply({ content: `${target} is already trusted.` });
