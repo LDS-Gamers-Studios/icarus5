@@ -238,7 +238,7 @@ async function slashModSlowmode(interaction) {
   const ch = interaction.options.getChannel("channel") || interaction.channel;
 
   if ([ "GUILD_VOICE", "GUILD_CATEGORY", "GUILD_STORE", "GUILD_STAGE_VOICE", "UNKNOWN" ].includes(ch.type)) {
-    interaction.editReply("You can't set slowmode in that channel.");
+    await interaction.editReply("You can't set slowmode in that channel.");
     return;
   }
 
@@ -267,8 +267,8 @@ async function slashModSlowmode(interaction) {
       limit
     });
 
-    interaction.editReply(`${timer}-second slowmode activated for ${duration} minute${duration > 1 ? 's' : ''}.`);
-    interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+    await interaction.editReply(`${timer}-second slowmode activated for ${duration} minute${duration > 1 ? 's' : ''}.`);
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
       u.embed({ author: interaction.member })
       .setTitle("Channel Slowmode")
       .setDescription(`${interaction.member} set a ${timer}-second slow mode for ${duration} minute${duration > 1 ? 's' : ''} in ${ch}.`)
@@ -314,7 +314,7 @@ async function slashModTrust(interaction) {
       return;
     case 'watch':
       if (member.roles.cache.has(sf.roles.untrusted)) {
-        interaction.editReply({ content: `${member} is already watched.` });
+        await interaction.editReply({ content: `${member} is already watched.` });
         return;
       }
       embed.setTitle("User Watch")
@@ -323,15 +323,15 @@ async function slashModTrust(interaction) {
     }
 
     await member.roles.add(role);
-    interaction.editReply({ content: `${member} has been given the <@&${role}> role!` });
+    await interaction.editReply({ content: `${member} has been given the <@&${role}> role!` });
   } else {
     switch (type) {
     case 'initial':
       if (!member.roles.cache.has(sf.roles.trusted)) {
-        interaction.editReply({ content: `${member} in't trusted already.` });
+        await interaction.editReply({ content: `${member} isn't trusted already.` });
         return;
       }
-      member.send(
+      await member.send(
         `You have been removed from "Trusted" in ${interaction.guild.name}. `
         + "This means you no longer have the ability to post images. "
         + "Please remember to follow the Code of Conduct when posting images or links.\n"
@@ -346,10 +346,10 @@ async function slashModTrust(interaction) {
       break;
     case 'plus':
       if (!member.roles.cache.has(sf.roles.trustedplus)) {
-        interaction.editReply({ content: `${member} in't trusted+ already.` });
+        interaction.editReply({ content: `${member} isn't trusted+ already.` });
         return;
       }
-      member.send(
+      await member.send(
         `You have been removed from "Trusted+" in ${interaction.guild.name}. `
         + "This means you no longer have the ability to stream video in the server. "
         + "Please remember to follow the Code of Conduct.\n"
@@ -360,7 +360,7 @@ async function slashModTrust(interaction) {
       break;
     case 'watch':
       if (!member.roles.cache.has(sf.roles.untrusted)) {
-        interaction.editReply({ content: `${member} in't watched already.` });
+        await interaction.editReply({ content: `${member} isn't watched already.` });
         return;
       }
       embed.setTitle("User Unwatched")
@@ -369,7 +369,7 @@ async function slashModTrust(interaction) {
     }
 
     await member.roles.remove(role);
-    interaction.editReply({ content: `The <@&${role}> role has been removed from ${member}!` });
+    await interaction.editReply({ content: `The <@&${role}> role has been removed from ${member}!` });
   }
 
   await interaction.guild.channels.cache.get(channel).send({ embeds: [embed] });
@@ -387,7 +387,7 @@ async function slashModWarn(interaction) {
     + "As a reminder, if we believe that you are frequently in breach of our code of conduct or are otherwise acting inconsistently with the letter or spirit of the code, we may limit, suspend or terminate your access to the LDSG Discord server.\n\n"
     + `**${u.escapeText(interaction.member.displayName)}** has issued you a warning for:\n`
     + reason;
-  member.send(response).catch(() => blocked(member));
+  await member.send(response).catch(() => blocked(member));
 
   const embed = u.embed()
     .setColor("#0000FF")
@@ -411,7 +411,7 @@ async function slashModWarn(interaction) {
   embed.addField(`Infraction Summary (${summary.time} Days) `, `Infractions: ${summary.count}\nPoints: ${summary.points}`);
 
   flag.edit({ embeds: [embed] });
-  interaction.editReply(`${member} has been warned **${value}** points for reason \`${reason}\``);
+  await interaction.editReply(`${member} has been warned **${value}** points for reason \`${reason}\``);
 }
 
 const Module = new Augur.Module()
