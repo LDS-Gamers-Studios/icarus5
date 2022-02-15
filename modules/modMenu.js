@@ -218,7 +218,39 @@ const processes = {
     // Stuff goes here
   },
   purgeChannel: async function(interaction, target) {
-    // Stuff goes here
+    const dm = await u.awaitDM("What is the reason for this purge?", interaction.member);
+    if (!dm) {
+      await interaction.editReply({ embeds: [
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
+        .setDescription(`Channel purge cancelled`)
+      ], content: null });
+      return;
+    }
+
+    await interaction.editReply("Beginning deletion...");
+    await target.delete();
+    let toDelete = await interaction.channel.messages.fetch({ after: target.id }, { force: true });
+
+    while (toDelete.size > 0) {
+      const deleted = await interaction.channel.bulkDelete(toDelete, true);
+      if (toDelete.size != deleted.size) {
+        const diff = toDelete.difference(deleted);
+        for (const [, msg] of diff) {
+          await msg.delete().catch(u.noop);
+        }
+      }
+      toDelete = await interaction.channel.messages.fetch({ after: target.id }, { force: true });
+    }
+
+    // Log it
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+      u.embed({ author: interaction.member })
+      .setTitle("Channel Purge")
+      .setDescription(`**${interaction.member}** purged messages in ${interaction.channel}`)
+      .addField('Reason', dm.content)
+      .setColor(0x00ff00)
+    ] });
+    await interaction.followUp({ content: `Channel purged.`, ephemeral: true });
   },
   announceMessage: async function(interaction, target) {
     const author = target.member;
@@ -246,7 +278,7 @@ async function modMenu(inter) {
   .set(isMsg, ['pinMessage'])
   .set(isMod, ['banUser', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
     'trustUser', 'trustPlusUser', 'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'warnUser', 'watchUser',
-  // .set(isMod + isMsg, ['purgeChannel', 'warnMessage'])
+  .set(isMod + isMsg, ['purgeChannel']) // , 'warnMessage'
   .set(isMgr + isMsg, ['announceMessage']);
 
   const menuItems = getMenuItems(menuOptions, allMenuItems, includeKey);

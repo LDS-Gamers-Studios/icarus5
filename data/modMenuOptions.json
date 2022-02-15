@@ -128,7 +128,7 @@
   "purgeChannel": {
     "label": "Purge Channel",
     "value": "purgeChannel",
-    "description": "",
+    "description": "Delete all messages in the channel since this one",
     "emoji": "❌",
     "default": false
   },
