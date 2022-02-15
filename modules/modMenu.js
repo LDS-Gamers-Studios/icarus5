@@ -312,9 +312,9 @@ async function modMenu(inter) {
   const target = inter.targetType === "MESSAGE" ? inter.options.getMessage("message") : inter.options.getMember("user");
 
   const allMenuItems = new u.Collection()
-  .set(0, ['flag', 'userAvatar']) // 'userInfo',
+  .set(0, ['userAvatar']) // 'userInfo',
   .set(isMsg, ['pinMessage'])
-  .set(isMod, ['banUser', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
+  .set(isMod, ['banUser', 'flag', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
     'trustUser', 'trustPlusUser', 'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'warnUser', 'watchUser',
   .set(isMod + isMsg, ['purgeChannel']) // , 'warnMessage'
   .set(isMgr + isMsg, ['announceMessage']);
