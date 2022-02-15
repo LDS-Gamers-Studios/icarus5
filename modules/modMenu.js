@@ -5,7 +5,8 @@ const Augur = require("augurbot"),
   c = require("../utils/modCommon"),
   Discord = require("discord.js");
 
-const menuOptions = require("../data/modMenuOptions");
+const menuOptions = require("../data/modMenuOptions"),
+  menuFlagOptions = require("../data/modMenuFlagOptions");
 
 const isMsg = 1 << 0;
 const isMod = 1 << 1;
@@ -15,7 +16,7 @@ function permCheck(inter) {
   return (
     (inter.targetType === "MESSAGE") * isMsg |
     p.isMod(inter) * isMod |
-    p.isMgr(inter) * isMgr
+    (p.isMgr(inter) || p.isMgmt(inter)) * isMgr
   );
 }
 
@@ -23,9 +24,106 @@ function getTargetUser(target) {
   return target.member ?? target.author ?? target;
 }
 
+function getMenuItems(rawItems, permsMap, includeKey) {
+  const options = permsMap.filter((v, k) => (includeKey & k) == k)
+    .reduce((a, v) => a.concat(v), [])
+    .map((v) => rawItems[v])
+    .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
+
+  return options;
+}
+
+async function menu(options, interaction, target) {
+  const selectId = u.customId();
+  const row = new Discord.MessageActionRow()
+    .addComponents(
+      new Discord.MessageSelectMenu()
+        .setCustomId(selectId)
+        .setPlaceholder('Nothing Selected')
+        .addOptions(options),
+    );
+
+  const e = u.embed({ author: getTargetUser(target) })
+    .setColor("RED");
+  let embeds = [ e ];
+  if (target instanceof Discord.Message) {
+    e.setTitle("Select An Action On This Message");
+    e.setDescription(target.content);
+    embeds = embeds.concat(target.embeds);
+  } else {
+    e.setTitle("Select An Action On This User");
+  }
+
+  await interaction.editReply({ embeds, components: [ row ] });
+
+  const filter = (comp) => comp.customId === selectId && comp.user.id === interaction.member.id;
+  let menuSelect;
+  menuSelect = await interaction.channel.awaitMessageComponent({ filter, time: 60000 })
+    .catch(() => menuSelect = null);
+
+  if (!menuSelect) {
+    embeds[0].setTitle("Action Timed Out").setColor("BLUE");
+    await interaction.editReply({ embeds, components: [ ] });
+    return;
+  }
+  await menuSelect.deferUpdate({ ephemeral: true });
+
+  embeds[0].setTitle("Action Selected")
+  .setColor("GREEN")
+  .addField("Selection", options.find(o => o.value === menuSelect.values[0]).label);
+  await interaction.editReply({ embeds, components: [ ] });
+
+  return menuSelect;
+}
+
 const processes = {
-  flagUser: async function(interaction, target) {
-    // Stuff goes here
+  flag: async function(interaction, target) {
+    const flagMenuItems = new u.Collection()
+    .set(0, ['badVibes', 'harassment', 'modAbuse']) // , 'nominate'
+    .set(isMsg, ['debate', 'inappropriate', 'offensive', 'promotion', 'scam', 'spam']);
+
+    const includeKey = (target instanceof Discord.Message) ? 1 : 0;
+    const menuItems = getMenuItems(menuFlagOptions, flagMenuItems, includeKey);
+
+    const menuSelect = await menu(menuItems, interaction, target);
+    if (!menuSelect) return;
+    const reason = menuItems.find(o => o.value === menuSelect.values[0]).label;
+
+    const targetUser = getTargetUser(target);
+    const embed = u.embed({ author: targetUser });
+    if (target instanceof Discord.Message) {
+      embed.setDescription((target.editedAt ? "[Edited]\n" : "") + target.cleanContent)
+      .addField("Channel", target.channel?.toString(), true)
+      .addField("User", target.author.toString(), true)
+      .addField("Jump to Post", `[Original Message](${target.url})`, true);
+    }
+
+    const infractionSummary = await Module.db.infraction.getSummary(targetUser);
+    embed.addField(`Infraction Summary (${infractionSummary.time} Days)`, `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`);
+
+    embed.addField("Flagged By", interaction.member.toString());
+    embed.addField("Reason", reason);
+
+    if (['badVibes', 'harassment', 'modAbuse', 'nominate'].includes(menuSelect.values[0])) {
+      const extra = await u.awaitDM(`You selected "${reason}." Please provide more information (one message only).`, interaction.member, 300);
+      if (!extra) {
+        await interaction.editReply({ embeds: [
+          u.embed({ author: interaction.member }).setColor(0x0000ff)
+          .setDescription(`Flag cancelled. The reason you selected requires more information.`)
+        ], content: null });
+        return;
+      }
+      embed.addField("Further Information", extra.content);
+    }
+
+    if (menuSelect.values[0] == "nominate") {
+      // Send it to the Team (unimplemented)
+    } else {
+      const modLogs = interaction.guild.channels.cache.get(sf.channels.modlogs);
+      await modLogs.send({ embeds: [embed] });
+
+      await menuSelect.editReply("Thank you for sharing your concern. I've put this in front of the mods.");
+    }
   },
   userInfo: async function(interaction, target) {
     // Stuff goes here
@@ -36,9 +134,6 @@ const processes = {
     .setDescription(`${u.escapeText(user.displayName ?? user.username)}'s Avatar`)
     .setImage(user.displayAvatarURL({ size: 512, dynamic: true }));
     interaction.editReply({ embeds: [embed] });
-  },
-  flagMessage: async function(interaction, target) {
-    // Stuff goes here
   },
   pinMessage: async function(interaction, target) {
     try {
@@ -88,10 +183,10 @@ const processes = {
     await c.rename(interaction, getTargetUser(target));
   },
   trustUser: async function(interaction, target) {
-    // Stuff goes here
+    await c.trust(interaction, getTargetUser(target));
   },
   trustPlusUser: async function(interaction, target) {
-    // Stuff goes here
+    await c.trustPlus(interaction, getTargetUser(target));
   },
   watchUser: async function(interaction, target) {
     // Stuff goes here
@@ -107,7 +202,17 @@ const processes = {
     await c.unmute(interaction, getTargetUser(target));
   },
   timeoutUser: async function(interaction, target) {
-    // Stuff goes here
+    await interaction.editReply("Please check your DMs from me.");
+    const dm = await u.awaitDM("What is the reason for this timeout?", interaction.member);
+    if (!dm) {
+      await interaction.editReply({ embeds: [
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
+        .setDescription(`Timeout cancelled`)
+      ], content: null });
+      return;
+    }
+
+    await c.timeout(interaction, getTargetUser(target), dm.content);
   },
   kickUser: async function(interaction, target) {
     await interaction.editReply("Please check your DMs from me.");
@@ -139,7 +244,39 @@ const processes = {
     // Stuff goes here
   },
   purgeChannel: async function(interaction, target) {
-    // Stuff goes here
+    const dm = await u.awaitDM("What is the reason for this purge?", interaction.member);
+    if (!dm) {
+      await interaction.editReply({ embeds: [
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
+        .setDescription(`Channel purge cancelled`)
+      ], content: null });
+      return;
+    }
+
+    await interaction.editReply("Beginning deletion...");
+    await target.delete();
+    let toDelete = await interaction.channel.messages.fetch({ after: target.id }, { force: true });
+
+    while (toDelete.size > 0) {
+      const deleted = await interaction.channel.bulkDelete(toDelete, true);
+      if (toDelete.size != deleted.size) {
+        const diff = toDelete.difference(deleted);
+        for (const [, msg] of diff) {
+          await msg.delete().catch(u.noop);
+        }
+      }
+      toDelete = await interaction.channel.messages.fetch({ after: target.id }, { force: true });
+    }
+
+    // Log it
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+      u.embed({ author: interaction.member })
+      .setTitle("Channel Purge")
+      .setDescription(`**${interaction.member}** purged messages in ${interaction.channel}`)
+      .addField('Reason', dm.content)
+      .setColor(0x00ff00)
+    ] });
+    await interaction.followUp({ content: `Channel purged.`, ephemeral: true });
   },
   announceMessage: async function(interaction, target) {
     const author = target.member;
@@ -154,68 +291,27 @@ const processes = {
   }
 };
 
-const allMenuItems = new u.Collection()
-.set(0, ['userAvatar']) // 'flagUser', 'userInfo',
-.set(isMsg, ['pinMessage']) // 'flagMessage',
-.set(isMod, ['banUser', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
-  'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'trustUser', 'trustPlusUser', 'warnUser', 'watchUser',
-// .set(isMod + isMsg, ['purgeChannel', 'warnMessage'])
-.set(isMgr + isMsg, ['announceMessage']);
-
 /**
    * @param {Discord.ContextMenuInteraction} inter
    */
 async function modMenu(inter) {
   await inter.deferReply({ ephemeral: true });
   const includeKey = permCheck(inter);
-  const options = allMenuItems.filter((v, k) => (includeKey & k) == k)
-    .reduce((a, v) => a.concat(v), [])
-    .map((v) => menuOptions[v])
-    .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
-
-  // Present menu to user
-  const selectId = u.customId();
-  const row = new Discord.MessageActionRow()
-    .addComponents(
-      new Discord.MessageSelectMenu()
-        .setCustomId(selectId)
-        .setPlaceholder('Nothing Selected')
-        .addOptions(options),
-    );
-
   const target = inter.targetType === "MESSAGE" ? inter.options.getMessage("message") : inter.options.getMember("user");
 
-  const e = u.embed({ author: getTargetUser(target) })
-    .setColor("RED");
-  let embeds = [ e ];
-  if (inter.targetType === "MESSAGE") {
-    e.setTitle("Select An Action On This Message");
-    e.setDescription(target.content);
-    embeds = embeds.concat(target.embeds);
-  } else {
-    e.setTitle("Select An Action On This User");
-  }
+  const allMenuItems = new u.Collection()
+  .set(0, ['userAvatar']) // 'userInfo',
+  .set(isMsg, ['pinMessage'])
+  .set(isMod, ['banUser', 'flag', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
+    'trustUser', 'trustPlusUser', 'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'warnUser', 'watchUser',
+  .set(isMod + isMsg, ['purgeChannel']) // , 'warnMessage'
+  .set(isMgr + isMsg, ['announceMessage']);
 
-  await inter.editReply({ embeds, components: [ row ] });
+  const menuItems = getMenuItems(menuOptions, allMenuItems, includeKey);
+  const menuSelect = await menu(menuItems, inter, target);
+  if (!menuSelect) return;
 
-  let menuSelect;
-  const filter = (comp) => comp.customId === selectId && comp.user.id === inter.member.id;
-  menuSelect = await inter.channel.awaitMessageComponent({ filter, time: 60000 })
-    .catch(() => menuSelect = null);
-
-  if (!menuSelect) {
-    embeds[0].setTitle("Action Timed Out").setColor("BLUE");
-    await inter.editReply({ embeds, components: [ ] });
-    return;
-  }
-
-  const selection = menuSelect.values[0];
-  await menuSelect.deferReply({ ephemeral: true });
-  embeds[0].setTitle("Action Selected")
-    .setColor("GREEN")
-    .setFooter(options.filter(o => o.value === selection)[0].label);
-  await inter.editReply({ embeds, components: [ ] });
-  await processes[selection](menuSelect, target);
+  await processes[menuSelect.values[0]](menuSelect, target);
 }
 
 const Module = new Augur.Module()

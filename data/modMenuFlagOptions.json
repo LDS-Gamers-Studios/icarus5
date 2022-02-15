@@ -1,0 +1,72 @@
+{
+  "badVibes": {
+    "label": "General Concern",
+    "value": "badVibes",
+    "description": "This person makes me feel uncomfortable",
+    "emoji": "😳",
+    "default": false
+  },
+  "debate": {
+    "label": "Political or religious debate",
+    "value": "debate",
+    "description": "This message is part of, or is likely to cause, a political or religious debate",
+    "emoji": "🙊",
+    "default": false
+  },
+  "harassment": {
+    "label": "Harassment",
+    "value": "harassment",
+    "description": "This user is harassing me or someone else",
+    "emoji": "😰",
+    "default": false
+  },
+  "inappropriate": {
+    "label": "Inappropriate Content",
+    "value": "inappropriate",
+    "description": "This message or one of its attachments contains inappropriate material",
+    "emoji": "🤬",
+    "default": false
+  },
+  "modAbuse": {
+    "label": "Mod Abuse",
+    "value": "modAbuse",
+    "description": "This moderator is abusing their power",
+    "emoji": "⚖",
+    "default": false
+  },
+  "offensive": {
+    "label": "Offensive Content",
+    "value": "offensive",
+    "description": "This message or one of its attachments is mean, rude, or belittling",
+    "emoji": "💩",
+    "default": false
+  },
+  "nominate": {
+    "label": "Nominate for an Award",
+    "value": "nominate",
+    "description": "This user deserves to be awarded Ember",
+    "emoji": "<:ember:512508452619157504>",
+    "default": false
+  },
+  "promotion": {
+    "label": "Self-promotion",
+    "value": "promotion",
+    "description": "This message includes unapproved self-promotion outside of #streaming or #game-deals-and-trades",
+    "emoji": "💰",
+    "default": false
+  },
+  "scam": {
+    "label": "Scam or Phishing",
+    "value": "scam",
+    "description": "This message contains a scam or phishing attempt",
+    "emoji": "🎣",
+    "default": false
+  },
+  "spam": {
+    "label": "Spam",
+    "value": "spam",
+    "description": "This message is spam",
+    "emoji": "🥫",
+    "default": false
+  }
+}

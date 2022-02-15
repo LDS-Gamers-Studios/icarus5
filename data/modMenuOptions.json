@@ -1,8 +1,8 @@
 {
-  "flagUser": {
-    "label": "Flag User",
-    "value": "flagUser",
-    "description": "Bring this user to the attention of LDSG's Discord Moderators",
+  "flag": {
+    "label": "Flag Message/User",
+    "value": "flag",
+    "description": "Bring this to the attention of LDSG's Discord Moderators",
     "emoji": "🚩",
     "default": false
   },
@@ -18,13 +18,6 @@
     "value": "userAvatar",
     "description": "See a larger version of this user's avatar",
     "emoji": "📷",
-    "default": false
-  },
-  "flagMessage": {
-    "label": "Flag Message",
-    "value": "flagMessage",
-    "description": "Bring this message to the attention of LDSG's Discord Moderators",
-    "emoji": "🚩",
     "default": false
   },
   "pinMessage": {
@@ -65,14 +58,14 @@
   "trustUser": {
     "label": "Trust User",
     "value": "trustUser",
-    "description": "",
+    "description": "Give this user the Trusted role",
     "emoji": "👍",
     "default": false
   },
   "trustPlusUser": {
     "label": "Trust+ User",
     "value": "trustPlusUser",
-    "description": "",
+    "description": "Give this user the Trusted+ role",
     "emoji": "💚",
     "default": false
   },
@@ -107,7 +100,7 @@
   "timeoutUser": {
     "label": "Timeout User",
     "value": "timeoutUser",
-    "description": "",
+    "description": "Time this user out for 10 minutes",
     "emoji": "🕑",
     "default": false
   },
@@ -135,7 +128,7 @@
   "purgeChannel": {
     "label": "Purge Channel",
     "value": "purgeChannel",
-    "description": "",
+    "description": "Delete all messages in the channel since this one",
     "emoji": "❌",
     "default": false
   },

@@ -307,42 +307,11 @@ async function slashModTrust(interaction) {
   if (apply) {
     switch (type) {
     case 'initial':
-      if (member.roles.cache.has(sf.roles.trusted)) {
-        interaction.editReply({ content: `${member} is already trusted.` });
-        return;
-      }
-
-      member.send(
-        `You have been marked as "Trusted" in ${interaction.guild.name} . `
-        + "This means you are now permitted to post images and links in chat. "
-        + "Please remember to follow the Code of Conduct when doing so.\n"
-        + "<http://ldsgamers.com/code-of-conduct>\n\n"
-        + "If you'd like to join one of our in-server Houses, you can visit <http://3houses.live> to get started!"
-      ).catch(() => blocked(member));
-      embed.setTitle("User Given Trusted")
-      .setDescription(`${interaction.member} trusted ${member}.`);
-      if (member.roles.cache.has(sf.roles.untrusted)) {
-        await member.roles.remove(sf.roles.untrusted);
-      }
-      break;
+      await c.trust(interaction, member);
+      return;
     case 'plus':
-      if (member.roles.cache.has(sf.roles.trustedplus)) {
-        interaction.editReply({ content: `${member} is already trusted+.` });
-        return;
-      }
-      if (!member.roles.cache.has(sf.roles.trusted)) {
-        await interaction.editReply({ content: `${member} needs <@&${sf.roles.trusted}> before they can be given <@&${sf.roles.trustedplus}>!` });
-        return;
-      }
-      member.send(
-        "Congratulations! "
-        + "You've been added to the Trusted+ list in LDSG, allowing you to stream to voice channels!\n\n"
-        + "While streaming, please remember the Streaming Guidelines ( https://goo.gl/Pm3mwS ) and LDSG Code of Conduct ( http://ldsgamers.com/code-of-conduct ). "
-        + "Also, please be aware that LDSG may make changes to the Trusted+ list from time to time at its discretion."
-      ).catch(u.noop);
-      embed.setTitle("User Given Trusted+")
-      .setDescription(`${interaction.member} gave ${member} the <@&${role}> role.`);
-      break;
+      await c.trustPlus(interaction, member);
+      return;
     case 'watch':
       if (member.roles.cache.has(sf.roles.untrusted)) {
         interaction.editReply({ content: `${member} is already watched.` });

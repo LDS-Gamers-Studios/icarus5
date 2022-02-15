@@ -295,6 +295,71 @@ const modCommon = {
     await interaction.editReply({ content: `${target}'s nickname changed from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.` });
   },
 
+  timeout: async function(interaction, target, reason) {
+    // Log it
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+      u.embed({ author: interaction.member })
+      .setTitle("Channel Purge")
+      .setDescription(`**${interaction.member}** timed out ${target}`)
+      .addField('Reason', reason)
+      .setColor(0x00ff00)
+    ] });
+
+    // Do it
+    await target.timeout(10 * 60 * 1000, reason);
+  },
+
+  trust: async function(interaction, target) {
+    if (target.roles.cache.has(sf.roles.trusted)) {
+      interaction.editReply({ content: `${target} is already trusted.` });
+      return;
+    }
+
+    target.send(
+      `You have been marked as "Trusted" in ${interaction.guild.name} . `
+      + "This means you are now permitted to post images and links in chat. "
+      + "Please remember to follow the Code of Conduct when doing so.\n"
+      + "<http://ldsgamers.com/code-of-conduct>\n\n"
+      + "If you'd like to join one of our in-server Houses, you can visit <http://3houses.live> to get started!"
+    ).catch(() => blocked(target));
+
+    const embed = u.embed({ author: target })
+    .setTitle("User Given Trusted")
+    .setDescription(`${interaction.member} trusted ${target}.`);
+    if (target.roles.cache.has(sf.roles.untrusted)) {
+      await target.roles.remove(sf.roles.untrusted);
+    }
+
+    await target.roles.add(sf.roles.trusted);
+    await interaction.editReply({ content: `${target} has been given the <@&${sf.roles.trusted}> role!` });
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
+  },
+
+  trustPlus: async function(interaction, target) {
+    if (target.roles.cache.has(sf.roles.trustedplus)) {
+      await interaction.editReply({ content: `${target} is already trusted+.` });
+      return;
+    }
+    if (!target.roles.cache.has(sf.roles.trusted)) {
+      await interaction.editReply({ content: `${target} needs <@&${sf.roles.trusted}> before they can be given <@&${sf.roles.trustedplus}>!` });
+      return;
+    }
+    target.send(
+      "Congratulations! "
+      + "You've been added to the Trusted+ list in LDSG, allowing you to stream to voice channels!\n\n"
+      + "While streaming, please remember the Streaming Guidelines ( https://goo.gl/Pm3mwS ) and LDSG Code of Conduct ( http://ldsgamers.com/code-of-conduct ). "
+      + "Also, please be aware that LDSG may make changes to the Trusted+ list from time to time at its discretion."
+    ).catch(u.noop);
+
+    const embed = u.embed({ author: target })
+    .setTitle("User Given Trusted+")
+    .setDescription(`${interaction.member} gave ${target} the <@&${sf.roles.trustedplus}> role.`);
+
+    await target.roles.add(sf.roles.trustedplus);
+    await interaction.editReply({ content: `${target} has been given the <@&${sf.roles.trustedplus}> role!` });
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
+  },
+
   unmute: async function(interaction, target) {
     try {
       // Don't unmute if not muted
