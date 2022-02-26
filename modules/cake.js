@@ -95,7 +95,7 @@ async function testCakeDays() {
       .setTitle("Cake Days!")
       .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Emoji_u1f382.svg/128px-Emoji_u1f382.svg.png")
       .setDescription("The following server members are celebrating their cake days! Glad you're with us!");
-      for (const [years, cakeMembers] of celebrating) {
+      for (const [years, cakeMembers] of celebrating.sort((v1, v2, k1, k2) => k2 - k1)) {
         embed.addField(`${years} ${years > 1 ? "Years" : "Year"}`, cakeMembers.join("\n"));
       }
       const allMentions = celebrating.reduce((t, v) => t.concat(v), []);
