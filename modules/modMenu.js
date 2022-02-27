@@ -126,7 +126,7 @@ const processes = {
     }
   },
   userInfo: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   userAvatar: async function(interaction, target) {
     const user = getTargetUser(target);
@@ -161,10 +161,10 @@ const processes = {
     } catch (error) { u.errorHandler(error, interaction); }
   },
   fullinfo: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   summary: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   noteUser: async function(interaction, target) {
     await interaction.editReply("Please check your DMs from me.");
@@ -189,10 +189,10 @@ const processes = {
     await c.trustPlus(interaction, getTargetUser(target));
   },
   watchUser: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   warnUser: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   muteUser: async function(interaction, target) {
     const reason = target.cleanContent ?? "Violating the Code of Conduct";
@@ -241,7 +241,7 @@ const processes = {
     await c.ban(interaction, getTargetUser(target), dm.content, 1);
   },
   warnMessage: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   purgeChannel: async function(interaction, target) {
     const dm = await u.awaitDM("What is the reason for this purge?", interaction.member);
