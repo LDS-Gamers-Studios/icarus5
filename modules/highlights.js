@@ -18,7 +18,7 @@ Module.addCommand({ name: "fetchhighlights",
           if (fetched.length != 100) console.log('less');
           lastId = fetched[fetched.length - 1].id;
           messages.push(...fetched);
-          if (fetched.length != 100 || i > 5) res();
+          if (fetched.length != 100 || i > 15) res();
           else loop(i++);
         }, 3000);
       };
