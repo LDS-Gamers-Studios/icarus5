@@ -10,7 +10,7 @@ Module.addCommand({ name: "fetchhighlights",
     const messages = [];
     let lastId;
     await new Promise(res => {
-      const loop = async () => {
+      const loop = async (i = 0) => {
         setTimeout(async () => {
           console.log('loop started');
           let fetched = await channel.messages.fetch({ limit: 100, before: lastId });
@@ -18,8 +18,8 @@ Module.addCommand({ name: "fetchhighlights",
           if (fetched.length != 100) console.log('less');
           lastId = fetched[fetched.length - 1].id;
           messages.push(...fetched);
-          if (fetched.length != 100) res();
-          else loop();
+          if (fetched.length != 100 || i > 5) res();
+          else loop(i++);
         }, 3000);
       };
       loop();
