@@ -2,7 +2,7 @@ const Augur = require('augurbot'),
   sf = require("../config/snowflakes.json"),
   Module = new Augur.Module();
 Module.addCommand({ name: "fetchhighlights",
-  permissions: (msg) => ['337713155801350146'].includes(msg.author.id),
+  permissions: (msg) => msg.member?.roles.cache.hasAny([sf.roles.team, sf.roles.management, sf.roles.manager]),
   process: async (msg) => {
     const date = new Date();
     const after = new Date(date.getFullYear(), date.getMonth(), 1);
