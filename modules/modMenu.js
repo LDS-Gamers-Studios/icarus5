@@ -104,7 +104,7 @@ const processes = {
     embed.addField("Flagged By", interaction.member.toString());
     embed.addField("Reason", reason);
 
-    if (menuSelect.values[0] == "modAbuse" && (!targetUser.roles.cache.has(sf.roles.mod) && !targetUser.roles.cache.has(sf.roles.management))) {
+    if (menuSelect.values[0] === "modAbuse" && (!targetUser.roles.cache.has(sf.roles.mod) && !targetUser.roles.cache.has(sf.roles.management))) {
       await menuSelect.editReply("Only Moderators can be flagged for mod abuse.");
       return;
     }
