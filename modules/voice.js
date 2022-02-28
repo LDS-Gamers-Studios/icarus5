@@ -198,10 +198,10 @@ const Module = new Augur.Module()
               id: sf.roles.ducttape,
               deny: ["VIEW_CHANNEL", "CONNECT", "SPEAK"]
             },
-            // {
-            //   id: sf.roles.suspended, // "871566171206484008"
-            //   deny: ["VIEW_CHANNEL", "CONNECT", "SPEAK"]
-            // }
+            {
+              id: sf.roles.suspended, // "871566171206484008"
+              deny: ["VIEW_CHANNEL", "CONNECT", "SPEAK"]
+            }
           ]
         });
       } catch (e) { u.errorHandler(e, "Voice Channel Creation Error"); }
