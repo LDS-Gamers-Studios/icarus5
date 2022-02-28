@@ -9,8 +9,8 @@ const u = require("../utils/utils"),
 
 let channelNames = new Array();
 
-function isCommuntyVoice(channel) {
-  return (channel?.parentID == sf.channels.communityVoice) && (channel?.id != sf.channels.voiceAFK);
+function isCommunityVoice(channel) {
+  return (channel?.parentId == sf.channels.communityVoice) && (channel?.id != sf.channels.voiceAFK);
 }
 
 function getIDsFromMentionString(mentionString) {
@@ -20,11 +20,15 @@ function getIDsFromMentionString(mentionString) {
   return userIDs;
 }
 
+function random(iter) {
+  return iter[Math.floor(Math.random() * iter.length)];
+}
+
 async function slashVoiceLock(interaction) {
   try {
     const member = interaction.member;
     const channel = member.voice.channel;
-    if (isCommuntyVoice(channel)) {
+    if (isCommunityVoice(channel)) {
       // lock the channel
       const users = Array.from(channel.members.keys()).concat(getIDsFromMentionString(interaction.options.getString("users")));
 
@@ -65,7 +69,7 @@ async function slashVoiceLock(interaction) {
 async function slashVoiceUnlock(interaction) {
   try {
     const channel = interaction.member.voice.channel;
-    if (isCommuntyVoice(channel)) {
+    if (isCommunityVoice(channel)) {
       if (channel.permissionsFor(interaction.member).has("SPEAK")) {
         // Unlock the channel.
         const overwrites = [
@@ -100,7 +104,7 @@ async function slashVoiceStreamlock(interaction) {
   try {
     const member = interaction.member;
     const channel = member.voice.channel;
-    if (isCommuntyVoice(channel)) {
+    if (isCommunityVoice(channel)) {
       if (channel.permissionsFor(member).has("STREAM")) {
         // stream lock the channel
         const users = Array.from(channel.members.keys()).concat(getIDsFromMentionString(interaction.options.getString("users")));
@@ -165,25 +169,23 @@ const Module = new Augur.Module()
 
   } catch (e) { u.errorHandler(e, "Load Voice Channel Names"); }
 })
-.addEvent("voiceStateUpdate", async (oldMember, newMember) => {
-  const guild = oldMember.guild;
-  const oldState = oldMember.voice;
-  const newState = newMember.voice;
+.addEvent("voiceStateUpdate", async (oldState, newState) => {
+  const guild = oldState.guild;
   // If the change is in LDSG and involves moving users (we don't care otherwise)
-  if ((guild.id == sf.ldsg) && (oldState?.channelId != newState?.channelId)) {
+  if ((guild.id == sf.ldsg) && (oldState.channelId != newState.channelId)) {
     // If the channel that was moved out of is empty, remove it.
-    if (oldState.channel && (oldState.channel.members.size == 0) && isCommuntyVoice(oldState.channel)) {
+    if (oldState.channel && (oldState.channel.members.size == 0) && isCommunityVoice(oldState.channel)) {
       await oldState.channel.delete().catch(e => u.errorHandler(e, `Could not delete empty voice channel: ${oldState.channel.name}`));
     }
     // If the channel that was moved into was empty, add another one.
-    if (newState.channel && (newState.channel.members.size == 1) && isCommuntyVoice(newState.channel)) {
+    if (newState.channel && (newState.channel.members.size == 1) && isCommunityVoice(newState.channel)) {
       const bitrate = newState.channel.bitrate;
       const available = channelNames.filter(name => !guild.channels.cache.find(c => c.name.startsWith(name)));
-      const name = (available.random() || channelNames.random()) + ` (${parseInt(bitrate / 1000, 10)} kbps)`;
+      const name = ((random(available) || random(channelNames)) || "Room Error") + ` (${parseInt(bitrate / 1000, 10)} kbps)`;
 
       try {
         await guild.channels.create(name, {
-          type: "voice",
+          type: "GUILD_VOICE",
           bitrate,
           parent: sf.channels.communityVoice,
           permissionOverwrites: [
