@@ -9,18 +9,13 @@ Module.addCommand({ name: "fetchhighlights",
     const channel = msg.guild.channels.cache.get(sf.channels.highlightsubmissions); // #highlight-submissions
     const messages = [];
     let lastId;
-    await new Promise(res => {
-      const loop = async (i = 0) => {
-          let fetched = await channel.messages.fetch({ limit: 100, cache: false, before: lastId });
-          fetched = fetched.filter(a => a.createdTimestamp >= after.getTime()).map(a => a);
-          if (fetched.length != 100) console.log('less');
-          lastId = fetched[fetched.length - 1].id;
-          messages.push(...fetched);
-          if (fetched.length != 100 || i > 15) res();
-          else loop(i++);
-      };
-      loop();
-    });
+    let fetched;
+    do {
+      fetched = await channel.messages.fetch({limit: 100, before: lastId});
+      fetched = fetched.filter(a => a.createdTimestamp >= after.getTime()).map(a => a);
+      lastId = fetched[fetched.length - 1].id;
+      messages.push(...fetched);
+    } while (fetched.length == 100);
     if (messages.length > 0) {
       let results = messages.filter(a => a.attachments.size > 0);
       let otherLinks = messages.filter(a => a.content?.includes('https://'));
@@ -32,5 +27,4 @@ Module.addCommand({ name: "fetchhighlights",
       } else {msg.reply("I couldn't find any new submissions!");}
     } else {msg.reply("I couldn't find any new submissions!");}
   }
-});
-module.exports = Module;
+})
