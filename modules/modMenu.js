@@ -104,43 +104,29 @@ const processes = {
     embed.addField("Flagged By", interaction.member.toString());
     embed.addField("Reason", reason);
     
-    function canAbuse() {
-      if(!targetUser.roles.cache.has(sf.roles.mod)) {
-        if(targetUser.roles.cache.has(sf.roles.management)) {
-          return false;
-        }
-        else {
-          return true;
-        }
-      }
-      else {
-        return false;
-      }
-    }
-    if(menuSelect.values[0] == "modAbuse" && canAbuse()) {
+    if(menuSelect.values[0] == "modAbuse" && (!targetUser.roles.cache.has(sf.roles.mod) && !targetUser.roles.cache.has(sf.roles.management))) {
       await menuSelect.editReply("Only Moderators can be flagged for mod abuse.");
+      return;
     }
-    else {
-      if (['badVibes', 'harassment', 'modAbuse', 'nominate'].includes(menuSelect.values[0])) {
-        const extra = await u.awaitDM(`You selected "${reason}." Please provide more information (one message only).`, interaction.member, 300);
-        if (!extra) {
-          await interaction.editReply({ embeds: [
-            u.embed({ author: interaction.member }).setColor(0x0000ff)
-            .setDescription(`Flag cancelled. The reason you selected requires more information.`)
-          ], content: null });
-          return;
-        }
-        embed.addField("Further Information", extra.content);
+    if (['badVibes', 'harassment', 'modAbuse', 'nominate'].includes(menuSelect.values[0])) {
+      const extra = await u.awaitDM(`You selected "${reason}." Please provide more information (one message only).`, interaction.member, 300);
+      if (!extra) {
+        await interaction.editReply({ embeds: [
+          u.embed({ author: interaction.member }).setColor(0x0000ff)
+          .setDescription(`Flag cancelled. The reason you selected requires more information.`)
+        ], content: null });
+        return;
       }
+      embed.addField("Further Information", extra.content);
+    }
 
-      if (menuSelect.values[0] == "nominate") {
-        // Send it to the Team (unimplemented)
-      } else {
-        const modLogs = interaction.guild.channels.cache.get(sf.channels.modlogs);
-        await modLogs.send({ embeds: [embed] });
+    if (menuSelect.values[0] == "nominate") {
+      // Send it to the Team (unimplemented)
+    } else {
+      const modLogs = interaction.guild.channels.cache.get(sf.channels.modlogs);
+      await modLogs.send({ embeds: [embed] });
 
-        await menuSelect.editReply("Thank you for sharing your concern. I've put this in front of the mods.");
-      }
+      await menuSelect.editReply("Thank you for sharing your concern. I've put this in front of the mods.");
     }
   },
   userInfo: async function(interaction, target) {
