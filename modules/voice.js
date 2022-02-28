@@ -165,10 +165,12 @@ const Module = new Augur.Module()
 
   } catch (e) { u.errorHandler(e, "Load Voice Channel Names"); }
 })
-.addEvent("voiceStateUpdate", async (oldState, newState) => {
-  const guild = oldState.guild;
+.addEvent("voiceStateUpdate", async (oldMember, newMember) => {
+  const guild = oldMember.guild;
+  const oldState = oldMember.voice;
+  const newState = newMember.voice;
   // If the change is in LDSG and involves moving users (we don't care otherwise)
-  if (guild.id == sf.ldsg && oldState.channelID != newState.channelID) {
+  if ((guild.id == sf.ldsg) && (oldState?.channelId != newState?.channelId)) {
     // If the channel that was moved out of is empty, remove it.
     if (oldState.channel && (oldState.channel.members.size == 0) && isCommuntyVoice(oldState.channel)) {
       await oldState.channel.delete().catch(e => u.errorHandler(e, `Could not delete empty voice channel: ${oldState.channel.name}`));
