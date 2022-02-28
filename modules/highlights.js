@@ -11,7 +11,6 @@ Module.addCommand({ name: "fetchhighlights",
     let lastId;
     await new Promise(res => {
       const loop = async (i = 0) => {
-        setTimeout(async () => {
           console.log('loop started');
           let fetched = await channel.messages.fetch({ limit: 100, before: lastId });
           fetched = fetched.filter(a => a.createdTimestamp >= after.getTime()).map(a => a);
@@ -20,7 +19,6 @@ Module.addCommand({ name: "fetchhighlights",
           messages.push(...fetched);
           if (fetched.length != 100 || i > 15) res();
           else loop(i++);
-        }, 3000);
       };
       loop();
     });
