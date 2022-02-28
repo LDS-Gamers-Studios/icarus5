@@ -11,8 +11,7 @@ Module.addCommand({ name: "fetchhighlights",
     let lastId;
     await new Promise(res => {
       const loop = async (i = 0) => {
-          console.log('loop started');
-          let fetched = await channel.messages.fetch({ limit: 100, before: lastId });
+          let fetched = await channel.messages.fetch({ limit: 100, cache: false, before: lastId });
           fetched = fetched.filter(a => a.createdTimestamp >= after.getTime()).map(a => a);
           if (fetched.length != 100) console.log('less');
           lastId = fetched[fetched.length - 1].id;
