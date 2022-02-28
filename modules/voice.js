@@ -14,9 +14,10 @@ function isCommunityVoice(channel) {
 }
 
 function getIDsFromMentionString(mentionString) {
+  if (!mentionString) return new Array();
   const pingRegex = /<@!?(?<id>\d+)>/g; // Gets the IDs of users mentioned.
-  let userIDs = mentionString.matchAll(pingRegex).map(x => x.id);
-  userIDs = Array.from(userIDs);
+  let userIDs = mentionString.matchAll(pingRegex);
+  userIDs = Array.from(userIDs).map(x => x.groups.id);
   return userIDs;
 }
 
@@ -41,14 +42,14 @@ async function slashVoiceLock(interaction) {
           deny: "CONNECT"
         }, { // Muted
           id: sf.roles.muted,
-          deny: ["CONNECT", "SPEAK"]
+          deny: ["CONNECT", "SPEAK", "VIEW_CHANNEL"]
         }
       ].concat(users.map(id => ({
         id,
         allow: "CONNECT"
       })));
 
-      await channel.overwritePermissions(overwrites);
+      await channel.permissionOverwrites.set(overwrites);
       interaction.reply({ content: "Channel successfully locked!", ephemeral: true });
       // The following is an alternative using embeds.
       // let embed = u.embed()
@@ -80,12 +81,12 @@ async function slashVoiceUnlock(interaction) {
             id: interaction.guild.id,
             allow: "CONNECT"
           }, { // Muted
-            id: Module.config.roles.muted,
-            deny: ["CONNECT", "SPEAK"]
+            id: sf.roles.muted,
+            deny: ["CONNECT", "SPEAK", "VIEW_CHANNEL"]
           }
         ];
 
-        await channel.overwritePermissions(overwrites);
+        await channel.permissionOverwrites.set(overwrites);
         if (channel.name.includes("[STREAM]")) channel.setName(channel.name.replace("[STREAM]", "Room"), "Channel Unlock");
         interaction.reply({ content: "Channel successfully unlocked!", ephemeral: true });
 
@@ -118,14 +119,14 @@ async function slashVoiceStreamlock(interaction) {
             deny: ["SPEAK", "STREAM"]
           }, { // Muted
             id: sf.roles.muted,
-            deny: ["CONNECT", "SPEAK"]
+            deny: ["CONNECT", "SPEAK", "VIEW_CHANNEL"]
           }
         ].concat(users.map(id => ({
           id,
           allow: ["CONNECT", "STREAM", "SPEAK"]
         })));
 
-        await channel.overwritePermissions(overwrites);
+        await channel.permissionOverwrites.set(overwrites);
         if (channel.name.includes("Room")) await channel.setName(channel.name.replace("Room", "[STREAM]"), "Stream Lock");
         interaction.reply({ content: "Channel successfully stream locked!", ephemeral: true });
       } else {
