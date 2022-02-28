@@ -104,6 +104,10 @@ const processes = {
     embed.addField("Flagged By", interaction.member.toString());
     embed.addField("Reason", reason);
 
+    if (menuSelect.values[0] === "modAbuse" && (!targetUser.roles.cache.has(sf.roles.mod) && !targetUser.roles.cache.has(sf.roles.management))) {
+      await menuSelect.editReply("Only Moderators can be flagged for mod abuse.");
+      return;
+    }
     if (['badVibes', 'harassment', 'modAbuse', 'nominate'].includes(menuSelect.values[0])) {
       const extra = await u.awaitDM(`You selected "${reason}." Please provide more information (one message only).`, interaction.member, 300);
       if (!extra) {
