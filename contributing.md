@@ -8,7 +8,7 @@ To set up a test intance of Icarus, here's what you'll need to do:
 # Setting Up A Test Instance
 1. Open a shell to your MongoDB instance. Run `use databasename`, replacing `databasename` with something else such as `icarusdata`. Note whatever name you use for the config file later.
 2. Create a Discord bot application. It must have all privileged intents enabled. Note the bot token and applicationId.
-3. Invite your bot to [the official Icarus test server](https://discord.gg/BANbkb22Km), or your own server. [This generator](https://discordapi.com/permissions.html#1099511492566) is filled in with the required permissions. Just fill in the applicationId, and the scope field must be `applications.commands bot`.
+3. Invite your bot to the official Icarus test server (Talk to Ryndinovia), or your own server. [This generator](https://discordapi.com/permissions.html#1099511492566) is filled in with the required permissions. Just fill in the applicationId, and the scope field must be `applications.commands bot`.
 4. Clone the repository.
 5. For each of the files in `registry`, use a script (or [Postman](https://www.postman.com/downloads/)) to post those slash commands to the ***guild*** the bot is in (not global commands). Explanations on the required APIs for that can be found [within Discord docs.](https://discord.com/developers/docs/interactions/application-commands#making-a-guild-command) Note the ID of every command registered for configuring the bot later.
 6. Create the following files, based on their matching `-example` file: `config/config.json`, `config/snowflakes.json`, `config/rankConfig.json`, and `data/banned.json`.
