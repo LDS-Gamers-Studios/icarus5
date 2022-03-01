@@ -57,7 +57,7 @@ async function ensureVoiceChannelsOpen(client) {
       // Notify mods of the new channel.
       const embed = u.embed()
         .setTitle("Voice Channel Added")
-        .setDescription("`A channel was removed by mistake so I created ${newChannel.name}. You might want to modify its bitrate if I guessed it wrong.`");
+        .setDescription(`A channel was removed by mistake so I created ${newChannel.name}. You might want to modify its bitrate if I guessed it wrong.`);
       await (client.channels.cache.get(sf.channels.modlogs)).send({ embeds: [embed] });
       // Update in case of multiple missing channels.
       openVoiceChannels = Array.from(communityVoice.children.values());
