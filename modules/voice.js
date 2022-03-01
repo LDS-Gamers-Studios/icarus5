@@ -25,6 +25,43 @@ function random(iter) {
   return iter[Math.floor(Math.random() * iter.length)];
 }
 
+async function ensureVoiceChannelsOpen(client) {
+  if (!client) return;
+  const communityVoice = client.channels.cache.get(sf.channels.communityVoice);
+  let openVoiceChannels = Array.from(communityVoice.children.values());
+  while (openVoiceChannels.filter((x => (x.id != sf.channels.voiceAFK) && (x.members.size == 0))).length < 2) {
+    const bitrate = 64000;
+    const available = channelNames.filter(name => !communityVoice.guild.channels.cache.find(c => c.name.startsWith(name)));
+    const name = ((random(available) || random(channelNames)) || "Room Error") + ` (${parseInt(bitrate / 1000, 10)} kbps)`;
+
+    try {
+      const newChannel = await communityVoice.guild.channels.create(name, {
+        type: "GUILD_VOICE",
+        bitrate,
+        parent: sf.channels.communityVoice,
+        permissionOverwrites: [
+          {
+            id: sf.roles.muted,
+            deny: ["VIEW_CHANNEL", "CONNECT", "SEND_MESSAGES", "SPEAK"]
+          },
+          {
+            id: sf.roles.ducttape,
+            deny: ["VIEW_CHANNEL", "CONNECT", "SPEAK"]
+          },
+          {
+            id: sf.roles.suspended, // "871566171206484008"
+            deny: ["VIEW_CHANNEL", "CONNECT", "SPEAK"]
+          }
+        ]
+      });
+      // Notify mods of the new channel.
+      await (client.channels.cache.get(sf.channels.modlogs)).send(`A channel was removed by mistake so I created ${newChannel.name}. You might want to modify its bitrate if I guessed it wrong.`);
+      // Update in case of multiple missing channels.
+      openVoiceChannels = Array.from(communityVoice.children.values());
+    } catch (e) { u.errorHandler(e, "Voice Channel Creation Error (ensureVoiceChannelsOpen)"); }
+  }
+}
+
 async function slashVoiceLock(interaction) {
   try {
     const member = interaction.member;
@@ -158,6 +195,8 @@ const Module = new Augur.Module()
       await slashVoiceStreamlock(interaction);
       break;
     }
+    // Refresh channels, make sure they're ok.
+    await ensureVoiceChannelsOpen(interaction.client);
   }
 })
 .setInit(async () => {
@@ -207,6 +246,7 @@ const Module = new Augur.Module()
       } catch (e) { u.errorHandler(e, "Voice Channel Creation Error"); }
     }
   }
+  await ensureVoiceChannelsOpen(oldState.channel?.client || newState.channel?.client);
 })
 ;
 
