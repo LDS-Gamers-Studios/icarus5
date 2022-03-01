@@ -60,7 +60,7 @@ async function slashModFilter(interaction) {
   const modLogs = interaction.guild.channels.cache.get(sf.channels.modlogs);
   const filtered = pf.scan(word);
   const apply = interaction.options.getBoolean("apply") ?? true;
-  if (!user.roles.cache.has(sf.roles.management)) {
+  if (!user.roles.cache.has(sf.roles.management) && !user.roles.cache.has(sf.roles.manager) && !sf.adminId.includes(user.id)) {
     interaction.editReply("This command is for management only.");
     return;
   }
