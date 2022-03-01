@@ -6,15 +6,14 @@ To set up a test intance of Icarus, here's what you'll need to do:
 - [Node.js](https://nodejs.org/) ***(Version - ^16.13.1)***
 
 # Setting Up A Test Instance
-1. Open a shell to your MongoDB instance. Run `use databasename`, replacing `databasename` with something else such as `icarusdata`. Note whatever name you use for the config file later.
-2. Create a Discord bot application. It must have all privileged intents enabled. Note the bot token and applicationId.
-3. Invite your bot to the official Icarus test server (Talk to Ryndinovia), or your own server. [This generator](https://discordapi.com/permissions.html#1099511492566) is filled in with the required permissions. Just fill in the applicationId, and the scope field must be `applications.commands bot`.
-4. Clone the repository.
-5. For each of the files in `registry`, use a script (or [Postman](https://www.postman.com/downloads/)) to post those slash commands to the ***guild*** the bot is in (not global commands). Explanations on the required APIs for that can be found [within Discord docs.](https://discord.com/developers/docs/interactions/application-commands#making-a-guild-command) Note the ID of every command registered for configuring the bot later.
-6. Create the following files, based on their matching `-example` file: `config/config.json`, `config/snowflakes.json`, `config/rankConfig.json`, and `data/banned.json`.
+1. Create a Discord bot application. It must have all privileged intents enabled. Note the bot token and applicationId.
+2. Invite your bot to the official Icarus test server (Talk to Ryndinovia), or your own server. [This generator](https://discordapi.com/permissions.html#1099511492566) is filled in with the required permissions. Just fill in the applicationId, and the scope field must be `applications.commands bot`.
+3. Clone the repository.
+4. For each of the files in `registry`, use a script (or [Postman](https://www.postman.com/downloads/)) to post those slash commands to the ***guild*** the bot is in (not global commands). Explanations on the required APIs for that can be found [within Discord docs.](https://discord.com/developers/docs/interactions/application-commands#making-a-guild-command) Note the ID of every command registered for configuring the bot later.
+5. Create the following files, based on their matching `-example` file: `config/config.json`, `config/snowflakes.json`, `config/rankConfig.json`, and `data/banned.json`.
     1. Explanations of these files can be found below.
-7. Within the root folder of the repo, run `npm ci`.
-8. The start-up command is `node ./icarus.js`.
+6. Within the root folder of the repo, run `npm ci`.
+7. The start-up command is `node ./icarus.js`.
 
 # File Explanations
 For the bot to successfully run, you'll need to create or edit a few files first. These files, for various reasons, are excluded from the repository. However, example files are provided to make their creation easier.
