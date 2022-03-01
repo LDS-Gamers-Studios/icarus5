@@ -36,7 +36,8 @@
     "presenceUpdate",
     "ready",
     "threadCreate",
-    "userUpdate"
+    "userUpdate",
+    "filterUpdate"
   ],
   "google": {
     "api": "",
