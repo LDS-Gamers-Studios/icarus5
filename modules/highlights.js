@@ -1,8 +1,9 @@
 const Augur = require('augurbot'),
   sf = require("../config/snowflakes.json"),
+  u = require('../utils/utils'),
   Module = new Augur.Module();
 Module.addCommand({ name: "fetchhighlights",
-  permissions: (msg) => msg.guild?.id == sf.ldsg && msg.member.roles.cache.hasAny([sf.roles.team, sf.roles.management, sf.roles.manager]),
+  permissions: (msg) => msg.guild?.id == sf.ldsg && msg.member.roles.cache.hasAny(sf.roles.team, sf.roles.management, sf.roles.manager),
   process: async (msg) => {
     const date = new Date();
     const after = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -24,8 +25,9 @@ Module.addCommand({ name: "fetchhighlights",
         otherLinks = otherLinks.map(a => `{"content": "${a.content}", "author": "${a.author.username}"}`);
         const final = Buffer.from(`{"files": [${results.join(',\n')}],\n"urls": [\n${otherLinks.join(',\n')}]}`, 'utf8');
         msg.author.send({ files: [{ attachment: final, name: `${after.toDateString()} Highlight Reel.json` }] });
-      } else {msg.reply("I couldn't find any new submissions!");}
-    } else {msg.reply("I couldn't find any new submissions!");}
+        msg.react("👍");
+      } else {msg.reply("I couldn't find any new submissions!").then(u.clean);}
+    } else {msg.reply("I couldn't find any new submissions!").then(u.clean);}
   }
 });
 module.exports = Module;
