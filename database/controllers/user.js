@@ -43,10 +43,10 @@ const models = {
      * @param {(string|Discord.User|Discord.GuildMember)} discordId The user record to fetch.
      * @returns {Promise<User>}
      */
-  fetchUser: async function(discordId) {
+  fetchUser: async function(discordId, createIfNotFound = true) {
     discordId = discordId.id ?? discordId;
     let user = await User.findOne({ discordId }).exec();
-    if (!user) {
+    if (!user && createIfNotFound) {
       user = await models.newUser(discordId);
     }
     return user;
