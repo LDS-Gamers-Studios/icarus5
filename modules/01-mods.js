@@ -3,7 +3,10 @@ const Augur = require("augurbot"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes.json"),
   p = require("../utils/perms"),
+  profanityFilter = require("profanity-matcher"),
   c = require("../utils/modCommon");
+
+const pf = new profanityFilter();
 
 /**
  * Give the mods a heads up that someone isn't getting their DMs.
@@ -48,6 +51,38 @@ async function slashModBan(interaction) {
   const days = interaction.options.getInteger("clean") ?? 1;
 
   await c.ban(interaction, target, reason, days);
+}
+
+async function slashModFilter(interaction) {
+  await interaction.deferReply({ ephemeral: true });
+  const word = interaction.options.getString("word").toLowerCase().trim();
+  const user = interaction.member;
+  const modLogs = interaction.guild.channels.cache.get(sf.channels.modlogs);
+  const filtered = pf.scan(word);
+  const apply = interaction.options.getBoolean("apply") ?? true;
+  if (!user.roles.cache.has(sf.roles.management)) {
+    interaction.editReply("This command is for management only.");
+    return;
+  }
+  if (apply) {
+    if (filtered != word && pf.add_word(word)) {
+      const embed = u.embed({ author: user })
+      .setTitle("Word added to the language filter.")
+      .setDescription(`<@${user.id}> added "${word}" to the language filter.`);
+      await modLogs.send({ embeds: [embed] });
+      await interaction.editReply(`"${word}" was added to the language filter.`);
+    } else {
+      await interaction.editReply(`"${word}" was already in the language filter.`);
+    }
+  } else if (pf.remove_word(word)) {
+    const embed = u.embed({ author: user })
+    .setTitle("Word removed from language filter.")
+    .setDescription(`<@${user.id}> removed "${word}" from the language filter.`);
+    await modLogs.send({ embeds: [embed] });
+    await interaction.editReply(`"${word}" has been removed from the language filter.`);
+  } else {
+    await interaction.editReply(`"${word}" was not found in the language filter.`);
+  }
 }
 
 async function slashModFullInfo(interaction) {
@@ -426,6 +461,9 @@ const Module = new Augur.Module()
       switch (subcommand) {
       case "ban":
         await slashModBan(interaction);
+        break;
+      case "filter":
+        await slashModFilter(interaction);
         break;
       case "fullinfo":
         await slashModFullInfo(interaction);

@@ -30,6 +30,25 @@
       ]
     },
     {
+      "name": "filter",
+      "description": "Add a word to the language filter",
+      "type": 1,
+      "options": [
+        {
+          "name": "word",
+          "description": "Which word do you want to add to the language filter?",
+          "type": 3,
+          "required": true
+        },
+        {
+          "name": "apply",
+          "description": "Should I add (`true`) or remove (`false`) the word? (Default: `true`)",
+          "type": 5,
+          "required": false
+        }
+      ]
+    },
+    {
       "name": "fullinfo",
       "description": "Check when a user joined the server and rank information",
       "type": 1,
