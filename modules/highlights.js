@@ -27,4 +27,5 @@ Module.addCommand({ name: "fetchhighlights",
       } else {msg.reply("I couldn't find any new submissions!");}
     } else {msg.reply("I couldn't find any new submissions!");}
   }
-})
+});
+module.exports = Module;
