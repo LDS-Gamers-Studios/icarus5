@@ -4,8 +4,7 @@ const Augur = require("augurbot"),
   profanityFilter = require("profanity-matcher"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes"),
-  { MessageActionRow, MessageButton } = require("discord.js"),
-  fs = require('fs');
+  { MessageActionRow, MessageButton } = require("discord.js");
 
 const bannedWords = new RegExp(banned.words.join("|"), "i"),
   bannedLinks = new RegExp(`\\b(${banned.links.join("|").replaceAll(".", "\\.")})`, "i"),
