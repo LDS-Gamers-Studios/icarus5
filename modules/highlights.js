@@ -11,7 +11,7 @@ Module.addCommand({ name: "fetchhighlights",
     let lastId;
     let fetched;
     do {
-      fetched = await channel.messages.fetch({limit: 100, before: lastId});
+      fetched = await channel.messages.fetch({ limit: 100, before: lastId });
       fetched = fetched.filter(a => a.createdTimestamp >= after.getTime()).map(a => a);
       lastId = fetched[fetched.length - 1].id;
       messages.push(...fetched);
