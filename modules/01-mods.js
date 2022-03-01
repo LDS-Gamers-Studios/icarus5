@@ -83,6 +83,7 @@ async function slashModFilter(interaction) {
   } else {
     await interaction.editReply(`"${word}" was not found in the language filter.`);
   }
+  Module.client.emit("filterUpdate");
 }
 
 async function slashModFullInfo(interaction) {

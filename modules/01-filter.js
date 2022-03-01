@@ -4,13 +4,15 @@ const Augur = require("augurbot"),
   profanityFilter = require("profanity-matcher"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes"),
-  { MessageActionRow, MessageButton } = require("discord.js");
+  { MessageActionRow, MessageButton } = require("discord.js"),
+  fs = require('fs');
 
 const bannedWords = new RegExp(banned.words.join("|"), "i"),
   bannedLinks = new RegExp(`\\b(${banned.links.join("|").replaceAll(".", "\\.")})`, "i"),
   hasLink = /http(s)?:\/\/(\w+(-\w+)*\.)+\w+/,
-  pf = new profanityFilter(),
   scamLinks = new RegExp(`\\b(${banned.scam.join("|").replaceAll(".", "\\.")})`, "i");
+
+let pf = new profanityFilter();
 
 const grownups = new Map(),
   processing = new Set();
@@ -402,6 +404,7 @@ const Module = new Augur.Module()
 .addInteractionHandler({ customId: "modCardMajor", process: processCardAction })
 .addInteractionHandler({ customId: "modCardMute", process: processCardAction })
 .addInteractionHandler({ customId: "modCardInfo", process: processCardAction })
-.addInteractionHandler({ customId: "modCardLink", process: processCardAction });
+.addInteractionHandler({ customId: "modCardLink", process: processCardAction })
+.addEvent("filterUpdate", () => pf = new profanityFilter());
 
 module.exports = Module;
