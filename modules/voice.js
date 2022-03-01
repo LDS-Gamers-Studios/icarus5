@@ -213,7 +213,7 @@ const Module = new Augur.Module()
   } catch (e) { u.errorHandler(e, "Load Voice Channel Names"); }
 })
 .addEvent("voiceStateUpdate", async (oldState, newState) => {
-  const guild = oldState.guild;
+  const guild = oldState?.guild;
   // If the change is in LDSG and involves moving users (we don't care otherwise)
   if ((guild.id == sf.ldsg) && (oldState.channelId != newState.channelId)) {
     // If the channel that was moved out of is empty, remove it.
