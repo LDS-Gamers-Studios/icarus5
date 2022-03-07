@@ -10,8 +10,7 @@
         {
           "type": 3,
           "name": "book",
-          "description": "The name of the book. `1 Nephi` , `Mosiah` , etc.",
-          "required": true
+          "description": "The name of the book. `1 Nephi` , `Mosiah` , etc."
         },
         {
           "type": 4,
