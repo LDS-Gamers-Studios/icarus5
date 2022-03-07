@@ -5,7 +5,7 @@
       {
         "type": 1,
         "name": "lock",
-        "description": "Locks your voice channel to new members.",
+        "description": "Lock your voice channel to new members.",
         "options": [
           {
             "type": 3,
@@ -17,12 +17,12 @@
       {
         "type": 1,
         "name": "unlock",
-        "description": "Unlocks your voice channel to new members."
+        "description": "Unlock your voice channel to new members."
       },
       {
         "type": 1,
         "name": "streamlock",
-        "description": "Restricts voice for new members of your channel.",
+        "description": "Restrict voice for new members of your channel.",
         "options": [
           {
             "type": 3,
@@ -30,6 +30,11 @@
             "description": "Mentions of users you want to allow to speak/stream in the channel."
           }
         ]
+      },
+      {
+        "type": 1,
+        "name": "refresh",
+        "description": "Check that there are voice channels to join, and create a channel if not."
       }
     ]
   }

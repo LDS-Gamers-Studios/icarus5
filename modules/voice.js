@@ -21,18 +21,15 @@ function getIDsFromMentionString(mentionString) {
   return userIDs;
 }
 
-function random(iter) {
-  return iter[Math.floor(Math.random() * iter.length)];
-}
-
 async function ensureVoiceChannelsOpen(client) {
   if (!client) return;
   const communityVoice = client.channels.cache.get(sf.channels.communityVoice);
-  let openVoiceChannels = Array.from(communityVoice.children.values());
+  let openVoiceChannels = [...communityVoice.children.values()];
+  const channelsOpenedArr = [];
   while (openVoiceChannels.filter((x => (x.id != sf.channels.voiceAFK) && (x.members.size == 0))).length < 2) {
     const bitrate = 64000;
     const available = channelNames.filter(name => !communityVoice.guild.channels.cache.find(c => c.name.startsWith(name)));
-    const name = ((random(available) || random(channelNames)) || "Room Error") + ` (${parseInt(bitrate / 1000, 10)} kbps)`;
+    const name = ((u.rand(available) || u.rand(channelNames)) || "Room Error") + ` (${parseInt(bitrate / 1000, 10)} kbps)`;
 
     try {
       const newChannel = await communityVoice.guild.channels.create(name, {
@@ -61,8 +58,11 @@ async function ensureVoiceChannelsOpen(client) {
       await (client.channels.cache.get(sf.channels.modlogs)).send({ embeds: [embed] });
       // Update in case of multiple missing channels.
       openVoiceChannels = Array.from(communityVoice.children.values());
+      // Report the channel name in case it's needed.
+      channelsOpenedArr.push(newChannel);
     } catch (e) { u.errorHandler(e, "Voice Channel Creation Error (ensureVoiceChannelsOpen)"); }
   }
+  return channelsOpenedArr;
 }
 
 async function slashVoiceLock(interaction) {
@@ -181,6 +181,18 @@ async function slashVoiceStreamlock(interaction) {
   } catch (e) { u.errorHandler(e, "Lock Voice Channel"); }
 }
 
+async function slashVoiceRefresh(interaction) {
+  const channels = await ensureVoiceChannelsOpen(interaction.client);
+  if (channels.length) {
+    interaction.reply({ content: "I opened " + channels.map(x => "<#" + x.id + ">").join(" and ") + ". The mods have been notified, and will change the bitrate if needed.", ephemeral: true });
+  } else {
+    // Let the user know what channels are open.
+    const channelsOpen = [...interaction.client.channels.cache.get(sf.channels.communityVoice).children.values()]
+      .filter((x => (x.id != sf.channels.voiceAFK) && (x.members.size == 0)));
+    interaction.reply({ content: "The channels " + channelsOpen.map(x => "<#" + x + ">").join(" and ") + " are already open! Join one of those!", ephemeral: true });
+  }
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "voice",
@@ -197,9 +209,10 @@ const Module = new Augur.Module()
     case "streamlock":
       await slashVoiceStreamlock(interaction);
       break;
+    case "refresh":
+      await slashVoiceRefresh(interaction);
+      break;
     }
-    // Refresh channels, make sure they're ok.
-    await ensureVoiceChannelsOpen(interaction.client);
   }
 })
 .setInit(async () => {
@@ -224,7 +237,7 @@ const Module = new Augur.Module()
     if (newState.channel && (newState.channel.members.size == 1) && isCommunityVoice(newState.channel)) {
       const bitrate = newState.channel.bitrate;
       const available = channelNames.filter(name => !guild.channels.cache.find(c => c.name.startsWith(name)));
-      const name = ((random(available) || random(channelNames)) || "Room Error") + ` (${parseInt(bitrate / 1000, 10)} kbps)`;
+      const name = ((u.rand(available) || u.rand(channelNames)) || "Room Error") + ` (${parseInt(bitrate / 1000, 10)} kbps)`;
 
       try {
         await guild.channels.create(name, {
