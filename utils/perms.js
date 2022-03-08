@@ -9,7 +9,10 @@ const perms = {
   },
   isMgmt: (msg) => msg.member?.roles.cache.has(sf.roles.management),
   isMgr: (msg) => msg.member?.roles.cache.has(sf.roles.manager),
-  isTeam: (msg) => msg.member?.roles.cache.has(sf.roles.team)
+  isTeam: function(msg) {
+    const roles = msg.member?.roles.cache;
+    return roles?.has(sf.roles.team) || roles?.has(sf.roles.management);
+  }
 };
 
 module.exports = perms;

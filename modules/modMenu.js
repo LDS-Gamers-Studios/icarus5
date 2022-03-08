@@ -104,6 +104,10 @@ const processes = {
     embed.addField("Flagged By", interaction.member.toString());
     embed.addField("Reason", reason);
 
+    if (menuSelect.values[0] === "modAbuse" && (!targetUser.roles.cache.has(sf.roles.mod) && !targetUser.roles.cache.has(sf.roles.management))) {
+      await menuSelect.editReply("Only Moderators can be flagged for mod abuse.");
+      return;
+    }
     if (['badVibes', 'harassment', 'modAbuse', 'nominate'].includes(menuSelect.values[0])) {
       const extra = await u.awaitDM(`You selected "${reason}." Please provide more information (one message only).`, interaction.member, 300);
       if (!extra) {
@@ -126,7 +130,7 @@ const processes = {
     }
   },
   userInfo: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   userAvatar: async function(interaction, target) {
     const user = getTargetUser(target);
@@ -161,10 +165,10 @@ const processes = {
     } catch (error) { u.errorHandler(error, interaction); }
   },
   fullinfo: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   summary: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   noteUser: async function(interaction, target) {
     await interaction.editReply("Please check your DMs from me.");
@@ -189,10 +193,10 @@ const processes = {
     await c.trustPlus(interaction, getTargetUser(target));
   },
   watchUser: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   warnUser: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   muteUser: async function(interaction, target) {
     const reason = target.cleanContent ?? "Violating the Code of Conduct";
@@ -241,7 +245,7 @@ const processes = {
     await c.ban(interaction, getTargetUser(target), dm.content, 1);
   },
   warnMessage: async function(interaction, target) {
-    // Stuff goes here
+    console.log(interaction, target); // Stuff goes here
   },
   purgeChannel: async function(interaction, target) {
     const dm = await u.awaitDM("What is the reason for this purge?", interaction.member);
@@ -315,7 +319,7 @@ async function modMenu(inter) {
 }
 
 const Module = new Augur.Module()
-.addInteractionCommand({ name: "Moderation", commandId: sf.commands.modMessage, process: modMenu })
-.addInteractionCommand({ name: "Moderation", commandId: sf.commands.modUser, process: modMenu });
+.addInteractionCommand({ name: "Moderation", commandId: sf.commands.messageMod, process: modMenu })
+.addInteractionCommand({ name: "Moderation", commandId: sf.commands.userMod, process: modMenu });
 
 module.exports = Module;

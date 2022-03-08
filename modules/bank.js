@@ -368,7 +368,7 @@ const Module = new Augur.Module()
 .addInteractionCommand({
   name: "bank",
   guildId: sf.ldsg,
-  commandId: sf.commands.bank,
+  commandId: sf.commands.slashBank,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand(true)) {
     case "give":
