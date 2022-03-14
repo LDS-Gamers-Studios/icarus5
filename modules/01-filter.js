@@ -184,10 +184,10 @@ async function warnCard(msg, filtered, call) {
 
     // Minecraft Filter
     if (msg.channel.parentId == sf.channels.minecraftcategory) {
-      embed.addField("User", msg.author.username, true)
+      embed.addField("User", msg.author.username, true);
       msg.client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
     } else {
-      embed.addField("User", msg.author.toString(), true) 
+      embed.addField("User", msg.author.toString(), true);
     }
 
     embed.addField(`Infraction Summary (${infractionSummary.time} Days)`, `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`);
