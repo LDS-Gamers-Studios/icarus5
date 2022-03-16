@@ -1,6 +1,6 @@
 const {fetchSystemFactions} = require("../utils/EliteApi"),
   {Collection, MessageEmbed} = require("discord.js"),
-  {ldsg, channels: {elitefactionupdates}} = require("../config/snowflakes")
+  {ldsg, channels: {elitefactionupdates}} = require("../config/snowflakes"),
   u = require("../utils/utils");
 
 const factions = new Collection();
