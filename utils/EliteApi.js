@@ -1,6 +1,6 @@
 const https = require("https");
 
-function request({path, method = "GET", hostname = "www.edsm.net", params}) {
+function request({ path, method = "GET", hostname = "www.edsm.net", params }) {
   return new Promise((fulfill, reject) => {
     const options = {
       hostname,
@@ -17,7 +17,7 @@ function request({path, method = "GET", hostname = "www.edsm.net", params}) {
       res.on("end", () => {
         try {
           fulfill(JSON.parse(data));
-        } catch(e) {
+        } catch (e) {
           reject(e);
         }
       });
@@ -30,7 +30,7 @@ function request({path, method = "GET", hostname = "www.edsm.net", params}) {
 function fetchSystemFactions(systemName) {
   return request({
     path: "/api-system-v1/factions",
-    params: {systemName, showHistory: 0}
+    params: { systemName, showHistory: 0 }
   });
 }
 

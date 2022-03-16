@@ -1,9 +1,9 @@
-const {fetchSystemFactions} = require("../utils/EliteApi"),
-  {Collection, MessageEmbed} = require("discord.js"),
-  {ldsg, channels: {elitefactionupdates}} = require("../config/snowflakes"),
+const Augur = require("augurbot"),
+  { fetchSystemFactions } = require("../utils/EliteApi"),
+  { ldsg, channels: { elitefactionupdates } } = require("../config/snowflakes"),
   u = require("../utils/utils");
 
-const factions = new Collection();
+const factions = new Map();
 
 async function updateFactions() {
   let updated = false;
