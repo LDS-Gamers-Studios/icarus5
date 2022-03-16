@@ -29,6 +29,18 @@ function filterUnique(e, i, a) {
   return (a.indexOf(a.find(g => g["Game Title"] == e["Game Title"] && g["System"] == e["System"])) == i);
 }
 
+function getHouseColor(member) {
+  const houseColors = u.Collection()
+    .set(sf.roles.housebb, "#00a1da")
+    .set(sf.roles.housefb, "#fdd023")
+    .set(sf.roles.housesc, "#e32736");
+
+  for (const [k, v] of houseColors) {
+    if (member.roles.cache.has(k)) return v;
+  }
+  return config.color;
+}
+
 async function slashBankGive(interaction) {
   try {
     const giver = interaction.member;
@@ -356,8 +368,8 @@ async function slashBankAward(interaction) {
     giver.send({ embeds: [embed] }).catch(u.noop);
 
     const mopbucket = interaction.client.channels.cache.get(sf.channels.mopbucketawards);
-    embed = u.embed()
-    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
+    embed = u.embed({ author: interaction.client.user })
+    .setColor(getHouseColor(recipient))
     .addField("Reason", reason)
     .setDescription(`**${giver}** ${value > 0 ? `awarded ${recipient} ${ember}${value}.` : `docked ${recipient} ${ember}${-value}.`}`);
     mopbucket.send({ embeds: [embed] });
