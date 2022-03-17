@@ -30,7 +30,7 @@ function filterUnique(e, i, a) {
 }
 
 function getHouseInfo(member) {
-  const houseInfo = u.Collection()
+  const houseInfo = new u.Collection()
     .set(sf.roles.housebb, { name: "Brightbeam", color: "#00a1da" })
     .set(sf.roles.housefb, { name: "Freshbeast", color: "#fdd023" })
     .set(sf.roles.housesc, { name: "Starcamp", color: "#e32736" });
