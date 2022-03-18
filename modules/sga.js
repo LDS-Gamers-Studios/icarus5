@@ -3,15 +3,36 @@ const Augur = require("augurbot"),
   { MessageActionRow, MessageButton } = require('discord.js');
 
 const dict = {
-  "a": "ᔑ",  "b": "ʖ",   "c": "ᓵ",  "d": "↸",   "e": "ŀ",
-  "f": "⎓",  "g": "ㅓ",  "h": "〒",  "i": "╎",   "j": "፧",
-  "k": "ꖌ",  "l": "ꖎ",   "m": "ᒲ",   "n": "リ",  "o": "フ",
-  "p": "¡",  "q": "ᑑ",  "r": "።",   "s": "ነ",   "t": "ﬧ",
-  "u": "⚍",  "v": "⍊",  "w": "∴",   "x": "∕",  "y": "॥",
-  "z": "∩",   zeroWidthSpace: '​',
+  "ᔑ": "a",
+  "ʖ": "b",
+  "ᓵ": "c",
+  "↸": "d",
+  "ŀ": "e",
+  "⎓": "f",
+  "ㅓ": "g",
+  "〒": "h",
+  "╎": "i",
+  "፧": "j",
+  "ꖌ": "k",
+  "ꖎ": "l",
+  "ᒲ": "m",
+  "リ": "n",
+  "フ": "o",
+  "¡": "p",
+  "ᑑ": "q",
+  "።": "r",
+  "ነ": "s",
+  "ﬧ": "t",
+  "⚍": "u",
+  "⍊": "v",
+  "∴": "w",
+  "∕": "x",
+  "॥": "y",
+  "∩": "z",
+  "zeroWidthSpace": "​"
 };
 
-const translate = (sga) => {
+function translate(sga) {
   let to = "";
 
   let upper = false;
@@ -23,16 +44,16 @@ const translate = (sga) => {
       continue;
     }
 
-    const f = Object.keys(dict).find(key => dict[key] === c);
+    const f = dict[c];
     to += f ? (upper ? f.toUpperCase() : f) : (upper ? c.toUpperCase() : c);
     upper = false;
   }
 
   return to;
-};
+}
 
-const handleMessage = (msg) => {
-  if (msg.author.bot || !([...msg.content].some(char => Object.values(dict).includes(char)))) {
+async function handleMessage(msg) {
+  if (msg.author.bot || !([...msg.content].some(char => Object.keys(dict).includes(char)))) {
     return;
   }
 
@@ -44,22 +65,27 @@ const handleMessage = (msg) => {
       .setStyle('PRIMARY'),
   );
 
-  msg.reply({
+  await msg.reply({
     components: [row]
   });
-};
+}
 
-const handleButton = (inter) => {
+async function handleButton(inter) {
   if (!inter.isButton() || inter.customId !== "sgaTranslate") return;
-  inter.message.fetchReference()
-    .then(async msg => {
-      const translated = translate(msg.content);
-      await inter.reply({ content: translated, ephemeral: true });
-    }).catch(async () => {
-      await inter.reply({ content: "It appears the message was deleted.", ephemeral: true });
-      await inter.message.delete();
-    });
-};
+
+  let message;
+
+  try {
+    message = await inter.message.fetchReference();
+  } catch (e) {
+    await inter.reply({ content: "It appears the message was deleted.", ephemeral: true });
+    await inter.message.delete();
+    return;
+  }
+
+  const translated = translate(message.content);
+  await inter.reply({ content: translated, ephemeral: true });
+}
 
 const Module = new Augur.Module()
   .addEvent("messageCreate", handleMessage)
