@@ -45,7 +45,7 @@ function translate(sga) {
     }
 
     const f = dict[c];
-    to += f ? (upper ? f.toUpperCase() : f) : (upper ? c.toUpperCase() : c);
+    to += f ? (upper ? f.toUpperCase() : f) : c;
     upper = false;
   }
 
