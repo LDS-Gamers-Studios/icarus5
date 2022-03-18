@@ -1,4 +1,3 @@
-/* eslint-disable no-multi-spaces */
 const Augur = require("augurbot"),
   { MessageActionRow, MessageButton } = require('discord.js');
 
