@@ -52,11 +52,12 @@ const handleMessage = (msg) => {
 const handleButton = (inter) => {
   if (!inter.isButton() || inter.customId !== "sgaTranslate") return;
   inter.message.fetchReference()
-    .then(msg => {
+    .then(async msg => {
       const translated = translate(msg.content);
-      inter.reply({ content: translated, ephemeral: true });
-    }).catch(() => {
-      inter.reply({ content: "It appears the message was deleted.", ephemeral: true });
+      await inter.reply({ content: translated, ephemeral: true });
+    }).catch(async () => {
+      await inter.reply({ content: "It appears the message was deleted.", ephemeral: true });
+      await inter.message.delete();
     });
 };
 
