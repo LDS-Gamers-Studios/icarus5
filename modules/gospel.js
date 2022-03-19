@@ -14,9 +14,9 @@ const works = {
   "pogp": "pearl-of-great-price"
 };
 
-const manuals = new Map(
+const manuals = new Map([
   [2022, "old-testament-2022"]
-);
+]);
 
 /**
  * Builds the abbreviation lookup table for books of scripture.
@@ -48,7 +48,7 @@ async function slashGospelVerse(interaction) {
   let chapter = interaction.options.getInteger("chapter", false);
   let verses = interaction.options.getString("verses", false);
 
-  if (!book) {
+  if (!book || !chapter || !verses) {
     // Get a random one from scripture mastery.
     ({ book, chapter, verses } = getScriptureMastery());
   }
@@ -152,10 +152,10 @@ async function slashGospelNews(interaction) {
   const feed = await parser.parseURL(url);
   const newsItem = feed.items[0];
   const embed = u.embed()
-    .setAuthor({ author, url: feed.link })
+    .setAuthor({ name: author, url: feed.link.startsWith("http") ? feed.link : "https://" + feed.link })
     .setTitle(newsItem.title)
     .setURL(newsItem.link)
-    .setDescription(newsItem.description.replace(/<[\s\S]+?>/g, "")) // Remove all HTML tags from the description
+    .setDescription(newsItem.content.replace(/<[\s\S]+?>/g, "")) // Remove all HTML tags from the description
     .setTimestamp(new Date(newsItem.pubDate));
   interaction.reply({ embeds: [embed] });
 
@@ -262,7 +262,7 @@ const Module = new Augur.Module()
   .addInteractionCommand({
     name: "gospel",
     guildId: sf.ldsg,
-    commandId: sf.commands.gospel,
+    commandId: sf.commands.slashGospel,
     process: async (interaction) => {
       switch (interaction.options.getSubcommand(true)) {
       case "verse":
