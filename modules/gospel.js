@@ -13,6 +13,10 @@ const works = {
   "pogp": "pearl-of-great-price"
 };
 
+const manuals = new Map(
+  [2022, "old-testament-2022"]
+);
+
 /**
  * Builds the abbreviation lookup table for books of scripture.
  * @param {String} bookName The canonical book name. Ex: "Song of Solomon"
@@ -101,8 +105,34 @@ async function slashGospelVerse(interaction) {
 }
 
 async function slashGospelComeFollowMe(interaction) {
-  // b
-  interaction.reply({ content: "to be done lol" });
+  // Most of this function is old code. Not sure how to improve it.
+  let date = new Date();
+  date.setHours(0, 0, 0, 0);
+  const displayDate = new Date(date);
+  let jan1;
+  // Account for year-end dates.
+  if (date.getMonth() == 11 && (date.getDate() - date.getDay() >= 26)) {
+    jan1 = new Date(date.getFullYear() + 1, 0, 1, 0, 0, 0);
+    date = jan1;
+  } else {
+    jan1 = new Date(date.getFullYear(), 0, 1, 0, 0, 0);
+  }
+
+  const manual = manuals.get(date.getFullYear());
+  if (manual) {
+    // Add full weeks and check partial weeks by day of week comparison
+    let week = ((date.getDay() + 6) % 7 < (jan1.getDay() + 6) % 7 ? 2 : 1) + Math.floor((date - jan1) / (1000 * 60 * 60 * 24 * 7));
+    // Account for General Conference
+    if ((date.getMonth() == 3 && (date.getDate() - date.getDay()) >= 0) || date.getMonth() > 3) week -= 1;
+    if ((date.getMonth() == 9 && (date.getDate() - date.getDay()) >= 0) || date.getMonth() > 9) week -= 1;
+
+    const link = `https://www.churchofjesuschrist.org/study/manual/come-follow-me-for-individuals-and-families-${manual}/${week.toString().padStart(2, "0")}`;
+
+    // This would be cool as an embed, but I think Discord's built in style is better.
+    interaction.reply(`__Come, Follow Me Lesson for the week of ${displayDate.toLocaleDateString()}:__\n${link}`);
+  } else {
+    interaction.reply({ content:`Sorry, I don't have information for the ${date.getFullYear()} manual yet.`, ephemeral: true });
+  }
 }
 
 async function slashGospelNews(interaction) {
