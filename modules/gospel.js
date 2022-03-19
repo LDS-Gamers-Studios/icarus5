@@ -35,8 +35,13 @@ function refAbbrBuild(bookName, urlAbbrev, work, abbreviations = []) {
 }
 
 function getScriptureMastery() {
-  // TODO
-  return { book: "1 Nephi", chapter: 3, verses: "7" };
+  const scriptureMasteries = require("../data/gospel/scripture-mastery-reference.json");
+  const reference = u.rand(scriptureMasteries);
+  return {
+    book: reference[0],
+    chapter: reference[1],
+    verses: reference[2]
+  };
 }
 
 /**
@@ -48,7 +53,7 @@ async function slashGospelVerse(interaction) {
   let chapter = interaction.options.getInteger("chapter", false);
   let verses = interaction.options.getString("verses", false);
 
-  if (!book || !chapter || !verses) {
+  if (!book || !chapter) {
     // Get a random one from scripture mastery.
     ({ book, chapter, verses } = getScriptureMastery());
   }
@@ -61,6 +66,48 @@ async function slashGospelVerse(interaction) {
 
   // Parse verses.
   let versesNums;
+  try {
+    versesNums = parseVerseRange(verses);
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      interaction.reply({ content: "I don't understand what verses you're looking for.", ephemeral: true });
+      return;
+    } else {
+      throw e;
+    }
+  }
+  // Put together the embed
+  const embed = u.embed()
+    .setTitle(bookRef.bookName + " " + chapter.toString() + (versesNums[0] ? ":" + verses : ""))
+    .setURL(`https://www.churchofjesuschrist.org/study/scriptures/${bookRef.work}/${bookRef.urlAbbrev}/${chapter}${(versesNums[0] ? ("." + verses + "?lang=eng#p" + versesNums[0]) : "?lang=eng")}`);
+  const bookJson = require("../data/gospel/" + works[bookRef.work] + "-reference.json");
+  if (!bookJson[bookRef.bookName][chapter]) {
+    interaction.reply({ content: `That chapter doesn't exist in ${bookRef.bookName}!`, ephemeral: true });
+    return;
+  }
+  const verseContent = [];
+  for (const num of versesNums) {
+    if (bookJson[bookRef.bookName][chapter][num]) {
+      verseContent.push(num.toString() + " " + bookJson[bookRef.bookName][chapter][num]);
+    }
+  }
+  const verseJoinedContent = verseContent.join("\n\n");
+  if (verses && verseJoinedContent.length === 0) {
+    interaction.reply({ content: "The verse(s) you requested weren't found.", ephemeral: true });
+    return;
+  }
+  embed.setDescription(verseJoinedContent.length > 2048 ? verseJoinedContent.slice(0, 2048) + "…" : verseJoinedContent);
+  embed.setColor(0x012b57);
+  interaction.reply({ embeds: [embed] });
+}
+
+/**
+ * Splits the verses section in a scripture reference into individual verse numbers.
+ * @param {string} verses A string containing numbers, spaces, hyphens, and commas.
+ * @returns An Array of numbered integers as interpreted. "3-5, 7" returns [3, 4, 5, 7]
+ */
+function parseVerseRange(verses) {
+  let versesNums;
   if (verses) {
     verses = verses.replace(/ /g, "");
     const versesList = verses.split(",");
@@ -71,8 +118,7 @@ async function slashGospelVerse(interaction) {
       const low = results[1],
         high = results[2];
       if (!low) {
-        interaction.reply({ content: "I don't understand what verses you're looking for.", ephemeral: true });
-        return;
+        throw new SyntaxError("Invalid verse range.");
       } else if (!high) {
         versesNums.push(parseInt(low));
       } else {
@@ -88,21 +134,9 @@ async function slashGospelVerse(interaction) {
       }
     }
     // Get unique verses
-    versesNums = [...new Set(versesNums)].sort();
+    versesNums = [...new Set(versesNums)].sort((a, b) => a - b);
   } else { versesNums = []; }
-  // Put together the embed
-  const embed = u.embed()
-    .setTitle(bookRef.bookName + " " + chapter.toString() + (versesNums[0] ? ":" + verses : ""))
-    .setURL(`https://www.churchofjesuschrist.org/study/scriptures/${bookRef.work}/${bookRef.urlAbbrev}/${chapter}${(versesNums[0] ? ("." + verses + "?lang=eng#p" + versesNums[0]) : "?lang=eng")}`);
-  const bookJson = require("../data/gospel/" + works[bookRef.work] + "-reference.json");
-  const verseContent = [];
-  for (const num of versesNums) {
-    if (bookJson[bookRef.bookName][chapter][num]) {
-      verseContent.push(num.toString() + " " + bookJson[bookRef.bookName][chapter][num]);
-    }
-  }
-  embed.setDescription(verseContent.join("\n\n"));
-  interaction.reply({ embeds: [embed] });
+  return versesNums;
 }
 
 async function slashGospelComeFollowMe(interaction) {
@@ -250,8 +284,8 @@ refAbbrBuild("Doctrine & Covenants", "dc", "dc-testament", ["d&c", "d & c", "doc
 // Pearl of Great Price
 refAbbrBuild("Moses", "moses", "pgp");
 refAbbrBuild("Abraham", "abr", "pgp");
-refAbbrBuild("Joseph Smith - Matthew", "js-m", "pgp", ["jsm", "joseph smith matthew"]);
-refAbbrBuild("Joseph Smith - History", "js-h", "pgp", ["jsh", "joseph smith history"]);
+refAbbrBuild("Joseph Smith - Matthew", "js-m", "pgp", ["jsm", "joseph smith matthew", "js matthew"]);
+refAbbrBuild("Joseph Smith - History", "js-h", "pgp", ["jsh", "joseph smith history", "js history"]);
 refAbbrBuild("Articles of Faith", "a-of-f", "pgp", ["aof"]);
 
 
