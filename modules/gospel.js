@@ -1,5 +1,6 @@
 const Augur = require("augurbot");
 const { Interaction } = require("discord.js");
+const Parser = require("rss-parser");
 const sf = require("../config/snowflakes.json");
 const u = require("../utils/utils");
 
@@ -136,8 +137,28 @@ async function slashGospelComeFollowMe(interaction) {
 }
 
 async function slashGospelNews(interaction) {
-  // c
-  interaction.reply({ content: "to be done lol" });
+  const parser = new Parser();
+  let url, author;
+  switch (interaction.options.getString("source")) {
+  case "newsroom":
+    url = "https://newsroom.churchofjesuschrist.org/rss";
+    author = "Newsroom";
+    break;
+  case "choir":
+    url = "https://www.thetabernaclechoir.org/content/motab/en/blog.rss.xml";
+    author = "The Tabernacle Choir at Temple Square";
+    break;
+  }
+  const feed = await parser.parseURL(url);
+  const newsItem = feed.items[0];
+  const embed = u.embed()
+    .setAuthor({ author, url: feed.link })
+    .setTitle(newsItem.title)
+    .setURL(newsItem.link)
+    .setDescription(newsItem.description.replace(/<[\s\S]+?>/g, "")) // Remove all HTML tags from the description
+    .setTimestamp(new Date(newsItem.pubDate));
+  interaction.reply({ embeds: [embed] });
+
 }
 
 // On module load, load all the abbreviations in.
