@@ -16,7 +16,7 @@ function request({ path, method = "GET", hostname = "www.edsm.net", params = {} 
 
       res.on("end", () => {
         try {
-          fulfill(JSON.parse(data.replace(/<br \/>/g, "\n")));
+          fulfill(JSON.parse(data.replace(/<br \\\/>/g, "\\n")));
         } catch (e) {
           reject(e);
         }
