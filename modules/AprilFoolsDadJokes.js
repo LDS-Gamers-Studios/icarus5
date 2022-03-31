@@ -54,7 +54,7 @@ let DadJoke = {
         
 
         //make sure we should actually dadjoke this person
-        if (!oddsThingsHappen(oddsOfGettingDadJoked) || msg.author.bot) { return };
+        if (!oddsThingsHappen(oddsOfGettingDadJoked) || msg.author.bot) { return;}
         let imLocation = await DadJoke.calculateIAmLocation(msg.content);
         if (imLocation < 0) return;
 
