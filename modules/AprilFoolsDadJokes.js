@@ -1,13 +1,12 @@
 const Augur = require("augurbot"),
-    moment = require("moment"),
-    u = require('../utils/utils.js');
+  moment = require("moment"),
+  u = require('../utils/utils.js');
 const Module = new Augur.Module();
-const Discord = require("discord.js");
 
 function oddsThingsHappen(percentage) {
-    let ran = Math.random();
-    if (ran < percentage / 100) return true
-    else return false
+  let ran = Math.random();
+  if (ran < percentage / 100) return true;
+  else return false;
 }
 
 const oddsOfGettingDadJoked = 5;
@@ -24,7 +23,7 @@ let DadJoke = {
             const selfPronouns = "i, my name".toLowerCase().replace(" ", "").split(",");
             selfPronouns.forEach((pronoun) => pronoun = pronoun.replace(",", ""));
 
-            const beVerbs = [" be", " am", " is", " being", "'m"]
+            const beVerbs = [" be", " am", " is", " being", "'m"];
 
             //handle special patterns
             const specialMatches = "am, im, call me".toLowerCase().replace(" ", "").split(",");
@@ -55,7 +54,7 @@ let DadJoke = {
         
 
         //make sure we should actually dadjoke this person
-        if (!oddsThingsHappen(oddsOfGettingDadJoked) || msg.author.bot) { return }
+        if (!oddsThingsHappen(oddsOfGettingDadJoked) || msg.author.bot) { return };
         let imLocation = await DadJoke.calculateIAmLocation(msg.content);
         if (imLocation < 0) return;
 
@@ -65,13 +64,13 @@ let DadJoke = {
         let maxLength = 31;
 
         if (dadJokeName.length > 32) {
-            dadJokeName = dadJokeName.slice(0, 32)
+            dadJokeName = dadJokeName.slice(0, 32);
         }
         while (dadJokeName.length > maxLength) {
             if (dadJokeName.lastIndexOf(" ") < 0) {
                 dadJokeName = dadJokeName.slice(0, maxLength);
             }
-            else dadJokeName = dadJokeName.slice(0, dadJokeName.lastIndexOf(" ")).trim()
+            else dadJokeName = dadJokeName.slice(0, dadJokeName.lastIndexOf(" ")).trim();
         }
         try {
             console.log("Hi " + dadJokeName + " I'm Dad!");
@@ -82,7 +81,7 @@ let DadJoke = {
         }
 
     }
-}
+};
 
 Module.addEvent("messageCreate", (msg) => {
     if(!msg?.author?.bot) return;
@@ -91,5 +90,5 @@ Module.addEvent("messageCreate", (msg) => {
     if (!(date && (date.month() == curDate.month()) && (date.date() == curDate.date()))) return;
     DadJoke.initiate(msg);
     
-})
+});
 module.exports = Module;
