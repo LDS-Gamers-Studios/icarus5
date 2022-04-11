@@ -60,7 +60,7 @@ async function updateFactions() {
     const old = factions.get(faction.id);
 
     let states = `**Active State:** ${faction.state}`;
-    if (faction.pendingStates.length > 0) states += `\n**Pending State${(faction.pendingStates.length > 1) ? "s" : ""}:** ${faction.pendingStates.join(", ")}`;
+    if (faction.pendingStates.length > 0) states += `\n**Pending State${(faction.pendingStates.length > 1) ? "s" : ""}:** ${faction.pendingStates.map(state => state.state).join(", ")}`;
 
     if (!old) {
       embed.addField(`${faction.name} (${(100 * faction.influence).toFixed(2)}%)`, states, true);
