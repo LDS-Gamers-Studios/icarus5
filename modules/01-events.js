@@ -66,6 +66,86 @@ const Module = new Augur.Module()
     }
   }
 })
+.addEvent("guildMemberAdd", async (member) => {
+  try {
+    if (member.guild.id == sf.ldsg) {
+      const guild = member.guild;
+
+      const user = await Module.db.user.fetchUser(member.id, false);
+      const general = guild.channels.cache.get(sf.channels.general);
+      const welcomeChannel = guild.channels.cache.get(sf.channels.welcome);
+      const modLogs = guild.channels.cache.get(sf.channels.modlogs);
+
+      const embed = u.embed()
+      .setColor(0x7289da)
+      .setDescription("Account Created:\n" + member.user.createdAt.toLocaleDateString())
+      .setTimestamp()
+      .setThumbnail(member.user.displayAvatarURL({ dynamic: true }));
+
+      let welcomeString;
+
+      if (user) { // Member is returning
+        const toAdd = user.roles.filter(role => (
+          guild.roles.cache.has(role) &&
+          !guild.roles.cache.get(role).managed &&
+          ![sf.roles.live, sf.roles.management, sf.roles.manager, sf.roles.mod,
+            sf.roles.team, sf.roles.headofhouse, sf.roles.emberguardian,
+            sf.roles.destinyclansmanager, sf.roles.volunteer].includes(role)
+        ));
+        if (user.roles.length > 0) member = await member.roles.add(toAdd);
+
+        let roleString = member.roles.cache.sort((a, b) => b.comparePositionTo(a)).map(role => role.name).join(", ");
+        if (roleString.length > 1024) roleString = roleString.substr(0, roleString.indexOf(", ", 1000)) + " ...";
+
+        embed.setTitle(member.displayName + " has rejoined the server.")
+          .addField("Roles", roleString);
+        welcomeString = `Welcome back, ${member}! Glad to see you again.`;
+
+      } else { // Member is new
+        const welcome = u.rand([
+          "Welcome",
+          "Hi there",
+          "Glad to have you here",
+          "Ahoy"
+        ]);
+        const info1 = u.rand([
+          "Take a look at",
+          "Check out",
+          "Head on over to"
+        ]);
+        const info2 = u.rand([
+          "to get started",
+          "for some basic community rules",
+          "and join in the chat"
+        ]);
+        const info3 = u.rand([
+          "What brings you our way?",
+          "How'd you find us?",
+          "What platforms/games do you play?"
+        ]);
+        welcomeString = `${welcome}, ${member}! ${info1} ${welcomeChannel} ${info2}. ${info3}\n\nTry \`!profile\` over in <#${sf.channels.botspam}> if you'd like to opt in to roles or share IGNs.`;
+        embed.setTitle(member.displayName + " has joined the server.");
+
+        Module.db.user.newUser(member.id);
+      }
+
+      if (!member.client.ignoreNotifications?.has(member.id)) {
+        modLogs.send({ embeds: [embed] });
+      } else {
+        member.client.ignoreNotifications.delete(member.id);
+      }
+
+      const pizza = false,
+        milestone = 5000;
+      if (pizza && (guild.members.size < milestone)) welcomeString += `\n*${milestone - guild.members.size} more members until we have a pizza party!*`;
+      if (!member.roles.cache.has(sf.roles.muted) && !member.user.bot) await general.send({ content: welcomeString, allowedMentions: { parse: ['users'] } });
+      if (guild.members.size == milestone) {
+        await general.send(`:tada: :confetti_ball: We're now at ${milestone} members! :confetti_ball: :tada:`);
+        await modLogs.send(`:tada: :confetti_ball: We're now at ${milestone} members! :confetti_ball: :tada:\n*pinging for effect: ${guild.members.cache.get(sf.other.ghost)} ${guild.members.cache.get(sf.ownerId)}*`);
+      }
+    }
+  } catch (e) { u.errorHandler(e, "New Member Add"); }
+})
 .addEvent("guildMemberRemove", async (member) => {
   try {
     if (member.guild.id == sf.ldsg) {
@@ -93,7 +173,7 @@ const Module = new Augur.Module()
       const user = await Module.db.user.fetchUser(newMember).catch(u.noop);
       const embed = u.embed({ author: oldUser })
       .setTitle("User Update")
-      .setFooter(`${user.posts} Posts in ${moment(newMember?.joinedTimestamp).fromNow(true)}`);
+      .setFooter({ text: `${user.posts} Posts in ${moment(newMember?.joinedTimestamp).fromNow(true)}` });
       if (oldUser.tag !== newUser.tag) {
         embed.addField("**Username Update**", `**Old:** ${u.escapeText(oldUser.tag)}\n**New:** ${u.escapeText(newUser.tag)}`);
       }

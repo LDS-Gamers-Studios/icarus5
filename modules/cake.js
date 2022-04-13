@@ -52,7 +52,7 @@ async function testBirthdays() {
         .setTitle("Happy Birthday!")
         .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Emoji_u1f389.svg/128px-Emoji_u1f389.svg.png")
         .setDescription("Happy birthday to these fantastic people!\n\n" + celebrating.join("\n"));
-      guild.channels.cache.get(sf.channels.general).send({ embeds: [embed] });
+      guild.channels.cache.get(sf.channels.general).send({ content: celebrating.join(" "), embeds: [embed], allowedMentions: { parse: ['users'] } });
     }
   } catch (e) { u.errorHandler(e, "Birthday Error"); }
 }
@@ -76,8 +76,12 @@ async function testCakeDays() {
         const join = moment(member.joinedAt).subtract(offset?.priorTenure || 0, "days");
         if ((join?.month() == curDate.month()) && (join?.date() == curDate.date()) && (join?.year() < curDate.year())) {
           const years = curDate.year() - join.year();
-          await member.roles.remove(tenureIds).catch(u.noop);
-          await member.roles.add(tenure(years)).catch(e => u.errorHandler(e, `Tenure Role Add (${member.displayName} - ${memberId})`));
+
+          let roles = Array.from(member.roles.cache.keys());
+          roles = roles.filter((r) => !tenureIds.includes(r));
+          roles.push(tenure(years));
+          await member.roles.set(roles).catch(e => u.errorHandler(e, `Tenure Role Add (${member.displayName} - ${memberId})`));
+
           if (member.roles.cache.has(sf.roles.trusted)) {
             if (celebrating.has(years)) celebrating.get(years).push(member);
             else celebrating.set(years, [member]);
@@ -91,10 +95,11 @@ async function testCakeDays() {
       .setTitle("Cake Days!")
       .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Emoji_u1f382.svg/128px-Emoji_u1f382.svg.png")
       .setDescription("The following server members are celebrating their cake days! Glad you're with us!");
-      for (const [years, cakeMembers] of celebrating) {
+      for (const [years, cakeMembers] of celebrating.sort((v1, v2, k1, k2) => k2 - k1)) {
         embed.addField(`${years} ${years > 1 ? "Years" : "Year"}`, cakeMembers.join("\n"));
       }
-      await guild.channels.cache.get(sf.channels.general).send({ embeds: [embed] });
+      const allMentions = celebrating.reduce((t, v) => t.concat(v), []);
+      await guild.channels.cache.get(sf.channels.general).send({ content: allMentions.join(" "), embeds: [embed], allowedMentions: { parse: ['users'] } });
     }
   } catch (e) { u.errorHandler(e, "Cake Days"); }
 }

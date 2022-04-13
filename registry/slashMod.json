@@ -69,7 +69,7 @@
     },
     {
       "name": "mute",
-      "description": "Mute a user",
+      "description": "Mute or unmute a user",
       "type": 1,
       "options": [
         {
@@ -82,7 +82,7 @@
           "name": "reason",
           "description": "Why are they being muted?",
           "type": 3,
-          "required": true
+          "required": false
         },
         {
           "name": "apply",
@@ -157,7 +157,7 @@
     },
     {
       "name": "rename",
-      "description": "Renames a user, if their name is inappropriate",
+      "description": "Change a user's nickname, if their name is inappropriate",
       "type": 1,
       "options": [
         {
@@ -220,7 +220,7 @@
     },
     {
       "name": "trust",
-      "description": "Trust a user",
+      "description": "Trust or untrust a user",
       "type": 1,
       "options": [
         {

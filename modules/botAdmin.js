@@ -192,10 +192,16 @@ const Module = new Augur.Module()
       // console.log(`Checking ${filename}`);
       const [m1, m2] = fieldMismatches(prod, repo);
       if (m1.length > 0) {
-        u.errorHandler(Error("Mismatch from example file"), `Field(s) \`${m1.join("`, `")}\` in file ${filename + ".json"} but not example file`);
+        u.errorLog.send({ embeds: [
+          u.embed()
+          .addField("Config file and example do not match.", `Field(s) \`${m1.join("`, `")}\` in file ${filename + ".json"} but not example file.`)
+        ] });
       }
       if (m2.length > 0) {
-        u.errorHandler(Error("Mismatch from example file"), `Field(s) \`${m2.join("`, `")}\` in example file but not ${filename + ".json"}`);
+        u.errorLog.send({ embeds: [
+          u.embed()
+          .addField("Config file and example do not match.", `Field(s) \`${m2.join("`, `")}\` in example file but not ${filename + ".json"}`)
+        ] });
       }
     }
   } catch (e) {

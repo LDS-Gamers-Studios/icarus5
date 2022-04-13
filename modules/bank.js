@@ -1,4 +1,5 @@
 const Augur = require("augurbot"),
+  p = require("../utils/perms"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes"),
   config = require("../config/config.json"),
@@ -26,6 +27,18 @@ async function getGameList() {
 
 function filterUnique(e, i, a) {
   return (a.indexOf(a.find(g => g["Game Title"] == e["Game Title"] && g["System"] == e["System"])) == i);
+}
+
+function getHouseInfo(member) {
+  const houseInfo = new u.Collection()
+    .set(sf.roles.housebb, { name: "Brightbeam", color: "#00a1da" })
+    .set(sf.roles.housefb, { name: "Freshbeast", color: "#fdd023" })
+    .set(sf.roles.housesc, { name: "Starcamp", color: "#e32736" });
+
+  for (const [k, v] of houseInfo) {
+    if (member.roles.cache.has(k)) return v;
+  }
+  return { name: "Unsorted", color: config.color };
 }
 
 async function slashBankGive(interaction) {
@@ -81,7 +94,8 @@ async function slashBankGive(interaction) {
       .setDescription(`${u.escapeText(giver.toString())} just gave you ${coin}${receipt.value}.`);
       recipient.send({ embeds: [embed] }).catch(u.noop);
     }
-    interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`);
+    await interaction.reply(`${coin}${value} sent to ${u.escapeText(recipient.displayName)} for reason: ${reason}`);
+    u.clean(interaction);
 
     const withdrawal = {
       currency,
@@ -105,7 +119,7 @@ async function slashBankGive(interaction) {
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
       .addField("Reason", reason)
       .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
-      hoh.send({ content: `<@${sf.ownerId}>`, embeds: [hohEmbed] });
+      hoh.send({ content: `<@${sf.roles.manager}>`, embeds: [hohEmbed] });
     }
   } catch (e) { u.errorHandler(e, interaction); }
 }
@@ -304,8 +318,8 @@ async function slashBankAward(interaction) {
   try {
     const giver = interaction.member;
 
-    if (!giver.roles.cache.has(sf.roles.team)) {
-      interaction.reply({ content: `*Nice try!* This command is Team-only!`, ephemeral: true });
+    if (!p.isTeam(interaction) && !giver.roles.cache.has(sf.roles.volunteer)) {
+      interaction.reply({ content: `*Nice try!* This command is for Team and Volunteers only!`, ephemeral: true });
       return;
     }
 
@@ -341,10 +355,11 @@ async function slashBankAward(interaction) {
     let embed = u.embed({ author: interaction.client.user })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
-    .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ? "awarded" : "docked"} you ${ember}${receipt.value}! This counts toward your House's Points.`);
+    .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ? `awarded you ${ember}${receipt.value}` : `docked you ${ember}${-receipt.value}`}! This counts toward your House's Points.`);
     recipient.send({ embeds: [embed] }).catch(u.noop);
 
-    interaction.reply(`${ember}${value} ${value > 0 ? "awarded to" : "docked from"} ${u.escapeText(recipient.displayName)} for ${reason}`);
+    await interaction.reply(ember + (value > 0 ? `${value} awarded to` : `${-value} docked from`) + ` ${u.escapeText(recipient.displayName)} for ${reason}`);
+    u.clean(interaction, 60000);
 
     embed = u.embed()
     .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
@@ -352,12 +367,15 @@ async function slashBankAward(interaction) {
     .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
     giver.send({ embeds: [embed] }).catch(u.noop);
 
-    const hoh = interaction.client.channels.cache.get(sf.channels.headsofhouse);
-    embed = u.embed()
-    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
+    const house = getHouseInfo(recipient);
+
+    const mopbucket = interaction.client.channels.cache.get(sf.channels.mopbucketawards);
+    embed = u.embed({ author: interaction.client.user })
+    .setColor(house.color)
+    .addField("House", house.name)
     .addField("Reason", reason)
-    .setDescription(`**${giver.toString()}** ${value > 0 ? "awarded" : "docked"} ${recipient.toString()} ${ember}${value}.`);
-    hoh.send({ embeds: [embed] });
+    .setDescription(`**${giver}** ${value > 0 ? `awarded ${recipient} ${ember}${value}.` : `docked ${recipient} ${ember}${-value}.`}`);
+    mopbucket.send({ embeds: [embed] });
   } catch (e) { u.errorHandler(e, interaction); }
 }
 
@@ -365,7 +383,7 @@ const Module = new Augur.Module()
 .addInteractionCommand({
   name: "bank",
   guildId: sf.ldsg,
-  commandId: sf.commands.bank,
+  commandId: sf.commands.slashBank,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand(true)) {
     case "give":

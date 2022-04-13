@@ -1,0 +1,142 @@
+{
+  "flag": {
+    "label": "Flag Message/User",
+    "value": "flag",
+    "description": "Bring this to the attention of LDSG's Discord Moderators",
+    "emoji": "🚩",
+    "default": false
+  },
+  "userInfo": {
+    "label": "Get User Info",
+    "value": "userInfo",
+    "description": "",
+    "emoji": "ℹ",
+    "default": false
+  },
+  "userAvatar": {
+    "label": "View User Avatar",
+    "value": "userAvatar",
+    "description": "See a larger version of this user's avatar",
+    "emoji": "📷",
+    "default": false
+  },
+  "pinMessage": {
+    "label": "Pin Message",
+    "value": "pinMessage",
+    "description": "Request a message pin (or, depending on permissions, pin the message)",
+    "emoji": "📌",
+    "default": false
+  },
+  "fullinfo": {
+    "label": "Get User Info (Full)",
+    "value": "fullinfo",
+    "description": "",
+    "emoji": "ℹ",
+    "default": false
+  },
+  "summary": {
+    "label": "Get User Infraction Summary",
+    "value": "summary",
+    "description": "",
+    "emoji": "🖨️",
+    "default": false
+  },
+  "noteUser": {
+    "label": "Note User",
+    "value": "noteUser",
+    "description": "Make a moderation note about this user",
+    "emoji": "📓",
+    "default": false
+  },
+  "renameUser": {
+    "label": "Rename User",
+    "value": "renameUser",
+    "description": "Assign this user a randomly-generated nickname",
+    "emoji": "©",
+    "default": false
+  },
+  "trustUser": {
+    "label": "Trust User",
+    "value": "trustUser",
+    "description": "Give this user the Trusted role",
+    "emoji": "👍",
+    "default": false
+  },
+  "trustPlusUser": {
+    "label": "Trust+ User",
+    "value": "trustPlusUser",
+    "description": "Give this user the Trusted+ role",
+    "emoji": "💚",
+    "default": false
+  },
+  "watchUser": {
+    "label": "Watch User",
+    "value": "watchUser",
+    "description": "",
+    "emoji": "👀",
+    "default": false
+  },
+  "warnUser": {
+    "label": "Warn User",
+    "value": "warnUser",
+    "description": "",
+    "emoji": "😱",
+    "default": false
+  },
+  "muteUser": {
+    "label": "Mute User",
+    "value": "muteUser",
+    "description": "Mute this user",
+    "emoji": "🔇",
+    "default": false
+  },
+  "unmuteUser": {
+    "label": "Unmute User",
+    "value": "unmuteUser",
+    "description": "Unmute this user",
+    "emoji": "🔊",
+    "default": false
+  },
+  "timeoutUser": {
+    "label": "Timeout User",
+    "value": "timeoutUser",
+    "description": "Time this user out for 10 minutes",
+    "emoji": "🕑",
+    "default": false
+  },
+  "kickUser": {
+    "label": "Kick User",
+    "value": "kickUser",
+    "description": "Kick this user from LDSG",
+    "emoji": "🥾",
+    "default": false
+  },
+  "banUser": {
+    "label": "Ban User",
+    "value": "banUser",
+    "description": "Ban this user from LDSG",
+    "emoji": "🔨",
+    "default": false
+  },
+  "warnMessage": {
+    "label": "Warn User For Message",
+    "value": "warnMessage",
+    "description": "",
+    "emoji": "😱",
+    "default": false
+  },
+  "purgeChannel": {
+    "label": "Purge Channel",
+    "value": "purgeChannel",
+    "description": "Delete all messages in the channel since this one",
+    "emoji": "❌",
+    "default": false
+  },
+  "announceMessage": {
+    "label": "Announce Message",
+    "value": "announceMessage",
+    "description": "Repost this message in #announcements",
+    "emoji": "📣",
+    "default": false
+  }
+}

@@ -180,16 +180,18 @@ async function warnCard(msg, filtered, call) {
     if (filtered) embed.addField("Match", filtered);
 
     embed.addField("Channel", msg.channel?.toString(), true)
-    .addField("User", msg.author.toString(), true)
     .addField("Jump to Post", `[Original Message](${msg.url})`, true);
 
     // Minecraft Filter
     if (msg.channel.parentId == sf.channels.minecraftcategory) {
+      embed.addField("User", msg.author.username, true);
       msg.client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
+    } else {
+      embed.addField("User", msg.author.toString(), true);
     }
 
     embed.addField(`Infraction Summary (${infractionSummary.time} Days)`, `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`);
-    if (msg.author.bot) embed.setFooter("The user is a bot and the flag likely originated elsewhere. No action will be processed.");
+    if (msg.author.bot) embed.setFooter({ text: "The user is a bot and the flag likely originated elsewhere. No action will be processed." });
 
     let content;
 
@@ -308,7 +310,7 @@ async function processCardAction(interaction) {
       const md = await interaction.client.channels.cache.get(sf.channels.moddiscussion);
       await interaction.reply({ content: `Sending the flag over to ${md}...`, ephemeral: true });
 
-      embed.setFooter(`Linked by ${u.escapeText(mod.displayName)}`);
+      embed.setFooter({ text: `Linked by ${u.escapeText(mod.displayName)}` });
       md.send({ embeds: [embed] }).catch(u.noop);
     } else {
       await interaction.deferUpdate();

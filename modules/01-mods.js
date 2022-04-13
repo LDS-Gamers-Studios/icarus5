@@ -2,9 +2,8 @@ const Augur = require("augurbot"),
   Discord = require("discord.js"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes.json"),
-  p = require("../utils/perms");
-
-const muteState = new u.Collection();
+  p = require("../utils/perms"),
+  c = require("../utils/modCommon");
 
 /**
  * Give the mods a heads up that someone isn't getting their DMs.
@@ -15,24 +14,9 @@ function blocked(member) {
     u.embed({
       author: member,
       color: 0x00ffff,
-      title: `${member} has me blocked. *sadface*`
+      description: `${member} has me blocked. *sadface*`
     })
   ] });
-}
-
-function compareRoles(mod, target) {
-  const modHigh = mod.roles.cache.filter(r => r.id != sf.roles.live)
-    .sort((a, b) => b.comparePositionTo(a)).first();
-  const targetHigh = target.roles.cache.filter(r => r.id != sf.roles.live)
-    .sort((a, b) => b.comparePositionTo(a)).first();
-  return (modHigh.comparePositionTo(targetHigh) > 0);
-}
-
-function nameGen() {
-  const { names, colors, adjectives } = require("../data/nameParts.json");
-  let result = u.rand(adjectives) + " " + u.rand(colors) + " " + u.rand(names);
-  while (result.length > 32) { result = u.rand(adjectives) + " " + u.rand(colors) + " " + u.rand(names); }
-  return result;
 }
 
 async function getSummaryEmbed(member, time, guild) {
@@ -57,79 +41,13 @@ async function getSummaryEmbed(member, time, guild) {
 }
 
 async function slashModBan(interaction) {
-  try {
-    await interaction.deferReply({ ephemeral: true });
-    const target = interaction.options.getMember("user");
-    const reason = interaction.options.getString("reason");
-    const days = interaction.options.getInteger("clean") ?? 1;
+  await interaction.deferReply({ ephemeral: true });
 
-    if (!compareRoles(interaction.member, target)) {
-      await interaction.editReply({
-        content: `You have insufficient permissions to ban ${target}!`
-      });
-      return;
-    } else if (!target.bannable) {
-      await interaction.editReply({
-        content: `I have insufficient permissions to ban ${target}!`
-      });
-      return;
-    }
+  const target = interaction.options.getMember("user");
+  const reason = interaction.options.getString("reason");
+  const days = interaction.options.getInteger("clean") ?? 1;
 
-    const confirm = await u.confirmInteraction(interaction, `Ban ${target} for:\n${reason}?`, `Confirm Ban on ${u.escapeText(target.displayName)}`);
-    if (confirm) {
-      // Do the ban!
-
-      // The actual ban part
-      const targetRoles = target.roles.cache.clone();
-      await target.send({ embeds: [
-        u.embed()
-        .setTitle("User Ban")
-        .setDescription(`You have been banned in ${interaction.guild.name} for:\n${reason}`)
-      ] }).catch(() => blocked(target));
-      await target.ban({ days, reason });
-
-      // Edit interaction
-      await interaction.editReply({
-        embeds: [
-          u.embed({ author: target })
-          .setColor(0x00ff00)
-          .setDescription(`${target.toString()} banned for:\n${reason}`)
-        ],
-        components: []
-      });
-
-      // Save infraction
-      Module.db.infraction.save({
-        discordId: target.id,
-        description: `[User Ban]: ${reason}`,
-        value: 30,
-        mod: interaction.member.id
-      });
-
-      // Save roles
-      targetRoles.set(sf.roles.untrusted, null).set(sf.roles.muted, null).delete(sf.roles.trusted);
-      const fakeTarget = {
-        id: target.id,
-        roles: { cache: targetRoles }
-      };
-      Module.db.user.updateRoles(fakeTarget);
-
-      // Log it
-      interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: target })
-        .setTitle("User Ban")
-        .setDescription(`**${interaction.member}** banned **${target}** for:\n${reason}`)
-        .setColor(0x0000ff)
-      ] });
-    } else {
-      // Never mind
-      await interaction.editReply({
-        embeds: [u.embed({ author: interaction.member }).setColor(0x0000ff).setDescription(`Ban ${confirm === false ? "cancelled" : "timed out"}`)],
-        components: []
-      });
-    }
-    u.cleanInteraction(interaction);
-  } catch (error) { u.errorHandler(error, interaction); }
+  await c.ban(interaction, target, reason, days);
 }
 
 async function slashModFullInfo(interaction) {
@@ -159,72 +77,7 @@ async function slashModKick(interaction) {
     const target = interaction.options.getMember("user");
     const reason = interaction.options.getString("reason");
 
-    if (!compareRoles(interaction.member, target)) {
-      await interaction.editReply({
-        content: `You have insufficient permissions to kick ${target}!`
-      });
-      return;
-    } else if (!target.kickable) {
-      await interaction.editReply({
-        content: `I have insufficient permissions to kick ${target}!`
-      });
-      return;
-    }
-
-    const confirm = await u.confirmInteraction(interaction, `Kick ${target} for:\n${reason}?`, `Confirm Kick on ${u.escapeText(target.displayName)}`);
-    if (confirm) {
-      // Do the kick!
-
-      // The actual kick part
-      const targetRoles = target.roles.cache.clone();
-      await target.send({ embeds: [
-        u.embed()
-        .setTitle("User Kick")
-        .setDescription(`You have been kicked in ${interaction.guild.name} for:\n${reason}`)
-      ] }).catch(() => blocked(target));
-      await target.kick({ reason });
-
-      // Edit interaction
-      await interaction.editReply({
-        embeds: [
-          u.embed({ author: target })
-          .setColor(0x00ff00)
-          .setDescription(`${target.toString()} kicked for:\n${reason}`)
-        ],
-        components: []
-      });
-
-      // Save infraction
-      Module.db.infraction.save({
-        discordId: target.id,
-        description: `[User Kick]: ${reason}`,
-        value: 30,
-        mod: interaction.member.id
-      });
-
-      // Save roles
-      targetRoles.set(sf.roles.untrusted, null).set(sf.roles.muted, null).delete(sf.roles.trusted);
-      const fakeTarget = {
-        id: target.id,
-        roles: { cache: targetRoles }
-      };
-      Module.db.user.updateRoles(fakeTarget);
-
-      // Log it
-      interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: target })
-        .setTitle("User Kick")
-        .setDescription(`**${interaction.member}** kicked **${target}** for:\n${reason}`)
-        .setColor(0x0000ff)
-      ] });
-    } else {
-      // Never mind
-      await interaction.editReply({
-        embeds: [u.embed({ author: target }).setColor(0x0000ff).setDescription(`Kick ${confirm === false ? "cancelled" : "timed out"}`)],
-        components: []
-      });
-    }
-    u.cleanInteraction(interaction);
+    await c.kick(interaction, target, reason);
   } catch (error) { u.errorHandler(error, interaction); }
 }
 
@@ -235,77 +88,10 @@ async function slashModMute(interaction) {
     const reason = interaction.options.getString("reason") || "Violating the Code of Conduct";
     const apply = interaction.options.getBoolean("apply") ?? true;
 
-    if (!compareRoles(interaction.member, target)) {
-      await interaction.editReply({
-        content: `You have insufficient permissions to mute ${target}!`
-      });
-      return;
-    } else if (!target.manageable) {
-      await interaction.editReply({
-        content: `I have insufficient permissions to mute ${target}!`
-      });
-      return;
-    }
-
     if (apply) { // Mute 'em
-      // Don't mute if muted
-      if (target.roles.cache.has(sf.roles.muted)) {
-        await interaction.editReply({
-          content: `They are already muted.`,
-        });
-        return;
-      }
-
-      muteState.set(target.id, target.voice.serverMute);
-
-      // Impose Mute
-      await target.roles.add(sf.roles.muted);
-      if (target.voice.channel) {
-        await target.voice.disconnect(reason);
-        await target.voice.setMute(true, reason);
-      }
-
-      await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: target })
-        .setTitle("Member Mute")
-        .setDescription(`**${interaction.member}** muted **${target}** for:\n${reason}`)
-        .setColor(0x0000ff)
-      ] });
-
-      await interaction.guild.channels.cache.get(sf.channels.muted).send(
-        `${target}, you have been muted in ${interaction.guild.name}. `
-        + 'Please review our Code of Conduct. '
-        + 'A member of the mod team will be available to discuss more details.\n\n'
-        + 'http://ldsgamers.com/code-of-conduct'
-      );
-
-      await interaction.editReply({
-        content: `Muted ${target}.`,
-      });
+      await c.mute(interaction, target, reason);
     } else { // Remove mute
-      // Don't unmute if not muted
-      if (!target.roles.cache.has(sf.roles.muted)) {
-        await interaction.editReply({
-          content: `${target} isn't muted.`,
-        });
-        return;
-      }
-
-      // Remove Mute
-      await target.roles.remove(sf.roles.muted);
-      if (!muteState.get(target.id) && target.voice.channel) await target.voice.setMute(false, "Mute resolved");
-      muteState.delete(target.id);
-
-      await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: target })
-        .setTitle("Member Unmute")
-        .setDescription(`**${interaction.member}** unmuted **${target}**`)
-        .setColor(0x00ff00)
-      ] });
-
-      await interaction.editReply({
-        content: `Unmuted ${target}.`,
-      });
+      await c.unmute(interaction, target);
     }
   } catch (error) { u.errorHandler(error, interaction); }
 }
@@ -316,24 +102,7 @@ async function slashModNote(interaction) {
     const target = interaction.options.getMember("user");
     const note = interaction.options.getString("note");
 
-    Module.db.infraction.save({
-      discordId: target.id,
-      value: 0,
-      description: note,
-      mod: interaction.user.id
-    });
-    const summary = await Module.db.infraction.getSummary(target.id);
-
-    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-      u.embed({ author: target })
-      .setColor("#0000FF")
-      .setDescription(note)
-      .addField("Resolved", `${u.escapeText(interaction.user.username)} added a note.`)
-      .addField(`Infraction Summary (${summary.time} Days)`, `Infractions: ${summary.count}\nPoints: ${summary.points}`)
-      .setTimestamp()
-    ] });
-
-    await interaction.editReply({ content: `Note added for user ${target.toString()}.` });
+    await c.note(interaction, target, note);
   } catch (error) { u.errorHandler(error, interaction); }
 }
 
@@ -344,12 +113,7 @@ async function slashModOffice(interaction) {
     const reason = interaction.options.getString("reason") || "No reason provided";
     const apply = interaction.options.getBoolean("apply") ?? true;
 
-    if (!compareRoles(interaction.member, target)) {
-      await interaction.editReply({
-        content: `You have insufficient permissions to put ${target} in the office!`
-      });
-      return;
-    } else if (!target.manageable) {
+    if (!target.manageable) {
       await interaction.editReply({
         content: `I have insufficient permissions to put ${target} in the office!`
       });
@@ -461,34 +225,8 @@ async function slashModPurge(interaction) {
 async function slashModRename(interaction) {
   await interaction.deferReply({ ephemeral: true });
   const target = interaction.options.getMember("user");
-  const newNick = interaction.options.getString("name") || nameGen();
 
-  const oldNick = target.displayName;
-
-  await target.setNickname(newNick);
-
-  const comment = `Set nickname to ${u.escapeText(newNick)} from ${u.escapeText(oldNick)}.`;
-
-  await Module.db.infraction.save({
-    discordId: target.id,
-    value: 0,
-    description: comment,
-    message: interaction.id,
-    channel: interaction.channel.id,
-    mod: interaction.member.id
-  });
-  const summary = await Module.db.infraction.getSummary(target.id);
-
-  interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-    u.embed({ author: target })
-    .setColor("#0000FF")
-    .setDescription(comment)
-    .addField("Resolved", `${interaction.member} changed ${target}'s nickname from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.`)
-    .addField(`Infraction Summary (${summary.time} Days) `, `Infractions: ${summary.count}\nPoints: ${summary.points}`)
-    .setTimestamp()
-  ] });
-
-  await interaction.editReply({ content: `${target}'s nickname changed from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.` });
+  await c.rename(interaction, target);
 }
 
 const molasses = new Map();
@@ -500,11 +238,11 @@ async function slashModSlowmode(interaction) {
   const ch = interaction.options.getChannel("channel") || interaction.channel;
 
   if ([ "GUILD_VOICE", "GUILD_CATEGORY", "GUILD_STORE", "GUILD_STAGE_VOICE", "UNKNOWN" ].includes(ch.type)) {
-    interaction.editReply("You can't set slowmode in that channel.");
+    await interaction.editReply("You can't set slowmode in that channel.");
     return;
   }
 
-  if (duration == 0) {
+  if (duration <= 0) {
     ch.edit({ rateLimitPerUser: 0 }).catch(e => u.errorHandler(e, interaction));
 
     if (molasses.has(ch.id)) {
@@ -529,8 +267,8 @@ async function slashModSlowmode(interaction) {
       limit
     });
 
-    interaction.editReply(`${timer}-second slowmode activated for ${duration} minute${duration > 1 ? 's' : ''}.`);
-    interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+    await interaction.editReply(`${timer}-second slowmode activated for ${duration} minute${duration > 1 ? 's' : ''}.`);
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
       u.embed({ author: interaction.member })
       .setTitle("Channel Slowmode")
       .setDescription(`${interaction.member} set a ${timer}-second slow mode for ${duration} minute${duration > 1 ? 's' : ''} in ${ch}.`)
@@ -569,45 +307,14 @@ async function slashModTrust(interaction) {
   if (apply) {
     switch (type) {
     case 'initial':
-      if (member.roles.cache.has(sf.roles.trusted)) {
-        interaction.editReply({ content: `${member} is already trusted.` });
-        return;
-      }
-
-      member.send(
-        `You have been marked as "Trusted" in ${interaction.guild.name} . `
-        + "This means you are now permitted to post images and links in chat. "
-        + "Please remember to follow the Code of Conduct when doing so.\n"
-        + "<http://ldsgamers.com/code-of-conduct>\n\n"
-        + "If you'd like to join one of our in-server Houses, you can visit <http://3houses.live> to get started!"
-      ).catch(() => blocked(member));
-      embed.setTitle("User Given Trusted")
-      .setDescription(`${interaction.member} trusted ${member}.`);
-      if (member.roles.cache.has(sf.roles.untrusted)) {
-        await member.roles.remove(sf.roles.untrusted);
-      }
-      break;
+      await c.trust(interaction, member);
+      return;
     case 'plus':
-      if (member.roles.cache.has(sf.roles.trustedplus)) {
-        interaction.editReply({ content: `${member} is already trusted+.` });
-        return;
-      }
-      if (!member.roles.cache.has(sf.roles.trusted)) {
-        await interaction.editReply({ content: `${member} needs <@&${sf.roles.trusted}> before they can be given <@&${sf.roles.trustedplus}>!` });
-        return;
-      }
-      member.send(
-        "Congratulations! "
-        + "You've been added to the Trusted+ list in LDSG, allowing you to stream to voice channels!\n\n"
-        + "While streaming, please remember the Streaming Guidelines ( https://goo.gl/Pm3mwS ) and LDSG Code of Conduct ( http://ldsgamers.com/code-of-conduct ). "
-        + "Also, please be aware that LDSG may make changes to the Trusted+ list from time to time at its discretion."
-      ).catch(u.noop);
-      embed.setTitle("User Given Trusted+")
-      .setDescription(`${interaction.member} gave ${member} the <@&${role}> role.`);
-      break;
+      await c.trustPlus(interaction, member);
+      return;
     case 'watch':
       if (member.roles.cache.has(sf.roles.untrusted)) {
-        interaction.editReply({ content: `${member} is already watched.` });
+        await interaction.editReply({ content: `${member} is already watched.` });
         return;
       }
       embed.setTitle("User Watch")
@@ -616,15 +323,15 @@ async function slashModTrust(interaction) {
     }
 
     await member.roles.add(role);
-    interaction.editReply({ content: `${member} has been given the <@&${role}> role!` });
+    await interaction.editReply({ content: `${member} has been given the <@&${role}> role!` });
   } else {
     switch (type) {
     case 'initial':
       if (!member.roles.cache.has(sf.roles.trusted)) {
-        interaction.editReply({ content: `${member} in't trusted already.` });
+        await interaction.editReply({ content: `${member} isn't trusted already.` });
         return;
       }
-      member.send(
+      await member.send(
         `You have been removed from "Trusted" in ${interaction.guild.name}. `
         + "This means you no longer have the ability to post images. "
         + "Please remember to follow the Code of Conduct when posting images or links.\n"
@@ -639,10 +346,10 @@ async function slashModTrust(interaction) {
       break;
     case 'plus':
       if (!member.roles.cache.has(sf.roles.trustedplus)) {
-        interaction.editReply({ content: `${member} in't trusted+ already.` });
+        interaction.editReply({ content: `${member} isn't trusted+ already.` });
         return;
       }
-      member.send(
+      await member.send(
         `You have been removed from "Trusted+" in ${interaction.guild.name}. `
         + "This means you no longer have the ability to stream video in the server. "
         + "Please remember to follow the Code of Conduct.\n"
@@ -653,7 +360,7 @@ async function slashModTrust(interaction) {
       break;
     case 'watch':
       if (!member.roles.cache.has(sf.roles.untrusted)) {
-        interaction.editReply({ content: `${member} in't watched already.` });
+        await interaction.editReply({ content: `${member} isn't watched already.` });
         return;
       }
       embed.setTitle("User Unwatched")
@@ -662,7 +369,7 @@ async function slashModTrust(interaction) {
     }
 
     await member.roles.remove(role);
-    interaction.editReply({ content: `The <@&${role}> role has been removed from ${member}!` });
+    await interaction.editReply({ content: `The <@&${role}> role has been removed from ${member}!` });
   }
 
   await interaction.guild.channels.cache.get(channel).send({ embeds: [embed] });
@@ -680,7 +387,7 @@ async function slashModWarn(interaction) {
     + "As a reminder, if we believe that you are frequently in breach of our code of conduct or are otherwise acting inconsistently with the letter or spirit of the code, we may limit, suspend or terminate your access to the LDSG Discord server.\n\n"
     + `**${u.escapeText(interaction.member.displayName)}** has issued you a warning for:\n`
     + reason;
-  member.send(response).catch(() => blocked(member));
+  await member.send(response).catch(() => blocked(member));
 
   const embed = u.embed()
     .setColor("#0000FF")
@@ -704,14 +411,14 @@ async function slashModWarn(interaction) {
   embed.addField(`Infraction Summary (${summary.time} Days) `, `Infractions: ${summary.count}\nPoints: ${summary.points}`);
 
   flag.edit({ embeds: [embed] });
-  interaction.editReply(`${member} has been warned **${value}** points for reason \`${reason}\``);
+  await interaction.editReply(`${member} has been warned **${value}** points for reason \`${reason}\``);
 }
 
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "mod",
   guildId: sf.ldsg,
-  commandId: sf.commands.mod,
+  commandId: sf.commands.slashMod,
   permissions: p.isMod,
   process: async (interaction) => {
     try {

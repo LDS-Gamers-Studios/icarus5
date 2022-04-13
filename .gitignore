@@ -7,11 +7,7 @@ config/*
 test.js
 *-.js
 *-.json
-data/*
-!data/*-example.json
-!data/*-reference.json
-!data/birthday.json
-!data/nameParts.json
+data/banned.json
 site/*
 
 # For Visual Studio's temp directory
