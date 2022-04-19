@@ -24,6 +24,7 @@
   "events": [
     "channelCreate",
     "channelUpdate",
+    "filterUpdate",
     "guildBanAdd",
     "guildMemberAdd",
     "guildMemberRemove",
