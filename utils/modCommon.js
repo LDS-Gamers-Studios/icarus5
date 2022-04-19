@@ -47,25 +47,6 @@ function nameGen() {
 }
 
 const modCommon = {
-  getSummaryEmbed: async (member, time, guild) => {
-    const data = await member.client.db.infraction.getSummary(member.id, time);
-    const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
-    if ((data.count > 0) && (data.detail.length > 0)) {
-      data.detail = data.detail.reverse(); // Newest to oldest is what we want
-      for (const record of data.detail) {
-        const mod = guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
-        const pointsPart = record.value === 0 && mod.id !== member.client.user.id ? "Note" : `${record.value} pts`;
-        response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
-      }
-    }
-    let text = response.join("\n");
-    text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
-    return u.embed({ author: member })
-      .setTitle("Infraction Summary")
-      .setDescription(text)
-      .setColor(0x00ff00);
-  },
-
   ban: async function(interaction, target, reason, days) {
     try {
       if (!compareRoles(interaction.member, target)) {
@@ -229,6 +210,25 @@ const modCommon = {
       };
       await member.client.db.infraction.save(infraction);
     }
+  },
+
+  getSummaryEmbed: async function(member, time, guild) {
+    const data = await member.client.db.infraction.getSummary(member.id, time);
+    const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
+    if ((data.count > 0) && (data.detail.length > 0)) {
+      data.detail = data.detail.reverse(); // Newest to oldest is what we want
+      for (const record of data.detail) {
+        const mod = guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
+        const pointsPart = record.value === 0 && mod.id !== member.client.user.id ? "Note" : `${record.value} pts`;
+        response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
+      }
+    }
+    let text = response.join("\n");
+    text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
+    return u.embed({ author: member })
+      .setTitle("Infraction Summary")
+      .setDescription(text)
+      .setColor(0x00ff00);
   },
 
   kick: async function(interaction, target, reason) {
