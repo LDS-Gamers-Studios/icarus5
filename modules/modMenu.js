@@ -90,26 +90,15 @@ const processes = {
     const reason = menuItems.find(o => o.value === menuSelect.values[0]).label;
 
     const targetUser = getTargetUser(target);
-    const embed = u.embed({ author: targetUser });
-    if (target instanceof Discord.Message) {
-      embed.setDescription((target.editedAt ? "[Edited]\n" : "") + target.cleanContent)
-      .addField("Channel", target.channel?.toString(), true)
-      .addField("User", target.author.toString(), true)
-      .addField("Jump to Post", `[Original Message](${target.url})`, true);
-    }
-
-    const infractionSummary = await Module.db.infraction.getSummary(targetUser);
-    embed.addField(`Infraction Summary (${infractionSummary.time} Days)`, `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`);
-
-    embed.addField("Flagged By", interaction.member.toString());
-    embed.addField("Reason", reason);
 
     if (menuSelect.values[0] === "modAbuse" && (!targetUser.roles.cache.has(sf.roles.mod) && !targetUser.roles.cache.has(sf.roles.management))) {
       await menuSelect.editReply("Only Moderators can be flagged for mod abuse.");
       return;
     }
+
+    let extra;
     if (['badVibes', 'harassment', 'modAbuse', 'nominate'].includes(menuSelect.values[0])) {
-      const extra = await u.awaitDM(`You selected "${reason}." Please provide more information (one message only).`, interaction.member, 300);
+      extra = await u.awaitDM(`You selected "${reason}." Please provide more information (one message only).`, interaction.member, 300);
       if (!extra) {
         await interaction.editReply({ embeds: [
           u.embed({ author: interaction.member }).setColor(0x0000ff)
@@ -117,14 +106,19 @@ const processes = {
         ], content: null });
         return;
       }
-      embed.addField("Further Information", extra.content);
     }
 
     if (menuSelect.values[0] == "nominate") {
       // Send it to the Team (unimplemented)
     } else {
-      const modLogs = interaction.guild.channels.cache.get(sf.channels.modlogs);
-      await modLogs.send({ embeds: [embed] });
+      const flagInfo = {
+        member: targetUser,
+        snitch: interaction.member,
+        flagReason: reason,
+        furtherInfo: extra?.content
+      };
+      if (target instanceof Discord.Message) flagInfo.msg = target;
+      await c.createFlag(flagInfo);
 
       await menuSelect.editReply("Thank you for sharing your concern. I've put this in front of the mods.");
     }
