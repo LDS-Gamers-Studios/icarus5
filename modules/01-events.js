@@ -138,7 +138,7 @@ const Module = new Augur.Module()
       const pizza = false,
         milestone = 5000;
       if (pizza && (guild.members.size < milestone)) welcomeString += `\n*${milestone - guild.members.size} more members until we have a pizza party!*`;
-      if (!member.roles.cache.has(sf.roles.muted) && !member.user.bot) await general.send(welcomeString);
+      if (!member.roles.cache.has(sf.roles.muted) && !member.user.bot) await general.send({ content: welcomeString, allowedMentions: { parse: ['users'] } });
       if (guild.members.size == milestone) {
         await general.send(`:tada: :confetti_ball: We're now at ${milestone} members! :confetti_ball: :tada:`);
         await modLogs.send(`:tada: :confetti_ball: We're now at ${milestone} members! :confetti_ball: :tada:\n*pinging for effect: ${guild.members.cache.get(sf.other.ghost)} ${guild.members.cache.get(sf.ownerId)}*`);
