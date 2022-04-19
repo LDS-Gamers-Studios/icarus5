@@ -11,7 +11,7 @@ const works = {
   "nt": "new-testament",
   "bofm": "book-of-mormon",
   "dc-testament": "doctrine-and-covenants",
-  "pogp": "pearl-of-great-price"
+  "pgp": "pearl-of-great-price"
 };
 
 const manuals = new Map([
