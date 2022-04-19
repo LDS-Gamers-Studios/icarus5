@@ -221,7 +221,7 @@ const Module = new Augur.Module()
     await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
     const channels = await doc.sheetsByTitle["Voice Channel Names"].getRows();
-    channelNames = Array.from(channels.map(x => x.Channels));
+    channelNames = Array.from(channels.map(x => x["Name"]));
 
   } catch (e) { u.errorHandler(e, "Load Voice Channel Names"); }
 })
@@ -254,7 +254,7 @@ const Module = new Augur.Module()
               deny: ["VIEW_CHANNEL", "CONNECT", "SPEAK"]
             },
             {
-              id: sf.roles.suspended, // "871566171206484008"
+              id: sf.roles.suspended,
               deny: ["VIEW_CHANNEL", "CONNECT", "SPEAK"]
             }
           ]

@@ -15,8 +15,8 @@ const guildCommandFiles = [
   "slashBank.json",
   "slashRank.json",
   "slashMod.json",
-  "userMod.json",
-  "slashVoice.json"
+  "slashVoice.json",
+  "userMod.json"
 ];
 const permissionData = new Collection();
 permissionData.set(sf.commands.slashMod, [{
