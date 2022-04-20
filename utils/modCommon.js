@@ -131,10 +131,14 @@ const modCommon = {
    * @param {String} flagInfo.furtherInfo Where required, further information.
    */
   createFlag: async function(flagInfo) {
-    const { msg, member } = flagInfo;
+    const { msg } = flagInfo;
+    let { member } = flagInfo;
+    member = member ?? msg?.member ?? msg?.author;
     const { matches, pingMods, snitch, flagReason, furtherInfo } = flagInfo;
 
-    const infractionSummary = await member.client.db.infraction.getSummary(member);
+    const client = msg.client ?? member?.client;
+
+    const infractionSummary = await client.db.infraction.getSummary(member);
     const embed = u.embed({ color: 0xff0000, author: member });
 
     if (Array.isArray(matches)) {
@@ -151,7 +155,7 @@ const modCommon = {
 
     if (msg && msg.channel.parentId == sf.channels.minecraftcategory) {
       embed.addField("User", member.username, true);
-      msg.client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
+      client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
     } else {
       embed.addField("User", member.toString(), true);
     }
@@ -168,7 +172,7 @@ const modCommon = {
 
     if (pingMods) {
       u.clean(msg, 0);
-      const ldsg = msg.client.guilds.cache.get(sf.ldsg);
+      const ldsg = client.guilds.cache.get(sf.ldsg);
       content = [];
       if (!member.roles.cache.has(sf.roles.muted)) {
         content.push(ldsg.roles.cache.get(sf.roles.mod).toString());
@@ -176,10 +180,10 @@ const modCommon = {
       if (member.bot) {
         content.push("The message has been deleted. The member was *not* muted, on account of being a bot.");
       } else {
-        if (!member.roles.cache.has(sf.roles.muted)) {
-          await member.roles.add(ldsg.roles.cache.get(sf.roles.muted));
-          if (member.voice.channel) {
-            member.voice.disconnect("Auto-mute");
+        if (!member.roles?.cache.has(sf.roles.muted)) {
+          await member.roles?.add(ldsg.roles.cache.get(sf.roles.muted));
+          if (member.voice?.channel) {
+            member.voice?.disconnect("Auto-mute");
           }
           ldsg.channels.cache.get(sf.channels.muted).send({
             content: `${member}, you have been auto-muted in ${msg.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`,
@@ -191,7 +195,7 @@ const modCommon = {
       content = content.join("\n");
     }
 
-    const card = await member.client.channels.cache.get(sf.channels.modlogs).send({
+    const card = await client.channels.cache.get(sf.channels.modlogs).send({
       content,
       embeds: [embed],
       components: (member.bot || !msg ? undefined : modActions),
@@ -205,10 +209,10 @@ const modCommon = {
         message: msg?.id,
         flag: card.id,
         description: msg?.cleanContent,
-        mod: member.client.user.id,
+        mod: client.user.id,
         value: 0
       };
-      await member.client.db.infraction.save(infraction);
+      await client.db.infraction.save(infraction);
     }
   },
 
