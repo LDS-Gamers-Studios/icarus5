@@ -11,12 +11,14 @@ const menuOptions = require("../data/modMenuOptions"),
 const isMsg = 1 << 0;
 const isMod = 1 << 1;
 const isMgr = 1 << 2;
+const canFlag = 1 << 3;
 
 function permCheck(inter) {
   return (
     (inter.targetType === "MESSAGE") * isMsg |
     p.isMod(inter) * isMod |
-    (p.isMgr(inter) || p.isMgmt(inter)) * isMgr
+    (p.isMgr(inter) || p.isMgmt(inter)) * isMgr |
+    (p.isMod(inter) && inter.member.roles.cache.has(sf.roles.trusted) && !inter.member.roles.cache.has(sf.roles.untrusted)) * canFlag
   );
 }
 
@@ -300,7 +302,8 @@ async function modMenu(inter) {
   const allMenuItems = new u.Collection()
   .set(0, ['userAvatar']) // 'userInfo',
   .set(isMsg, ['pinMessage'])
-  .set(isMod, ['banUser', 'flag', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
+  .set(canFlag, ['flag'])
+  .set(isMod, ['banUser', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
     'trustUser', 'trustPlusUser', 'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'warnUser', 'watchUser',
   .set(isMod + isMsg, ['purgeChannel']) // , 'warnMessage'
   .set(isMgr + isMsg, ['announceMessage']);
