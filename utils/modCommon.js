@@ -194,11 +194,11 @@ const modCommon = {
     const card = await member.client.channels.cache.get(sf.channels.modlogs).send({
       content,
       embeds: [embed],
-      components: (member.bot ? undefined : modActions),
+      components: (member.bot || !msg ? undefined : modActions),
       allowedMentions: { roles: [sf.roles.mod] }
     });
 
-    if (!member.bot) {
+    if (!member.bot && msg) {
       const infraction = {
         discordId: member.id,
         channel: msg?.channel.id,
