@@ -134,17 +134,16 @@ const modCommon = {
     const { msg } = flagInfo;
     let { member } = flagInfo;
     member = member ?? msg?.member ?? msg?.author;
-    const { matches, pingMods, snitch, flagReason, furtherInfo } = flagInfo;
+    let { matches } = flagInfo;
+    const { pingMods, snitch, flagReason, furtherInfo } = flagInfo;
 
     const client = msg.client ?? member?.client;
 
     const infractionSummary = await client.db.infraction.getSummary(member);
     const embed = u.embed({ color: 0xff0000, author: member });
 
-    if (Array.isArray(matches)) {
-      const swears = matches.join(", ");
-      if (matches) embed.addField("Match", swears);
-    }
+    if (Array.isArray(matches)) matches = matches.join(", ");
+    if (matches) embed.addField("Match", matches);
 
     if (msg) {
       embed.setTimestamp(msg.editedAt ?? msg.createdAt)
