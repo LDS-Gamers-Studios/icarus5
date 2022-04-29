@@ -4,7 +4,7 @@ const Augur = require("augurbot"),
   profanityFilter = require("profanity-matcher"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes"),
-  { MessageActionRow, MessageButton } = require("discord.js");
+  c = require("../utils/modCommon");
 
 const bannedWords = new RegExp(banned.words.join("|"), "i"),
   bannedLinks = new RegExp(`\\b(${banned.links.join("|").replaceAll(".", "\\.")})`, "i"),
@@ -14,20 +14,6 @@ const bannedWords = new RegExp(banned.words.join("|"), "i"),
 
 const grownups = new Map(),
   processing = new Set();
-
-const modActions = [
-  new MessageActionRow().addComponents(
-    new MessageButton().setCustomId("modCardClear").setEmoji("✅").setStyle("SUCCESS"),
-    new MessageButton().setCustomId("modCardVerbal").setEmoji("🗣").setStyle("PRIMARY"),
-    new MessageButton().setCustomId("modCardMinor").setEmoji("⚠").setStyle("DANGER"),
-    new MessageButton().setCustomId("modCardMajor").setEmoji("⛔").setStyle("DANGER"),
-    new MessageButton().setCustomId("modCardMute").setEmoji("🔇").setStyle("DANGER")
-  ),
-  new MessageActionRow().addComponents(
-    new MessageButton().setCustomId("modCardInfo").setEmoji("👤").setLabel("User Info").setStyle("SECONDARY"),
-    new MessageButton().setCustomId("modCardLink").setEmoji("🔗").setLabel("Link to Discuss").setStyle("SECONDARY")
-  )
-];
 
 /**
  * Give the mods a heads up that someone isn't getting their DMs.
@@ -53,7 +39,7 @@ function filter(msg, text) {
   const noWhiteSpace = text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~"'()?|]/g, "").replace(/\s\s+/g, " ");
   const filtered = pf.scan(noWhiteSpace);
   if ((filtered.length > 0) && filtered[0] && (noWhiteSpace.length > 0)) {
-    warnCard(msg, filtered);
+    c.createFlag({ msg, member: msg.member, matches: filtered });
     return true;
   } else { return false; }
 }
@@ -77,29 +63,31 @@ function processMessageLanguage(old, msg) {
   if (link = hasLink.exec(msg.cleanContent)) {
     if (match = bannedLinks.exec(msg.cleanContent)) {
       // Naughty Links
-      warnCard(msg, match, true);
+      c.createFlag({ msg, member: msg.member, matches: match, pingMods: true });
       return true;
     } else if (match = scamLinks.test(msg.cleanContent)) {
       // Scam Links
       u.clean(msg, 0);
       msg.reply({ content: "That link is generally believed to be a scam/phishing site. Please be careful!", failIfNotExists: false }).catch(u.noop);
-      warnCard(msg, ["Suspected scam links (Auto-Removed)"].concat(match));
+      c.createFlag({ msg, member: msg.member,
+        matches: ["Suspected scam links (Auto-Removed)"].concat(match) });
       return true;
     } else if ((match = bannedWords.exec(msg.cleanContent)) && (link[0].toLowerCase().includes("tenor") || link[0].toLowerCase().includes("giphy"))) {
       // Bad gif link
       u.clean(msg, 0);
       msg.reply({ content: "Looks like that link might have some harsh language. Please be careful!", failIfNotExists: false }).catch(u.noop);
-      warnCard(msg, ["Link Language (Auto-Removed)"].concat(match));
+      c.createFlag({ msg, member: msg.member,
+        matches: ["Link Language (Auto-Removed)"].concat(match) });
       return true;
     } else if (!msg.webhookId && !msg.author.bot && !msg.member.roles.cache.has(sf.roles.trusted)) {
       // General untrusted link flag
-      warnCard(msg, "Links prior to being trusted");
+      c.createFlag({ msg, member: msg.member, matches: "Links prior to being trusted" });
     }
   }
 
   // HARD LANGUAGE FILTER
   if (match = bannedWords.exec(msg.cleanContent)) {
-    warnCard(msg, match, true);
+    c.createFlag({ msg, member: msg.member, matches: match, pingMods: true });
     return true;
   }
 
@@ -111,7 +99,7 @@ function processMessageLanguage(old, msg) {
     let previewMatch;
     if (previewMatch = bannedWords.exec(preview)) {
       msg.reply({ content: "It looks like that link might have some harsh language in the preview. Please be careful!", failIfNotExists: false }).catch(u.noop);
-      warnCard(msg, ["Link preview language (Auto-Removed)"].concat(previewMatch));
+      c.createFlag({ msg, member: msg.member, matches: ["Link preview language (Auto-Removed)"].concat(previewMatch) });
       u.clean(msg, 0);
       break;
     }
@@ -138,7 +126,7 @@ function processDiscordInvites(msg) {
       if (invites.length > 0) {
         const external = invites.reduce((e, i) => (i && i.guild && (i.guild.id != sf.ldsg) ? e.concat(`Guild: ${i.guild.name}`, `Channel: ${i.channel.name}`) : e), ["External Discord Server Invite"]);
         if (external.length > 1) {
-          warnCard(msg, external);
+          c.createFlag({ msg, member: msg.member, matches: external });
           u.clean(msg, 0);
           msg.channel.send({ embeds: [
             u.embed({
@@ -149,7 +137,7 @@ function processDiscordInvites(msg) {
       }
     }).catch(e => {
       if (e && e.message == "Unknown Invite") {
-        warnCard(msg, "Unknown Discord Server Invite");
+        c.createFlag({ msg, member: msg.member, matches: "Unknown Discord Server Invite" });
         u.clean(msg, 0);
         msg.channel.send({ embeds: [
           u.embed({
@@ -159,88 +147,6 @@ function processDiscordInvites(msg) {
       } else { u.errorHandler(e, msg); }
     });
   }
-}
-
-/**
- * Generate and send a warning card in #mod-logs
- * @async
- * @function warnCard
- * @param {Discord.Message} msg The message for the warning.
- * @param {String|[String]} filtered The reason for the flag.
- * @param {Boolean} [call=false] Whether to ping the mods.
- */
-async function warnCard(msg, filtered, call) {
-  try {
-    const infractionSummary = await Module.db.infraction.getSummary(msg.author);
-    const embed = u.embed({ color: 0xff0000, author: msg.member, timestamp: (msg.editedAt ?? msg.createdAt) })
-    .setDescription((msg.editedAt ? "[Edited]\n" : "") + msg.cleanContent)
-    .setURL(msg.url);
-
-    if (Array.isArray(filtered)) filtered = filtered.join(", ");
-    if (filtered) embed.addField("Match", filtered);
-
-    embed.addField("Channel", msg.channel?.toString(), true)
-    .addField("Jump to Post", `[Original Message](${msg.url})`, true);
-
-    // Minecraft Filter
-    if (msg.channel.parentId == sf.channels.minecraftcategory) {
-      embed.addField("User", msg.author.username, true);
-      msg.client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
-    } else {
-      embed.addField("User", msg.author.toString(), true);
-    }
-
-    embed.addField(`Infraction Summary (${infractionSummary.time} Days)`, `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`);
-    if (msg.author.bot) embed.setFooter({ text: "The user is a bot and the flag likely originated elsewhere. No action will be processed." });
-
-    let content;
-
-    if (call) {
-      u.clean(msg, 0);
-      const ldsg = msg.client.guilds.cache.get(sf.ldsg);
-      content = [];
-      if (!msg.member?.roles.cache.has(sf.roles.muted)) {
-        content.push(ldsg.roles.cache.get(sf.roles.mod).toString());
-      }
-      if (msg.author.bot) {
-        content.push("The message has been deleted. The member was *not* muted, on account of being a bot.");
-      } else {
-        if (!msg.member.roles.cache.has(sf.roles.muted)) {
-          await msg.member.roles.add(ldsg.roles.cache.get(sf.roles.muted));
-          if (msg.member.voice.channel) {
-            msg.member.voice.disconnect("Auto-mute");
-          }
-          ldsg.channels.cache.get(sf.channels.muted).send({
-            content: `${msg.member}, you have been auto-muted in ${msg.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`,
-            allowedMentions: { users: [msg.member.id] }
-          });
-        }
-        content.push("The mute role has been applied and message deleted.");
-      }
-      content = content.join("\n");
-    }
-
-    const card = await msg.client.channels.cache.get(sf.channels.modlogs).send({
-      content,
-      embeds: [embed],
-      components: (msg.author.bot ? undefined : modActions),
-      allowedMentions: { roles: [sf.roles.mod] }
-    });
-
-    if (!msg.author.bot) {
-      const infraction = {
-        discordId: msg.author.id,
-        channel: msg.channel.id,
-        message: msg.id,
-        flag: card.id,
-        description: msg.cleanContent,
-        mod: msg.client.user.id,
-        value: 0
-      };
-      await Module.db.infraction.save(infraction);
-    }
-
-  } catch (error) { u.errorHandler(error, "Mod Card Creation"); }
 }
 
 /**

@@ -24,6 +24,7 @@
   "events": [
     "channelCreate",
     "channelUpdate",
+    "filterUpdate",
     "guildBanAdd",
     "guildMemberAdd",
     "guildMemberRemove",
@@ -36,7 +37,8 @@
     "presenceUpdate",
     "ready",
     "threadCreate",
-    "userUpdate"
+    "userUpdate",
+    "voiceStateUpdate"
   ],
   "google": {
     "api": "",

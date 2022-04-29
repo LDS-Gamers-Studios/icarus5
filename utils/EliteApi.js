@@ -1,6 +1,6 @@
 const https = require("https");
 
-function request({ path, method = "GET", hostname = "www.edsm.net", params }) {
+function request({ path, method = "GET", hostname = "www.edsm.net", params = {} }) {
   return new Promise((fulfill, reject) => {
     const options = {
       hostname,
@@ -16,7 +16,7 @@ function request({ path, method = "GET", hostname = "www.edsm.net", params }) {
 
       res.on("end", () => {
         try {
-          fulfill(JSON.parse(data));
+          fulfill(JSON.parse(data.replace(/<br \\\/>/g, "\\n")));
         } catch (e) {
           reject(e);
         }
@@ -34,6 +34,14 @@ function fetchSystemFactions(systemName) {
   });
 }
 
+function fetchGalnetFeed() {
+  return request({
+    hostname: "www.alpha-orbital.com",
+    path: "/galnet-feed"
+  });
+}
+
 module.exports = {
+  fetchGalnetFeed,
   fetchSystemFactions
 };

@@ -15,6 +15,7 @@ const guildCommandFiles = [
   "slashBank.json",
   "slashRank.json",
   "slashMod.json",
+  "slashVoice.json",
   "userMod.json"
 ];
 const permissionData = new Collection();

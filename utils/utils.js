@@ -181,8 +181,8 @@ const utils = {
     } else {
       await message.edit({ embeds: [
         response
-        .setDescription(`Got your response! Please see original message.\n\n\`\`\`\n${collected.first()}\n\`\`\``)
-        .setFooter({ text: `Question was \`${msg}\`` })
+        .setDescription(`Got your response! Please see original message.\n\`\`\`\n${collected.first()}\n\`\`\``)
+        .addField("Original Question", msg, false)
       ] });
       return collected.first();
     }
