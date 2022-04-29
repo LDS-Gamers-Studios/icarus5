@@ -110,7 +110,7 @@ function parseVerseRange(verses) {
   let versesNums;
   if (verses) {
     verses = verses.replace(/ /g, "");
-    const versesList = verses.split(",");
+    const versesList = verses.split(/[,;]/);
     versesNums = new Array();
     const rangeRegex = /(\d+)(?:-(\d+))?/;
     for (const range of versesList) {
@@ -157,9 +157,9 @@ async function slashGospelComeFollowMe(interaction) {
   if (manual) {
     // Add full weeks and check partial weeks by day of week comparison
     let week = ((date.getDay() + 6) % 7 < (jan1.getDay() + 6) % 7 ? 2 : 1) + Math.floor((date - jan1) / (1000 * 60 * 60 * 24 * 7));
-    // Account for General Conference
-    if ((date.getMonth() == 3 && (date.getDate() - date.getDay()) >= 0) || date.getMonth() > 3) week -= 1;
-    if ((date.getMonth() == 9 && (date.getDate() - date.getDay()) >= 0) || date.getMonth() > 9) week -= 1;
+    // Account for General Conference - this was needed in 2020 but is kept here commented in case it's needed again.
+    // if ((date.getMonth() == 3 && (date.getDate() - date.getDay()) >= 0) || date.getMonth() > 3) week -= 1;
+    // if ((date.getMonth() == 9 && (date.getDate() - date.getDay()) >= 0) || date.getMonth() > 9) week -= 1;
 
     const link = `https://www.churchofjesuschrist.org/study/manual/come-follow-me-for-individuals-and-families-${manual}/${week.toString().padStart(2, "0")}`;
 
