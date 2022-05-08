@@ -153,7 +153,7 @@ const modCommon = {
     }
 
     if (msg && msg.channel.parentId == sf.channels.minecraftcategory) {
-      embed.addField("User", member.username, true);
+      embed.addField("User", (member.displayName ?? (await member.fetch()).displayName), true);
       client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
     } else {
       embed.addField("User", member.toString(), true);
