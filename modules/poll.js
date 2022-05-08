@@ -5,8 +5,8 @@ const Augur = require("augurbot"),
 
 const activeVotes = [];
 
-async function vote(inter) {
-  await inter.reply({ content: "Creating your vote!" });
+async function poll(inter) {
+  await inter.reply({ content: "Creating your poll!" });
   const title = inter.options.getString("title");
   const optionsString = inter.options.getString("options");
   const duration = inter.options.getNumber("duration") ?? 60;
@@ -44,6 +44,6 @@ async function vote(inter) {
 }
 
 const Module = new Augur.Module()
-.addInteractionCommand({ name: "Vote", commandId: sf.commands.vote, process: vote });
+.addInteractionCommand({ name: "Vote", commandId: sf.commands.poll, process: poll });
 
 module.exports = Module;
