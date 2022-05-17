@@ -279,9 +279,13 @@ const processes = {
     console.log(interaction, target); // Stuff goes here
   },
   purgeChannel: async function(interaction, target) {
-    await interaction.deferUpdate({ ephemeral: true });
-    const dm = await u.awaitDM("What is the reason for this purge?", interaction.member);
-    if (!dm) {
+    const reason = await u.modalInput(
+      "More Info Needed",
+      "What is the reason for this purge?",
+      "A reason must be provided.",
+      interaction
+    );
+    if (!reason) {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Channel purge cancelled`)
@@ -309,7 +313,7 @@ const processes = {
       u.embed({ author: interaction.member })
       .setTitle("Channel Purge")
       .setDescription(`**${interaction.member}** purged messages in ${interaction.channel}`)
-      .addField('Reason', dm.content)
+      .addField('Reason', reason)
       .setColor(0x00ff00)
     ] });
     await interaction.followUp({ content: `Channel purged.`, ephemeral: true });
