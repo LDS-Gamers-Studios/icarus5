@@ -177,10 +177,13 @@ const processes = {
     console.log(interaction, target); // Stuff goes here
   },
   noteUser: async function(interaction, target) {
-    await interaction.deferUpdate({ ephemeral: true });
-    await interaction.editReply("Please check your DMs from me.");
-    const dm = await u.awaitDM("What is the note would you like to add?", interaction.member);
-    if (!dm) {
+    const note = await u.modalInput(
+      "More Info Needed",
+      "What is the note would you like to add?",
+      "",
+      interaction
+    );
+    if (!note) {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Note cancelled`)
@@ -188,7 +191,8 @@ const processes = {
       return;
     }
 
-    await c.note(interaction, getTargetUser(target), dm.content);
+    await interaction.editReply("Note added.");
+    await c.note(interaction, getTargetUser(target), note);
   },
   renameUser: async function(interaction, target) {
     await interaction.deferUpdate({ ephemeral: true });
