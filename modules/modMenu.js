@@ -240,10 +240,13 @@ const processes = {
     await c.timeout(interaction, getTargetUser(target), reason);
   },
   kickUser: async function(interaction, target) {
-    await interaction.deferUpdate({ ephemeral: true });
-    await interaction.editReply("Please check your DMs from me.");
-    const dm = await u.awaitDM("What is the reason for this kick?", interaction.member);
-    if (!dm) {
+    const reason = await u.modalInput(
+      "More Info Needed",
+      "What is the reason for this kick?",
+      "A reason must be provided to kick a user.",
+      interaction
+    );
+    if (!reason) {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Kick cancelled`)
@@ -251,13 +254,17 @@ const processes = {
       return;
     }
 
-    await c.kick(interaction, getTargetUser(target), dm.content);
+    await interaction.editReply("Kick initiated.");
+    await c.kick(interaction, getTargetUser(target), reason);
   },
   banUser: async function(interaction, target) {
-    await interaction.deferUpdate({ ephemeral: true });
-    await interaction.editReply("Please check your DMs from me.");
-    const dm = await u.awaitDM("What is the reason for this ban?", interaction.member);
-    if (!dm) {
+    const reason = await u.modalInput(
+      "More Info Needed",
+      "What is the reason for this ban?",
+      "A reason must be provided to ban a user.",
+      interaction
+    );
+    if (!reason) {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Ban cancelled`)
@@ -265,7 +272,8 @@ const processes = {
       return;
     }
 
-    await c.ban(interaction, getTargetUser(target), dm.content, 1);
+    await interaction.editReply("Ban initiated.");
+    await c.ban(interaction, getTargetUser(target), reason, 1);
   },
   warnMessage: async function(interaction, target) {
     console.log(interaction, target); // Stuff goes here
