@@ -68,12 +68,11 @@ async function menu(options, interaction, target) {
     await interaction.editReply({ embeds, components: [ ] });
     return;
   }
-  await menuSelect.deferUpdate({ ephemeral: true });
 
   embeds[0].setTitle("Action Selected")
   .setColor("GREEN")
   .addField("Selection", options.find(o => o.value === menuSelect.values[0]).label);
-  await interaction.editReply({ embeds, components: [ ] });
+  interaction.editReply({ embeds, components: [ ] });
 
   return menuSelect;
 }
@@ -100,7 +99,12 @@ const processes = {
 
     let extra;
     if (['badVibes', 'harassment', 'modAbuse', 'nominate'].includes(menuSelect.values[0])) {
-      extra = await u.awaitDM(`You selected "${reason}." Please provide more information (one message only).`, interaction.member, 300);
+      extra = await u.modalInput(
+        "More Info Needed",
+        "Please provide more information.",
+        `You selected "${reason}." This selection requires more information.`,
+        menuSelect,
+        300_000);
       if (!extra) {
         await interaction.editReply({ embeds: [
           u.embed({ author: interaction.member }).setColor(0x0000ff)
@@ -117,7 +121,7 @@ const processes = {
         member: targetUser,
         snitch: interaction.member,
         flagReason: reason,
-        furtherInfo: extra?.content
+        furtherInfo: extra
       };
       if (target instanceof Discord.Message) flagInfo.msg = target;
       await c.createFlag(flagInfo);
@@ -311,6 +315,7 @@ async function modMenu(inter) {
   const menuItems = getMenuItems(menuOptions, allMenuItems, includeKey);
   const menuSelect = await menu(menuItems, inter, target);
   if (!menuSelect) return;
+  await menuSelect.deferUpdate({ ephemeral: true });
 
   await processes[menuSelect.values[0]](menuSelect, target);
 }
