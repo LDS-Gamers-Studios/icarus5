@@ -411,7 +411,7 @@ const modCommon = {
     // Log it
     await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
       u.embed({ author: interaction.member })
-      .setTitle("Channel Purge")
+      .setTitle("User Timeout")
       .setDescription(`**${interaction.member}** timed out ${target}`)
       .addField('Reason', reason)
       .setColor(0x00ff00)
