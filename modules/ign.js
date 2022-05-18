@@ -1,7 +1,6 @@
 const Augur = require("augurbot");
 const u = require("../utils/utils");
 const sf = require("../config/snowflakes.json");
-const t = require("discord.js");
 
 const Ign = {
   categories: [
@@ -66,10 +65,6 @@ function createIgnEmbed(user, igns) {
   } else { return false; } // Why are we mixing types
 }
 
-/**
- * a
- * @param {t.CommandInteraction} interaction
- */
 async function slashIgnView(interaction) {
   const user = interaction.options.getMember("target", false) || interaction.user;
   let system = interaction.options.getString("system", false);
