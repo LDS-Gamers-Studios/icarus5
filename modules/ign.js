@@ -200,11 +200,40 @@ const Module = new Augur.Module()
     try {
       const systems = await Module.config.sheets.get("IGN").getRows();
       Ign.gameids = new u.Collection(systems.map(s => [s["System"], new GameSystem(s)]));
-    } catch (e) {
-      u.errorHandler(e, "ign.js Load Config");
-    }
 
+      let helpList = ["```md"];
 
+      for (const category of Ign.categories) {
+        const categoryList = ["# " + category];
+        for (const system of Ign.gameids.filter(s => s.display && s.category == category).sort((a, b) => a.system.localeCompare(b.system)).values()) {
+          categoryList.push(`* ${system.system} (${system.name})`);
+        }
+        if (categoryList.length > 1) {
+          helpList = helpList.concat(categoryList);
+          helpList.push("");
+        }
+      }
+
+      helpList.push("```");
+      helpList = helpList.join("\n");
+
+      // In the past, this code was used to generate the help text.
+      // In the future, this could be used to make autocomplete for the system names.
+
+      const aliases = await Module.config.sheets.get("IGN Aliases").getRows();
+      Ign.aliases = new u.Collection(aliases.map(a => [a["Alias"], a["System"]]));
+
+      const fs = require("fs");
+      fs.writeFileSync("./storage/ignInfo.json", JSON.stringify({
+        categories: Ign.categories,
+        aliases: Array.from(Ign.aliases.entries()),
+        gameids: Array.from(Ign.gameids.entries())
+      }));
+    } catch (error) { u.errorHandler(error, "ign.js loadConfig"); }
   })
+  .setUnload(() => {
+    const path = require("path");
+    delete require.cache[require.resolve(path.resolve(process.cwd(), "./utils/IgnInfo.js"))];
+  });
 
-  ;
+module.exports = Module;
