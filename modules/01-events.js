@@ -4,7 +4,7 @@ const Augur = require("augurbot"),
   moment = require("moment");
 
 const ductTapeExclude = true;
-const emojis = new u.Collection(require('../data/sponsorReactions.json'));
+const emojis = require('../data/sponsorReactions.json');
 const Module = new Augur.Module()
 .addEvent("channelCreate", (channel) => {
   try {
@@ -188,13 +188,16 @@ const Module = new Augur.Module()
 })
 .addEvent("messageCreate", async (msg) => {
   if (!msg.author.bot && msg.guild && msg.guild.id == sf.ldsg) {
-
-    // Sponsor Pings
-    for (const [sponsor, emoji] of emojis) if (msg.mentions.members.has(sponsor)) msg.react(emoji).catch(u.noop);
-    // General Weirdness
-    if (Math.random() < 0.3 && msg.content.toLowerCase().includes("buttermelon") && emojis.get("buttermelon")) await msg.react(emojis.get("buttermelon")).catch(u.noop);
-    if (Math.random() < 0.3 && msg.content.toLowerCase().includes("carp") && emojis.get("carp")) await msg.react(emojis.get("carp")).catch(u.noop);
-    if (Math.random() < 0.3 && msg.content.toLowerCase().includes("noice") && emojis.get("noice")) await msg.react(emojis.get("noice")).catch(u.noop);
+    let i = 0;
+    do {
+      const [sponsor, emoji] = emojis[i];
+      // Sponsor Pings
+      console.log(!(!isNaN(sponsor) && sponsor.length == 18) && msg.content.toLowerCase().includes(sponsor));
+      if (msg.mentions.members.has(sponsor)) await msg.react(emoji).catch(u.noop);
+      // Filter out any IDs, just in case someone puts in the ID without pinging the person, then do trigger word reactions
+      else if (!(!isNaN(sponsor) && sponsor.length == 18) && Math.random() < 0.3 && msg.content.toLowerCase().includes(sponsor)) await msg.react(emoji).catch(u.noop);
+      i++;
+    } while (i < emojis.length);
   }
 });
 
