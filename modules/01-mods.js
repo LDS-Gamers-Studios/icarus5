@@ -6,7 +6,6 @@ const Augur = require("augurbot"),
   profanityFilter = require("profanity-matcher"),
   c = require("../utils/modCommon");
 
-const pf = new profanityFilter();
 
 /**
  * Give the mods a heads up that someone isn't getting their DMs.
@@ -54,6 +53,7 @@ async function slashModBan(interaction) {
 }
 
 async function slashModFilter(interaction) {
+  const pf = new profanityFilter();
   await interaction.deferReply({ ephemeral: true });
   const word = interaction.options.getString("word").toLowerCase().trim();
   const member = interaction.member;

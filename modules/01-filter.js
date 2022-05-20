@@ -11,6 +11,8 @@ const bannedWords = new RegExp(banned.words.join("|"), "i"),
   hasLink = /http(s)?:\/\/(\w+(-\w+)*\.)+\w+/,
   scamLinks = new RegExp(`\\b(${banned.scam.join("|").replaceAll(".", "\\.")})`, "i");
 
+let pf = new profanityFilter();
+
 const grownups = new Map(),
   processing = new Set();
 
@@ -35,7 +37,6 @@ function blocked(member) {
  */
 function filter(msg, text) {
   // PROFANITY FILTER
-  const pf = new profanityFilter();
   const noWhiteSpace = text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~"'()?|]/g, "").replace(/\s\s+/g, " ");
   const filtered = pf.scan(noWhiteSpace);
   if ((filtered.length > 0) && filtered[0] && (noWhiteSpace.length > 0)) {
