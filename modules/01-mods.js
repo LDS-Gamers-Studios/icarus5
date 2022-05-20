@@ -56,28 +56,28 @@ async function slashModBan(interaction) {
 async function slashModFilter(interaction) {
   await interaction.deferReply({ ephemeral: true });
   const word = interaction.options.getString("word").toLowerCase().trim();
-  const user = interaction.member;
+  const member = interaction.member;
   const modLogs = interaction.guild.channels.cache.get(sf.channels.modlogs);
   const filtered = pf.scan(word);
   const apply = interaction.options.getBoolean("apply") ?? true;
-  if (!user.roles.cache.has(sf.roles.management) && !user.roles.cache.has(sf.roles.manager) && !sf.adminId.includes(user.id)) {
-    interaction.editReply("This command is for management only.");
+  if (!p.isMgmt(interaction) && !p.isMgr(interaction) && !p.isAdmin(interaction)) {
+    interaction.editReply("This command is for Management, Discord Manager, and Bot Admins only.");
     return;
   }
   if (apply) {
     if (filtered != word && pf.add_word(word)) {
-      const embed = u.embed({ author: user })
+      const embed = u.embed({ author: member })
       .setTitle("Word added to the language filter.")
-      .setDescription(`<@${user.id}> added "${word}" to the language filter.`);
+      .setDescription(`${member} added "${word}" to the language filter.`);
       await modLogs.send({ embeds: [embed] });
       await interaction.editReply(`"${word}" was added to the language filter.`);
     } else {
       await interaction.editReply(`"${word}" was already in the language filter.`);
     }
   } else if (pf.remove_word(word)) {
-    const embed = u.embed({ author: user })
+    const embed = u.embed({ author: member })
     .setTitle("Word removed from language filter.")
-    .setDescription(`<@${user.id}> removed "${word}" from the language filter.`);
+    .setDescription(`${member} removed "${word}" from the language filter.`);
     await modLogs.send({ embeds: [embed] });
     await interaction.editReply(`"${word}" has been removed from the language filter.`);
   } else {
