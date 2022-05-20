@@ -186,17 +186,15 @@ const Module = new Augur.Module()
     }
   } catch (error) { u.errorHandler(error, `User Update Error: ${u.escapeText(newUser?.username)} (${newUser.id})`); }
 })
-.addEvent("messageCreate", (msg) => {
+.addEvent("messageCreate", async (msg) => {
   if (!msg.author.bot && msg.guild && msg.guild.id == sf.ldsg) {
 
     // Sponsor Pings
     for (const [sponsor, emoji] of emojis) if (msg.mentions.members.has(sponsor)) msg.react(emoji).catch(u.noop);
     // General Weirdness
-    if (Math.random() < 0.3) {
-      if (msg.content.toLowerCase().includes("buttermelon") && emojis.get("buttermelon")) msg.react(emojis.get("buttermelon")).catch(u.noop);
-      if (msg.content.toLowerCase().includes("carp") && emojis.get("carp")) msg.react(emojis.get("carp")).catch(u.noop);
-      if (msg.content.toLowerCase().includes("noice") && emojis.get("noice")) msg.react(emojis.get("noice")).catch(u.noop);
-    }
+    if (Math.random() < 0.3 && msg.content.toLowerCase().includes("buttermelon") && emojis.get("buttermelon")) await msg.react(emojis.get("buttermelon")).catch(u.noop);
+    if (Math.random() < 0.3 && msg.content.toLowerCase().includes("carp") && emojis.get("carp")) await msg.react(emojis.get("carp")).catch(u.noop);
+    if (Math.random() < 0.3 && msg.content.toLowerCase().includes("noice") && emojis.get("noice")) await msg.react(emojis.get("noice")).catch(u.noop);
   }
 });
 
