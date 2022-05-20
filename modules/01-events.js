@@ -1,10 +1,10 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
-  sf = require("../config/snowflakes"),
+  sf = require("../config/snowflakes.json"),
   moment = require("moment");
 
 const ductTapeExclude = true;
-
+const emojis = new u.Collection(require('../data/sponsorReactions.json'));
 const Module = new Augur.Module()
 .addEvent("channelCreate", (channel) => {
   try {
@@ -185,6 +185,19 @@ const Module = new Augur.Module()
       ldsg.channels.cache.get(sf.channels.userupdates).send({ content: `${newUser}: ${newUser.id}`, embeds: [embed] });
     }
   } catch (error) { u.errorHandler(error, `User Update Error: ${u.escapeText(newUser?.username)} (${newUser.id})`); }
+})
+.addEvent("messageCreate", (msg) => {
+  if (!msg.author.bot && msg.guild && msg.guild.id == sf.ldsg) {
+
+    // Sponsor Pings
+    for (const [sponsor, emoji] of emojis) if (msg.mentions.members.has(sponsor)) msg.react(emoji).catch(u.noop);
+    // General Weirdness
+    if (Math.random() < 0.3) {
+      if (msg.content.toLowerCase().includes("buttermelon") && emojis.get("buttermelon")) msg.react(emojis.get("buttermelon")).catch(u.noop);
+      if (msg.content.toLowerCase().includes("carp") && emojis.get("carp")) msg.react(emojis.get("carp")).catch(u.noop);
+      if (msg.content.toLowerCase().includes("noice") && emojis.get("noice")) msg.react(emojis.get("noice")).catch(u.noop);
+    }
+  }
 });
 
 module.exports = Module;
