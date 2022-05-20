@@ -29,6 +29,18 @@ function filterUnique(e, i, a) {
   return (a.indexOf(a.find(g => g["Game Title"] == e["Game Title"] && g["System"] == e["System"])) == i);
 }
 
+function getHouseInfo(member) {
+  const houseInfo = new u.Collection()
+    .set(sf.roles.housebb, { name: "Brightbeam", color: "#00a1da" })
+    .set(sf.roles.housefb, { name: "Freshbeast", color: "#fdd023" })
+    .set(sf.roles.housesc, { name: "Starcamp", color: "#e32736" });
+
+  for (const [k, v] of houseInfo) {
+    if (member.roles.cache.has(k)) return v;
+  }
+  return { name: "Unsorted", color: config.color };
+}
+
 async function slashBankGive(interaction) {
   try {
     const giver = interaction.member;
@@ -107,7 +119,7 @@ async function slashBankGive(interaction) {
       .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
       .addField("Reason", reason)
       .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
-      hoh.send({ content: `<@${sf.roles.manager}>`, embeds: [hohEmbed] });
+      hoh.send({ content: `<@&${sf.roles.manager}>`, embeds: [hohEmbed] });
     }
   } catch (e) { u.errorHandler(e, interaction); }
 }
@@ -355,9 +367,12 @@ async function slashBankAward(interaction) {
     .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
     giver.send({ embeds: [embed] }).catch(u.noop);
 
+    const house = getHouseInfo(recipient);
+
     const mopbucket = interaction.client.channels.cache.get(sf.channels.mopbucketawards);
-    embed = u.embed()
-    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
+    embed = u.embed({ author: interaction.client.user })
+    .setColor(house.color)
+    .addField("House", house.name)
     .addField("Reason", reason)
     .setDescription(`**${giver}** ${value > 0 ? `awarded ${recipient} ${ember}${value}.` : `docked ${recipient} ${ember}${-value}.`}`);
     mopbucket.send({ embeds: [embed] });

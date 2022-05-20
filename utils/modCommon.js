@@ -1,6 +1,21 @@
 const Discord = require("discord.js"),
   u = require("../utils/utils"),
-  sf = require("../config/snowflakes.json");
+  sf = require("../config/snowflakes.json"),
+  { MessageActionRow, MessageButton } = require("discord.js");
+
+const modActions = [
+  new MessageActionRow().addComponents(
+    new MessageButton().setCustomId("modCardClear").setEmoji("✅").setStyle("SUCCESS"),
+    new MessageButton().setCustomId("modCardVerbal").setEmoji("🗣").setStyle("PRIMARY"),
+    new MessageButton().setCustomId("modCardMinor").setEmoji("⚠").setStyle("DANGER"),
+    new MessageButton().setCustomId("modCardMajor").setEmoji("⛔").setStyle("DANGER"),
+    new MessageButton().setCustomId("modCardMute").setEmoji("🔇").setStyle("DANGER")
+  ),
+  new MessageActionRow().addComponents(
+    new MessageButton().setCustomId("modCardInfo").setEmoji("👤").setLabel("User Info").setStyle("SECONDARY"),
+    new MessageButton().setCustomId("modCardLink").setEmoji("🔗").setLabel("Link to Discuss").setStyle("SECONDARY")
+  )
+];
 
 /**
   * Give the mods a heads up that someone isn't getting their DMs.
@@ -32,25 +47,6 @@ function nameGen() {
 }
 
 const modCommon = {
-  getSummaryEmbed: async (member, time, guild) => {
-    const data = await member.client.db.infraction.getSummary(member.id, time);
-    const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
-    if ((data.count > 0) && (data.detail.length > 0)) {
-      data.detail = data.detail.reverse(); // Newest to oldest is what we want
-      for (const record of data.detail) {
-        const mod = guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
-        const pointsPart = record.value === 0 && mod.id !== member.client.user.id ? "Note" : `${record.value} pts`;
-        response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
-      }
-    }
-    let text = response.join("\n");
-    text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
-    return u.embed({ author: member })
-      .setTitle("Infraction Summary")
-      .setDescription(text)
-      .setColor(0x00ff00);
-  },
-
   ban: async function(interaction, target, reason, days) {
     try {
       if (!compareRoles(interaction.member, target)) {
@@ -120,6 +116,122 @@ const modCommon = {
       }
       u.cleanInteraction(interaction);
     } catch (error) { u.errorHandler(error, interaction); }
+  },
+
+  /**
+   * Generate and send a warning card in #mod-logs
+   * @async
+   * @function createFlag
+   * @param {Discord.Message} flagInfo.msg The message for the warning.
+   * @param {Discord.GuildMember} flagInfo.member The member for the warning.
+   * @param {String|[String]} flagInfo.matches If automatic, the reason for the flag.
+   * @param {Boolean} flagInfo.pingMods Whether to ping the mods.
+   * @param {Discord.GuildMember} flagInfo.snitch The user bringing up the message.
+   * @param {String} flagInfo.flagReason The reason the user is bringing it up.
+   * @param {String} flagInfo.furtherInfo Where required, further information.
+   */
+  createFlag: async function(flagInfo) {
+    const { msg } = flagInfo;
+    let { member } = flagInfo;
+    member = member ?? msg?.member ?? msg?.author;
+    let { matches } = flagInfo;
+    const { pingMods, snitch, flagReason, furtherInfo } = flagInfo;
+
+    const client = msg.client ?? member?.client;
+
+    const infractionSummary = await client.db.infraction.getSummary(member);
+    const embed = u.embed({ color: 0xff0000, author: member });
+
+    if (Array.isArray(matches)) matches = matches.join(", ");
+    if (matches) embed.addField("Match", matches);
+
+    if (msg) {
+      embed.setTimestamp(msg.editedAt ?? msg.createdAt)
+      .setDescription((msg.editedAt ? "[Edited]\n" : "") + msg.cleanContent)
+      .addField("Channel", msg.channel?.toString(), true)
+      .addField("Jump to Post", `[Original Message](${msg.url})`, true);
+    }
+
+    if (msg && msg.channel.parentId == sf.channels.minecraftcategory) {
+      embed.addField("User", (member.displayName ?? (await member.fetch()).displayName), true);
+      client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
+    } else {
+      embed.addField("User", member.toString(), true);
+    }
+
+    let content;
+    if (snitch) {
+      embed.addField("Flagged By", snitch.toString(), true)
+      .addField("Reason", flagReason, true);
+      if (furtherInfo) embed.addField("Further Information", furtherInfo, true);
+    }
+
+    embed.addField(`Infraction Summary (${infractionSummary.time} Days)`, `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`);
+    if (member.bot) embed.setFooter({ text: "The user is a bot and the flag likely originated elsewhere. No action will be processed." });
+
+    if (pingMods) {
+      u.clean(msg, 0);
+      const ldsg = client.guilds.cache.get(sf.ldsg);
+      content = [];
+      if (!member.roles.cache.has(sf.roles.muted)) {
+        content.push(ldsg.roles.cache.get(sf.roles.mod).toString());
+      }
+      if (member.bot) {
+        content.push("The message has been deleted. The member was *not* muted, on account of being a bot.");
+      } else {
+        if (!member.roles?.cache.has(sf.roles.muted)) {
+          await member.roles?.add(ldsg.roles.cache.get(sf.roles.muted));
+          if (member.voice?.channel) {
+            member.voice?.disconnect("Auto-mute");
+          }
+          ldsg.channels.cache.get(sf.channels.muted).send({
+            content: `${member}, you have been auto-muted in ${msg.guild.name}. Please review our Code of Conduct. A member of the mod team will be available to discuss more details.\n\nhttp://ldsgamers.com/code-of-conduct`,
+            allowedMentions: { users: [member.id] }
+          });
+        }
+        content.push("The mute role has been applied and message deleted.");
+      }
+      content = content.join("\n");
+    }
+
+    const card = await client.channels.cache.get(sf.channels.modlogs).send({
+      content,
+      embeds: [embed],
+      components: (member.bot || !msg ? undefined : modActions),
+      allowedMentions: { roles: [sf.roles.mod] }
+    });
+
+    if (!member.bot && msg) {
+      const infraction = {
+        discordId: member.id,
+        channel: msg?.channel.id,
+        message: msg?.id,
+        flag: card.id,
+        description: msg?.cleanContent,
+        mod: client.user.id,
+        value: 0
+      };
+      await client.db.infraction.save(infraction);
+    }
+  },
+
+  getSummaryEmbed: async function(member, time, guild) {
+    const data = await member.client.db.infraction.getSummary(member.id, time);
+    const response = [`**${member}** has had **${data.count}** infraction(s) in the last **${data.time}** day(s), totaling **${data.points}** points.`];
+    if ((data.count > 0) && (data.detail.length > 0)) {
+      data.detail = data.detail.reverse(); // Newest to oldest is what we want
+      for (const record of data.detail) {
+        const mod = guild.members.cache.get(record.mod) || `Unknown Mod (<@${record.mod}>)`;
+        const pointsPart = record.value === 0 && mod.id !== member.client.user.id ? "Note" : `${record.value} pts`;
+        response.push(`\`${record.timestamp.toLocaleDateString()}\` (${pointsPart}, modded by ${mod}): ${record.description}`);
+      }
+    }
+    let text = response.join("\n");
+    text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
+    return u.embed({ author: member })
+      .setTitle("Infraction Summary")
+      .setDescription(text)
+      .setColor(0x00ff00);
   },
 
   kick: async function(interaction, target, reason) {
@@ -299,7 +411,7 @@ const modCommon = {
     // Log it
     await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
       u.embed({ author: interaction.member })
-      .setTitle("Channel Purge")
+      .setTitle("User Timeout")
       .setDescription(`**${interaction.member}** timed out ${target}`)
       .addField('Reason', reason)
       .setColor(0x00ff00)

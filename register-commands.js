@@ -13,8 +13,10 @@ const globalCommandFiles = [
 const guildCommandFiles = [
   "messageMod.json",
   "slashBank.json",
+  "slashGospel.json",
   "slashRank.json",
   "slashMod.json",
+  "slashVoice.json",
   "userMod.json"
 ];
 const permissionData = new Collection();
