@@ -1,10 +1,12 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes.json"),
-  moment = require("moment");
+  moment = require("moment"),
+  { GoogleSpreadsheet } = require("google-spreadsheet"),
+  config = require('../config/config.json');
 
 const ductTapeExclude = true;
-const emojis = require('../data/sponsorReactions.json');
+let emojis = [];
 const Module = new Augur.Module()
 .addEvent("channelCreate", (channel) => {
   try {
@@ -186,19 +188,29 @@ const Module = new Augur.Module()
     }
   } catch (error) { u.errorHandler(error, `User Update Error: ${u.escapeText(newUser?.username)} (${newUser.id})`); }
 })
+.setInit(async () => {
+  const doc = new GoogleSpreadsheet(config.google.sheets.config);
+  try {
+    await doc.useServiceAccountAuth(config.google.creds);
+    await doc.loadInfo();
+    const channels = await doc.sheetsByTitle["Sponsor Channels"].getRows();
+    emojis = Array.from(channels.map(x => [x["Sponsor ID"], x["Sponsor Emoji"]]));
+    emojis = emojis.concat([
+      ["buttermelon", "305039588014161921"],
+      ["noice", "633500960483704843"],
+      ["carp", "🐟"]
+    ]);
+  } catch (e) { u.errorHandler(e, "Load Sponsor Reactions"); }
+})
 .addEvent("messageCreate", async (msg) => {
   if (!msg.author.bot && msg.guild && msg.guild.id == sf.ldsg) {
-    let i = 0;
-    do {
-      const [sponsor, emoji] = emojis[i];
-      // Sponsor Pings
-      console.log(!(!isNaN(sponsor) && sponsor.length == 18) && msg.content.toLowerCase().includes(sponsor));
+    for (const [sponsor, emoji] of emojis) {
       if (msg.mentions.members.has(sponsor)) await msg.react(emoji).catch(u.noop);
-      // Filter out any IDs, just in case someone puts in the ID without pinging the person, then do trigger word reactions
-      else if (!(!isNaN(sponsor) && sponsor.length == 18) && Math.random() < 0.3 && msg.content.toLowerCase().includes(sponsor)) await msg.react(emoji).catch(u.noop);
-      i++;
-    } while (i < emojis.length);
+      // Filter out sponsors and test for trigger words
+      else if (!await msg.client.users.fetch(sponsor).catch(u.noop) && Math.random() < 0.3 && msg.content.toLowerCase().includes(sponsor)) await msg.react(emoji).catch(u.noop);
+    }
   }
 });
+
 
 module.exports = Module;
