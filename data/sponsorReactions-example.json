@@ -1,6 +1,4 @@
 [
-  ["User ID", "Emoji ID"],
-  ["buttermelon", ""],
-  ["noice", ""],
-  ["carp", ""]
+  ["User ID", "Emoji ID/Unicode"],
+  ["Trigger Word", "Emoji ID/Unicode"]
 ]
