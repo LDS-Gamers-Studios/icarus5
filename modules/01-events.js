@@ -196,8 +196,8 @@ const Module = new Augur.Module()
     const channels = await doc.sheetsByTitle["Sponsor Channels"].getRows();
     emojis = Array.from(channels.map(x => [x["Sponsor ID"], x["Sponsor Emoji"]]));
     emojis = emojis.concat([
-      ["buttermelon", "305039588014161921"],
-      ["noice", "633500960483704843"],
+      ["buttermelon", sf.emoji.buttermelon],
+      ["noice", sf.emoji.noice],
       ["carp", "🐟"]
     ]);
   } catch (e) { u.errorHandler(e, "Load Sponsor Reactions"); }
