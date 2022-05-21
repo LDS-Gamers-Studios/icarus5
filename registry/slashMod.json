@@ -31,7 +31,7 @@
     },
     {
       "name": "filter",
-      "description": "Add a word to the language filter",
+      "description": "Add or remove a word from the language filter",
       "type": 1,
       "options": [
         {
