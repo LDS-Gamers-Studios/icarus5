@@ -1,10 +1,12 @@
 const Augur = require("augurbot"),
   u = require("../utils/utils"),
-  sf = require("../config/snowflakes"),
-  moment = require("moment");
+  sf = require("../config/snowflakes.json"),
+  moment = require("moment"),
+  { GoogleSpreadsheet } = require("google-spreadsheet"),
+  config = require('../config/config.json');
 
 const ductTapeExclude = true;
-
+let emojis = [];
 const Module = new Augur.Module()
 .addEvent("channelCreate", (channel) => {
   try {
@@ -185,6 +187,30 @@ const Module = new Augur.Module()
       ldsg.channels.cache.get(sf.channels.userupdates).send({ content: `${newUser}: ${newUser.id}`, embeds: [embed] });
     }
   } catch (error) { u.errorHandler(error, `User Update Error: ${u.escapeText(newUser?.username)} (${newUser.id})`); }
+})
+.setInit(async () => {
+  const doc = new GoogleSpreadsheet(config.google.sheets.config);
+  try {
+    await doc.useServiceAccountAuth(config.google.creds);
+    await doc.loadInfo();
+    const channels = await doc.sheetsByTitle["Sponsor Channels"].getRows();
+    emojis = Array.from(channels.map(x => [x["Sponsor ID"], x["Sponsor Emoji"]]));
+    emojis = emojis.concat([
+      ["buttermelon", sf.emoji.buttermelon],
+      ["noice", sf.emoji.noice],
+      ["carp", "🐟"]
+    ]);
+  } catch (e) { u.errorHandler(e, "Load Sponsor Reactions"); }
+})
+.addEvent("messageCreate", async (msg) => {
+  if (!msg.author.bot && msg.guild && msg.guild.id == sf.ldsg) {
+    for (const [sponsor, emoji] of emojis) {
+      if (msg.mentions.members.has(sponsor)) await msg.react(emoji).catch(u.noop);
+      // Filter out sponsors and test for trigger words
+      else if (!msg.guild.members.cache.has(sponsor) && Math.random() < 0.3 && msg.content.toLowerCase().includes(sponsor)) await msg.react(emoji).catch(u.noop);
+    }
+  }
 });
+
 
 module.exports = Module;
