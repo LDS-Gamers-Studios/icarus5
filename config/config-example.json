@@ -38,7 +38,6 @@
     "ready",
     "threadCreate",
     "userUpdate",
-    "filterUpdate",
     "voiceStateUpdate"
   ],
   "google": {
