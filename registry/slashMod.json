@@ -243,6 +243,12 @@
       "type": 1,
       "options": [
         {
+          "name": "user",
+          "description": "Which user are you applying this to?",
+          "type": 6,
+          "required": true
+        },
+        {
           "name": "type",
           "description": "What type of Trusting is needed?",
           "type": 3,
@@ -251,12 +257,6 @@
             { "name": "Plus", "value": "plus" },
             { "name": "Watch", "value": "watch" }
           ],
-          "required": true
-        },
-        {
-          "name": "user",
-          "description": "Which user are you applying this to?",
-          "type": 6,
           "required": true
         },
         {
