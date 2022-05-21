@@ -207,7 +207,7 @@ const Module = new Augur.Module()
     for (const [sponsor, emoji] of emojis) {
       if (msg.mentions.members.has(sponsor)) await msg.react(emoji).catch(u.noop);
       // Filter out sponsors and test for trigger words
-      else if (!await msg.client.users.fetch(sponsor).catch(u.noop) && Math.random() < 0.3 && msg.content.toLowerCase().includes(sponsor)) await msg.react(emoji).catch(u.noop);
+      else if (!msg.guild.members.cache.has(sponsor) && Math.random() < 0.3 && msg.content.toLowerCase().includes(sponsor)) await msg.react(emoji).catch(u.noop);
     }
   }
 });
