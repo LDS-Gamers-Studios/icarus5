@@ -194,7 +194,7 @@ const Module = new Augur.Module()
     await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
     const channels = await doc.sheetsByTitle["Sponsor Channels"].getRows();
-    emojis = Array.from(channels.map(x => [x["Sponsor ID"], x["Sponsor Emoji"]]));
+    emojis = Array.from(channels.map(x => [x["Sponsor ID"], x["Emoji ID"]]));
     emojis = emojis.concat([
       ["buttermelon", sf.emoji.buttermelon],
       ["noice", sf.emoji.noice],
