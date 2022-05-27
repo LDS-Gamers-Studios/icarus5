@@ -13,9 +13,9 @@ function isProSponsor(member) {
 async function coolkids(int) {
   const channel = int.guild.channels.cache.get(sponsorChannels.get(int.user.id));
   const target = int.options.getUser("user", true);
-  if (sponsorChannels.get(int.user.id) == '') return int.reply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started." });
+  if (sponsorChannels.get(int.user.id) == '') return int.reply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started.", ephemeral: true });
   if (!sponsorChannels.get(int.user.id)) return int.reply({ content: "You need to be a Pro Sponsor or above to use this command!", ephemeral: true });
-  if (!channel) return int.reply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this" });
+  if (!channel) return int.reply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this", ephemeral: true });
   if (channel.permissionOverwrites.cache.get(target.id)) return int.reply({ content: `${target} is already in the channel!`, ephemeral: true });
   try {
     await channel.permissionOverwrites.create(target, { 'VIEW_CHANNEL': true }, "Pro Sponsor Invite");
@@ -71,9 +71,9 @@ async function sponsorchannel(int) {
 }
 
 async function uncoolkids(int) {
-  if (sponsorChannels.get(int.user.id) == '') return int.reply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started." });
+  if (sponsorChannels.get(int.user.id) == '') return int.reply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started.", ephemeral: true });
   if (!sponsorChannels.get(int.user.id)) return int.reply({ content: "You need to be a Pro Sponsor or above to use this command!", ephemeral: true });
-  if (!channel) return int.reply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this" });
+  if (!channel) return int.reply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this", ephemeral: true });
   const channel = int.guild.channels.cache.get(sponsorChannels.get(int.member.id));
   const target = int.options.getUser("user");
   if (target.id == int.member.id) return int.reply({ content: "You can't remove yourself!", ephemeral: true });
