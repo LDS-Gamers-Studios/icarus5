@@ -11,25 +11,26 @@ function isProSponsor(member) {
 }
 
 async function coolkids(int) {
-  const channel = int.guild.channels.cache.get(sponsorChannels.get(int.member.id));
-  const target = int.options.getMember("user");
-  if (!channel) return int.reply({ content: "You need to be a pro sponsor or above to use this command!", ephemeral: true });
+  const channel = int.guild.channels.cache.get(sponsorChannels.get(int.user.id));
+  const target = int.options.getUser("user", true);
+  if (sponsorChannels.get(int.user.id) == '') return int.reply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started." });
+  if (!sponsorChannels.get(int.user.id)) return int.reply({ content: "You need to be a Pro Sponsor or above to use this command!", ephemeral: true });
+  if (!channel) return int.reply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this" });
   if (channel.permissionOverwrites.cache.get(target.id)) return int.reply({ content: `${target} is already in the channel!`, ephemeral: true });
   try {
-    await channel?.permissionOverwrites.create(target.id, {
-      VIEW_CHANNEL: true
-    }, "Pro Sponsor Invite");
+    await channel.permissionOverwrites.create(target, { 'VIEW_CHANNEL': true }, "Pro Sponsor Invite");
     channel?.send(`Welcome, ${target}!`);
+    int.reply({ content: `${target} was added to your Pro Sponsor channel!`, ephemeral: true });
   } catch (error) { u.errorHandler(error, int); }
 }
 
 async function sponsorchannel(int) {
   await int.deferReply({ ephemeral: true });
-  if (!int.member.roles.cache.has(sf.roles.management, sf.roles.manager)) return int.editReply({ content: "Only managers and management can use this command", ephemeral: true });
+  if (!int.member.roles.cache.has(sf.roles.management, sf.roles.manager)) return int.editReply({ content: "Only Managers and Management can use this command", ephemeral: true });
   try {
     const sponsor = isProSponsor(int.options.getMember("user"));
     if (!sponsor) return int.editReply({ content: "That person isn't a pro sponsor or above!", ephemeral: true });
-    if (sponsorChannels.get(sponsor.id)) int.editReply({ content: `${sponsor} already has a channel at ${int.guild.channels.cache.get(sponsorChannels.get(sponsor.id))}!`, ephemeral: true });
+    if (sponsorChannels.get(sponsor.id)) return int.editReply({ content: `${sponsor} already has a channel at ${int.guild.channels.cache.get(sponsorChannels.get(sponsor.id))}!`, ephemeral: true });
 
     const channel = await int.guild.channels.create(`${sponsor.displayName}-hangout`, {
       type: 'GUILD_TEXT',
@@ -70,14 +71,17 @@ async function sponsorchannel(int) {
 }
 
 async function uncoolkids(int) {
-  if (!sponsorChannels.get(int.user.id)) return int.reply({ content: "You need to be a pro sponsor or above to use this command!", ephemeral: true });
+  if (sponsorChannels.get(int.user.id) == '') return int.reply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started." });
+  if (!sponsorChannels.get(int.user.id)) return int.reply({ content: "You need to be a Pro Sponsor or above to use this command!", ephemeral: true });
+  if (!channel) return int.reply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this" });
   const channel = int.guild.channels.cache.get(sponsorChannels.get(int.member.id));
-  const target = int.options.getMember("user");
+  const target = int.options.getUser("user");
   if (target.id == int.member.id) return int.reply({ content: "You can't remove yourself!", ephemeral: true });
   if (target.id == int.client.user.id) return int.reply({ content: "You can't get rid of me that easily!", ephemeral: true });
-  if (!channel.permissionOverwrites.cache.get(target)) return int.reply({ content: `${target} isn't in this channel!`, ephemeral: true });
+  if (!channel.permissionOverwrites.cache.get(target.id)) return int.reply({ content: `${target} isn't in this channel!`, ephemeral: true });
   try {
-    channel.permissionOverwrites.get(target.id)?.delete("Pro Sponsor Boot");
+    await channel.permissionOverwrites.delete(target, "Pro Sponsor Boot");
+    int.reply({ content: `${target} was removed from your Pro Sponsor channel` });
   } catch (error) { u.errorHandler(error, int); }
 }
 const Module = new Augur.Module()
