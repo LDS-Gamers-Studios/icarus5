@@ -81,7 +81,7 @@ async function uncoolkids(int) {
   if (!channel.permissionOverwrites.cache.get(target.id)) return int.reply({ content: `${target} isn't in this channel!`, ephemeral: true });
   try {
     await channel.permissionOverwrites.delete(target, "Pro Sponsor Boot");
-    int.reply({ content: `${target} was removed from your Pro Sponsor channel` });
+    int.reply({ content: `${target} was removed from your Pro Sponsor channel`, ephemeral: true });
   } catch (error) { u.errorHandler(error, int); }
 }
 const Module = new Augur.Module()
