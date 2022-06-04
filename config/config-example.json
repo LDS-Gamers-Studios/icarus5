@@ -1,7 +1,8 @@
 {
   "api": {
     "snipcart": "",
-    "steam": ""
+    "steam": "",
+    "thegamesdb": ""
   },
   "applicationId": "",
   "color": [
@@ -60,6 +61,13 @@
       "applications": ""
     }
   },
+  "twitch": {
+    "clientId": "",
+    "clientSecret": "",
+    "redirectUri": "http://ldsgamers.com",
+    "scopes": []
+  },
+  "streamApplications": "",
   "prefix": "!",
   "token": ""
 }

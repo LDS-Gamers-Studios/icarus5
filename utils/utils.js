@@ -120,7 +120,7 @@ const utils = {
    * @function confirmInteraction
    * @param {Discord.Interaction} interaction The interaction to confirm
    * @param {String} prompt The prompt for the confirmation
-   * @returns {Boolean}
+   * @returns {Promise<Boolean>}
    */
   confirmInteraction: async (interaction, prompt = "Are you sure?", title = "Confirmation Dialog") => {
     const reply = (interaction.deferred || interaction.replied) ? "editReply" : "reply";
@@ -216,6 +216,32 @@ const utils = {
     if (!data?.color) embed.setColor(config.color);
     if (!data?.timestamp) embed.setTimestamp();
     return embed;
+  },
+  /**
+   * Takes a MessageEmbed and adds up to 25 fields to it.
+   * If there are still more fields to be added it will create another embed and keep going on that one
+   * @param {(index: number, embed: Discord.MessageEmbed) => Discord.MessageEmbed["addField"]} field
+   * @param {Number} length the number of fields to add
+   * @param {Discord.MessageEmbed} embed the initial embed to add fields to
+   * @returns {Discord.MessageEmbed[]}
+   */
+  multiEmbed: function(field, length, embed) {
+    const resetEmbed = embed;
+    const embeds = [];
+    let i = 0;
+    let itt = 0;
+    do {
+      field(i + (25 * itt), embed);
+      if (i + (25 * itt) + 1 == length) {
+        embeds.push(embed);
+      } else if (i == 24) {
+        embeds.push(embed);
+        embed = resetEmbed;
+        i = 0;
+        itt++;
+      }
+    } while (i + (25 * itt) < length);
+    return embeds;
   },
   /**
    * Handles a command exception/error. Most likely called from a catch.

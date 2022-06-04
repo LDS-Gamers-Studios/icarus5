@@ -8,7 +8,10 @@ test.js
 *-.js
 *-.json
 data/banned.json
+data/extraLifeDonors.json
+data/streams.json
 site/*
+.DS_STORE
 
 # For Visual Studio's temp directory
 .vs/
