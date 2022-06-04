@@ -68,18 +68,19 @@ async function menu(options, interaction, target) {
     await interaction.editReply({ embeds, components: [ ] });
     return;
   }
-  await menuSelect.deferUpdate({ ephemeral: true });
 
   embeds[0].setTitle("Action Selected")
   .setColor("GREEN")
   .addField("Selection", options.find(o => o.value === menuSelect.values[0]).label);
-  await interaction.editReply({ embeds, components: [ ] });
+  interaction.editReply({ embeds, components: [ ] });
 
   return menuSelect;
 }
 
 const processes = {
   flag: async function(interaction, target) {
+    await interaction.deferUpdate({ ephemeral: true });
+
     const flagMenuItems = new u.Collection()
     .set(0, ['badVibes', 'harassment', 'modAbuse']) // , 'nominate'
     .set(isMsg, ['debate', 'inappropriate', 'offensive', 'promotion', 'scam', 'spam']);
@@ -100,7 +101,12 @@ const processes = {
 
     let extra;
     if (['badVibes', 'harassment', 'modAbuse', 'nominate'].includes(menuSelect.values[0])) {
-      extra = await u.awaitDM(`You selected "${reason}." Please provide more information (one message only).`, interaction.member, 300);
+      extra = await u.modalInput(
+        "More Info Needed",
+        "Please provide more information.",
+        `You selected "${reason}." This selection requires more information.`,
+        menuSelect,
+        300_000);
       if (!extra) {
         await interaction.editReply({ embeds: [
           u.embed({ author: interaction.member }).setColor(0x0000ff)
@@ -117,7 +123,7 @@ const processes = {
         member: targetUser,
         snitch: interaction.member,
         flagReason: reason,
-        furtherInfo: extra?.content
+        furtherInfo: extra
       };
       if (target instanceof Discord.Message) flagInfo.msg = target;
       await c.createFlag(flagInfo);
@@ -129,6 +135,8 @@ const processes = {
     console.log(interaction, target); // Stuff goes here
   },
   userAvatar: async function(interaction, target) {
+    await interaction.deferUpdate({ ephemeral: true });
+
     const user = getTargetUser(target);
     const embed = u.embed({ author: user })
     .setDescription(`${u.escapeText(user.displayName ?? user.username)}'s Avatar`)
@@ -136,6 +144,8 @@ const processes = {
     interaction.editReply({ embeds: [embed] });
   },
   pinMessage: async function(interaction, target) {
+    await interaction.deferUpdate({ ephemeral: true });
+
     try {
       const user = interaction.user;
       if (target.channel.permissionsFor(user).has("MANAGE_MESSAGES")) {
@@ -167,9 +177,13 @@ const processes = {
     console.log(interaction, target); // Stuff goes here
   },
   noteUser: async function(interaction, target) {
-    await interaction.editReply("Please check your DMs from me.");
-    const dm = await u.awaitDM("What is the note would you like to add?", interaction.member);
-    if (!dm) {
+    const note = await u.modalInput(
+      "More Info Needed",
+      "What is the note would you like to add?",
+      "",
+      interaction
+    );
+    if (!note) {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Note cancelled`)
@@ -177,15 +191,19 @@ const processes = {
       return;
     }
 
-    await c.note(interaction, getTargetUser(target), dm.content);
+    await interaction.editReply("Note added.");
+    await c.note(interaction, getTargetUser(target), note);
   },
   renameUser: async function(interaction, target) {
+    await interaction.deferUpdate({ ephemeral: true });
     await c.rename(interaction, getTargetUser(target));
   },
   trustUser: async function(interaction, target) {
+    await interaction.deferUpdate({ ephemeral: true });
     await c.trust(interaction, getTargetUser(target));
   },
   trustPlusUser: async function(interaction, target) {
+    await interaction.deferUpdate({ ephemeral: true });
     await c.trustPlus(interaction, getTargetUser(target));
   },
   watchUser: async function(interaction, target) {
@@ -195,16 +213,22 @@ const processes = {
     console.log(interaction, target); // Stuff goes here
   },
   muteUser: async function(interaction, target) {
+    await interaction.deferUpdate({ ephemeral: true });
     const reason = target.cleanContent ?? "Violating the Code of Conduct";
     await c.mute(interaction, getTargetUser(target), reason);
   },
   unmuteUser: async function(interaction, target) {
+    await interaction.deferUpdate({ ephemeral: true });
     await c.unmute(interaction, getTargetUser(target));
   },
   timeoutUser: async function(interaction, target) {
-    await interaction.editReply("Please check your DMs from me.");
-    const dm = await u.awaitDM("What is the reason for this timeout?", interaction.member);
-    if (!dm) {
+    const reason = await u.modalInput(
+      "More Info Needed",
+      "What is the reason for this timeout?",
+      "",
+      interaction
+    );
+    if (!reason) {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Timeout cancelled`)
@@ -212,12 +236,17 @@ const processes = {
       return;
     }
 
-    await c.timeout(interaction, getTargetUser(target), dm.content);
+    await interaction.editReply("Timeout initiated.");
+    await c.timeout(interaction, getTargetUser(target), reason);
   },
   kickUser: async function(interaction, target) {
-    await interaction.editReply("Please check your DMs from me.");
-    const dm = await u.awaitDM("What is the reason for this kick?", interaction.member);
-    if (!dm) {
+    const reason = await u.modalInput(
+      "More Info Needed",
+      "What is the reason for this kick?",
+      "A reason must be provided to kick a user.",
+      interaction
+    );
+    if (!reason) {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Kick cancelled`)
@@ -225,12 +254,17 @@ const processes = {
       return;
     }
 
-    await c.kick(interaction, getTargetUser(target), dm.content);
+    await interaction.editReply("Kick initiated.");
+    await c.kick(interaction, getTargetUser(target), reason);
   },
   banUser: async function(interaction, target) {
-    await interaction.editReply("Please check your DMs from me.");
-    const dm = await u.awaitDM("What is the reason for this ban?", interaction.member);
-    if (!dm) {
+    const reason = await u.modalInput(
+      "More Info Needed",
+      "What is the reason for this ban?",
+      "A reason must be provided to ban a user.",
+      interaction
+    );
+    if (!reason) {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Ban cancelled`)
@@ -238,14 +272,20 @@ const processes = {
       return;
     }
 
-    await c.ban(interaction, getTargetUser(target), dm.content, 1);
+    await interaction.editReply("Ban initiated.");
+    await c.ban(interaction, getTargetUser(target), reason, 1);
   },
   warnMessage: async function(interaction, target) {
     console.log(interaction, target); // Stuff goes here
   },
   purgeChannel: async function(interaction, target) {
-    const dm = await u.awaitDM("What is the reason for this purge?", interaction.member);
-    if (!dm) {
+    const reason = await u.modalInput(
+      "More Info Needed",
+      "What is the reason for this purge?",
+      "A reason must be provided.",
+      interaction
+    );
+    if (!reason) {
       await interaction.editReply({ embeds: [
         u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Channel purge cancelled`)
@@ -273,12 +313,13 @@ const processes = {
       u.embed({ author: interaction.member })
       .setTitle("Channel Purge")
       .setDescription(`**${interaction.member}** purged messages in ${interaction.channel}`)
-      .addField('Reason', dm.content)
+      .addField('Reason', reason)
       .setColor(0x00ff00)
     ] });
     await interaction.followUp({ content: `Channel purged.`, ephemeral: true });
   },
   announceMessage: async function(interaction, target) {
+    await interaction.deferUpdate({ ephemeral: true });
     const author = target.member;
     const embed = u.embed({ author })
       .setTimestamp(target.createdAt)

@@ -284,6 +284,45 @@ const utils = {
   noop: () => {
     // No-op, do nothing
   },
+  modalInput: async function(title, message, filltext, interaction, timeout = 60_000) {
+    const modalId = utils.customId();
+
+    const modal = new Discord.Modal()
+      .setTitle(title)
+      .setCustomId(modalId);
+
+    const field = new Discord.TextInputComponent()
+      .setCustomId('response')
+      .setLabel(message)
+      .setPlaceholder(filltext)
+      .setStyle('PARAGRAPH')
+      .setRequired(true)
+      .setMaxLength(500);
+
+    modal.addComponents(new Discord.MessageActionRow().addComponents(field));
+
+    await interaction.showModal(modal);
+
+    try {
+      const modalSubmit = await interaction.awaitModalSubmit({
+        filter: (m) => m.customId == modalId,
+        time: timeout
+      });
+
+      const response = modalSubmit.fields.getTextInputValue('response');
+
+      const ack = utils.embed()
+        .setTitle("Response Received")
+        .setColor("GREEN")
+        .setDescription(response);
+
+      modalSubmit.reply({ embeds: [ack], ephemeral: true });
+
+      return response;
+    } catch (e) {
+      return null;
+    }
+  },
   /**
    * Returns an object containing the command, suffix, and params of the message.
    * @param {Discord.Message} msg The message to get command info from.
