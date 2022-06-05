@@ -4,7 +4,8 @@ const Augur = require("augurbot"),
   profanityFilter = require("profanity-matcher"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes"),
-  c = require("../utils/modCommon");
+  c = require("../utils/modCommon"),
+  wordMatcher = require("../utils/wordMatcher");
 
 const bannedWords = new RegExp(banned.words.join("|"), "i"),
   bannedLinks = new RegExp(`\\b(${banned.links.join("|").replaceAll(".", "\\.")})`, "i"),

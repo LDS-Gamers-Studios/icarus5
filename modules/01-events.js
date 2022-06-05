@@ -200,7 +200,7 @@ const Module = new Augur.Module()
       ["noice", sf.emoji.noice],
       ["carp", "🐟"]
     ]);
-  } catch (e) { u.errorHandler(e, "Load Sponsor Reactions"); }
+  } catch (e) { /* u.errorHandler(e, "Load Sponsor Reactions");*/ }
 })
 .addEvent("messageCreate", async (msg) => {
   if (!msg.author.bot && msg.guild && msg.guild.id == sf.ldsg) {

@@ -197,7 +197,7 @@ const Module = new Augur.Module()
 .addInteractionCommand({
   name: "voice",
   guildId: sf.ldsg,
-  commandID: sf.commands.slashVoice,
+  commandId: sf.commands.slashVoice,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand(true)) {
     case "lock":
@@ -223,7 +223,7 @@ const Module = new Augur.Module()
     const channels = await doc.sheetsByTitle["Voice Channel Names"].getRows();
     channelNames = Array.from(channels.map(x => x["Name"]));
 
-  } catch (e) { u.errorHandler(e, "Load Voice Channel Names"); }
+  } catch (e) { /* u.errorHandler(e, "Load Voice Channel Names"); */ }
 })
 .addEvent("voiceStateUpdate", async (oldState, newState) => {
   const guild = oldState?.guild;
