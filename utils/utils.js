@@ -1,17 +1,16 @@
 const Discord = require("discord.js"),
-  config = require("../config/config.json");
+  config = require("../config/config.json"),
+  db = require("../database/dbControllers");
 
 const errorLog = new Discord.WebhookClient(config.error);
 const { nanoid } = require("nanoid");
 
 /**
+ * Converts an interaction into a more universal format for error messages.
  * @typedef {Object} ParsedInteraction
  * @property {String} command - The command issued, represented as a string.
  * @property {Array} data - Associated data for the command, such as command options or values selected.
- */
-
-/**
- * Converts an interaction into a more universal format for error messages.
+ *
  * @param {Discord.Interaction} inter The interaction to be parsed.
  * @returns {ParsedInteraction} The interaction after it has been broken down.
  */
@@ -111,9 +110,7 @@ const utils = {
     await utils.wait(t);
     interaction.deleteReply();
   },
-  /**
-   * Shortcut to Discord.Collection. See docs there for reference.
-   */
+  /** Shortcut to Discord.Collection. See docs there for reference. */
   Collection: Discord.Collection,
   /**
    * Confirm Dialog
@@ -153,11 +150,18 @@ const utils = {
     else if (confirm.customId === confirmFalse) return false;
     else return null;
   },
-  awaitDM: async (msg, user, timeout = 60) => {
+  /**
+   * Sends the user a DM and awaits a message response
+   * @param {string} content The content to send to the user
+   * @param {Discord.User} user The user to send content to
+   * @param {number} timeout Time (in seconds) to wait for a response
+   * @returns {Discord.Message | null}
+   */
+  awaitDM: async (content, user, timeout = 60) => {
     const message = await user.send({ embeds: [
       utils.embed()
       .setTitle("Awaiting Response")
-      .setDescription(msg)
+      .setDescription(content)
       .setFooter({ text: `Times out in ${timeout} seconds.` })
       .setColor("RED")
     ] });
@@ -174,7 +178,7 @@ const utils = {
     if (collected.size === 0) {
       await message.edit({ embeds: [
         response
-        .setDescription(msg)
+        .setDescription(content)
         .setFooter({ text: "Timed out. Please see original message." })
       ] });
       return null;
@@ -182,29 +186,27 @@ const utils = {
       await message.edit({ embeds: [
         response
         .setDescription(`Got your response! Please see original message.\n\`\`\`\n${collected.first()}\n\`\`\``)
-        .addField("Original Question", msg, false)
+        .addField("Original Question", content, false)
       ] });
       return collected.first();
     }
   },
-  /**
-   * Shortcut to nanoid. See docs there for reference.
-   */
+  /** Shortcut to nanoid. See docs there for reference. */
   customId: nanoid,
-  /**
-   * Shortcut to Discord.Util.escapeMarkdown. See docs there for reference.
-   */
+  /** Shortcut for Module.db, but gives JSDoc info */
+  db,
+  /** Shortcut to Discord.Util.escapeMarkdown. See docs there for reference.*/
   escapeText: Discord.Util.escapeMarkdown,
   /**
    * Returns a MessageEmbed with basic values preset, such as color and timestamp.
    * @param {any} data The data object to pass to the MessageEmbed constructor.
-   *   You can override the color and timestamp here as well.
+   * You can override the color and timestamp here as well.
    */
   embed: function(data = {}) {
     if (data?.author instanceof Discord.GuildMember) {
       data.author = {
         name: data.author.displayName,
-        iconURL: data.author.user.displayAvatarURL()
+        iconURL: data.author.displayAvatarURL()
       };
     } else if (data?.author instanceof Discord.User) {
       data.author = {
@@ -267,6 +269,7 @@ const utils = {
     embed.setDescription(stack);
     errorLog.send({ embeds: [embed] });
   },
+  /** Shortcut to the configured error webhook */
   errorLog,
   /**
    * Fetch partial Discord objects
@@ -312,12 +315,15 @@ const utils = {
     }
     return null;
   },
+  // eslint has to be disabled here since it doesn't play nicely with generics for some reason
+  /* eslint-disable*/
   /**
    * Choose a random element from an array
-   * @function rand
-   * @param {Array} selections Items to choose from
-   * @returns {*} A random element from the array
+   * @template A
+   * @param {A[]} selections Items to choose from
+   * @returns {A} A random element from the array
    */
+  /* eslint-enable */
   rand: function(selections) {
     return selections[Math.floor(Math.random() * selections.length)];
   },
