@@ -197,7 +197,7 @@ const Module = new Augur.Module()
 .addInteractionCommand({
   name: "voice",
   guildId: sf.ldsg,
-  commandID: sf.commands.slashVoice,
+  commandId: sf.commands.slashVoice,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand(true)) {
     case "lock":
