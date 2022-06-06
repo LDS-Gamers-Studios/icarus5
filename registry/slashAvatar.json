@@ -1,0 +1,67 @@
+{
+  "name": "avatar",
+  "description": "See someone's avatar or apply a filter to it.",
+  "options": [
+    {
+      "type": 6,
+      "name": "user",
+      "description": "The user whose avatar you want to see."
+    },
+    {
+      "type": 11,
+      "name": "file",
+      "description": "Alternative to user. Requires a filter."
+    },
+    {
+      "type": 3,
+      "name": "filter",
+      "description": "The filter to apply.",
+      "choices": [
+        {
+          "name": "Andy Warhol",
+          "value": "andywarhol"
+        },
+        {
+          "name": "Blurple",
+          "value": "blurple"
+        },
+        {
+          "name": "Colorize",
+          "value": "colorme"
+        },
+        {
+          "name": "Deepfry",
+          "value": "deepfry"
+        },
+        {
+          "name": "Fisheye Lens",
+          "value": "fisheye"
+        },
+        {
+          "name": "Flex",
+          "value": "flex"
+        },
+        {
+          "name": "Grayscale",
+          "value": "grayscale"
+        },
+        {
+          "name": "Invert",
+          "value": "invert"
+        },
+        {
+          "name": "Metal",
+          "value": "metal"
+        },
+        {
+          "name": "Personal",
+          "value": "personal"
+        },
+        {
+          "name": "Pop Art",
+          "value": "popart"
+        }
+      ]
+    }
+  ]
+}

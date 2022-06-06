@@ -1,25 +1,41 @@
 const Augur = require("augurbot"),
   u = require('../utils/utils'),
   sf = require("../config/snowflakes.json"),
+  discord = require("discord.js"),
   Jimp = require("jimp");
 
 const errorReading = { content: "Sorry, but I couldn't get the avatar. Let my devs know if this is a reoccurring problem", ephemeral: true };
-
-function targetImg(int, size = 256) {
-  // if(int.options.get('file')) return int.options.get('file')
-  let target = (int.options.getUser('user') ?? int.user);
-  if (int.guild) target = int.guild.members.cache.get(target.id);
-  return target.displayAvatarURL({ format: 'png', size, dynamic: true });
+async function jimpRead(url) {
+  try {
+    return await Jimp.read(url);
+  } catch {
+    return null;
+  }
 }
 
+/**
+ * @param {discord.CommandInteraction} int
+ * @param {number} size
+ * @returns {string}
+ */
+function targetImg(int, size = 256) {
+  if (int.options.getAttachment('file')) {
+    const url = int.options.getAttachment('file').url;
+    if (!jimpRead(url)) return null;
+    else return url;
+  }
+  const target = (int.options[int.guild ? "getMember" : "getUser"]('user'));
+  return target.displayAvatarURL({ format: 'png', size, dynamic: true });
+}
+/** @param {discord.CommandInteraction} int */
 async function andywarhol(int) {
   await int.deferReply();
-  const img = await u.jimpRead(targetImg(int));
-  if (!img) return int.reply(errorReading);
+  const img = await jimpRead(targetImg(int));
+  if (!img) return int.editReply(errorReading);
   const width = img.getWidth();
   const height = img.getHeight();
   const canvas = new Jimp(width * 2 + 36, height * 2 + 36, 0xffffffff);
-  const o = 12;
+  const o = 12; // offset
   const positions = [[o, o], [width + o * 2, o], [o, height + o * 2], [width + o * 2, height + o * 2]];
   for (const p of positions) {
     img.color([{ apply: 'spin', params: [60] }]);
@@ -29,18 +45,19 @@ async function andywarhol(int) {
   return await int.editReply({ files: [output] });
 }
 async function blurple(int) {
-  const img = await u.jimpRead(targetImg(int));
-  if (!img) return int.reply(errorReading);
+  await int.deferReply();
+  const img = await jimpRead(targetImg(int));
+  if (!img) return int.editReply(errorReading);
   img.color([
     { apply: "desaturate", params: [100] },
     { apply: "saturate", params: [47.7] },
     { apply: "hue", params: [227] }
   ]);
   const output = await img.getBufferAsync(Jimp.MIME_PNG);
-  return await int.reply({ files: [output] });
+  return await int.editReply({ files: [output] });
 }
 async function colorme(int) {
-  const img = await u.jimpRead(targetImg(int));
+  const img = await jimpRead(targetImg(int));
   if (!img) return int.reply(errorReading);
   const color = Math.floor(Math.random() * 359);
   img.color([{ apply: 'hue', params: [color] }]);
@@ -48,7 +65,7 @@ async function colorme(int) {
   return int.reply({ content: `Hue: ${color}`, files: [output] });
 }
 async function deepfry(int) {
-  const img = await u.jimpRead(targetImg(int));
+  const img = await jimpRead(targetImg(int));
   if (!img) return int.reply(errorReading);
   img.posterize(20);
   img.color([{ apply: 'saturate', params: [100] }]);
@@ -56,8 +73,16 @@ async function deepfry(int) {
   const output = await img.getBufferAsync(Jimp.MIME_PNG);
   return int.reply({ files: [output] });
 }
+async function fisheye(int) {
+  await int.deferReply();
+  const img = await jimpRead(targetImg(int));
+  if (!img) return int.editReply(errorReading);
+  img.fishEye();
+  const output = await img.getBufferAsync(Jimp.MIME_PNG);
+  return int.reply({ files: [output] });
+}
 async function flex(int) {
-  const img = await u.jimpRead(targetImg(int, 128));
+  const img = await jimpRead(targetImg(int, 128));
   if (!img) return int.reply(errorReading);
   const right = await Jimp.read("./media/flexArm.png");
   const mask = await Jimp.read("./media/circleMask.png");
@@ -70,21 +95,21 @@ async function flex(int) {
   return int.reply({ files: [output] });
 }
 async function grayscale(int) {
-  const img = await u.jimpRead(targetImg(int));
+  const img = await jimpRead(targetImg(int));
   if (!img) return int.reply(errorReading);
   img.color([{ apply: "desaturate", params: [100] }]);
   const output = await img.getBufferAsync(Jimp.MIME_PNG);
   return await int.reply({ files: [output] });
 }
 async function invert(int) {
-  const img = await u.jimpRead(targetImg(int));
+  const img = await jimpRead(targetImg(int));
   if (!img) return int.reply(errorReading);
   img.invert();
   const output = await img.getBufferAsync(Jimp.MIME_PNG);
   return await int.reply({ files: [output] });
 }
 async function metal(int) {
-  const img = await u.jimpRead(targetImg(int, 128));
+  const img = await jimpRead(targetImg(int, 128));
   if (!img) return int.reply(errorReading);
   const right = await Jimp.read('./media/metalHand.png');
   const mask = await Jimp.read('./media/circleMask.png');
@@ -96,7 +121,7 @@ async function metal(int) {
   return int.reply({ files: [output] });
 }
 async function personal(int) {
-  const img = await u.jimpRead(targetImg(int));
+  const img = await jimpRead(targetImg(int));
   if (!img) return int.reply(errorReading);
   const canvas = await Jimp.read('./media/personalBase.png');
   const mask = await Jimp.read('./media/circleMask.png');
@@ -109,7 +134,7 @@ async function personal(int) {
 async function popart(int) {
   try {
     await int.deferReply();
-    const img = await u.jimpRead(targetImg(int));
+    const img = await jimpRead(targetImg(int));
     if (!img) return int.editReply(errorReading);
     const width = img.getWidth();
     const height = img.getHeight();
@@ -138,15 +163,15 @@ function avatar(int) {
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "avatar",
-  commandId: sf.commands.avatar,
+  commandId: sf.commands.slashAvatar,
   process: async (interaction) => {
-    // will impliment when file support is added to d.js
-    // if (interaction.options.get('file') && !interaction.options.getString('filter')) return interaction.reply({ content: "You need to specify a filter to apply if you're uploading a file", ephemeral: true });
+    if (interaction.options.getAttachment('file') && !interaction.options.getString('filter')) return interaction.reply({ content: "You need to specify a filter to apply if you're uploading a file", ephemeral: true });
     switch (interaction.options.getString('filter')) {
     case "andywarhol": return andywarhol(interaction);
     case "blurple": return blurple(interaction);
     case "colorme": return colorme(interaction);
     case "deepfry": return deepfry(interaction);
+    case "fisheye": return fisheye(interaction);
     case "flex": return flex(interaction);
     case "grayscale": return grayscale(interaction);
     case "invert": return invert(interaction);
