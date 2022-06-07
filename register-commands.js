@@ -12,6 +12,7 @@ const globalCommandFiles = [
 ];
 const guildCommandFiles = [
   "messageMod.json",
+  "slashAvatar.json",
   "slashBank.json",
   "slashGospel.json",
   "slashRank.json",
