@@ -16,15 +16,16 @@ const guildCommandFiles = [
   "slashGospel.json",
   "slashRank.json",
   "slashMod.json",
+  "slashStreams.json",
   "slashVoice.json",
   "userMod.json"
 ];
 const permissionData = new Collection();
-permissionData.set(sf.commands.slashMod, [{
-  id: sf.roles.mod,
-  type: 1,
-  permission: true
-}]);
+// permissionData.set(sf.commands.slashMod, [{
+//   id: sf.roles.mod,
+//   type: 1,
+//   permission: true
+// }]);
 /**********************
  * END "CONFIG" BLOCK *
  **********************/

@@ -12,6 +12,7 @@
     "communityVoice": "363014069533540362",
     "elitefactionupdates": "953437056879714354",
     "elitenews": "953437130984685638",
+    "extralifediscussion": "502209774897594368",
     "general": "96335850576556032",
     "headsofhouse": "734797868036259860",
     "minecraftcategory": "363016175980118016",
@@ -33,19 +34,22 @@
     "slashBank": "882719721068331149",
     "slashGospel": "970560664844247061",
     "slashMod": "928690734473814057",
+    "slashStreams": "",
     "slashRank": "894614354987733052",
     "slashVoice": "965802558411112508",
     "userMod": "938657362246533141"
   },
   "emoji": {
     "buttermelon": "305039588014161921",
-    "noice": "633500960483704843"
+    "noice": "633500960483704843",
+    "hexlogo": "447251297033256962"
   },
   "ldsg": "96335850576556032",
   "other": {
     "ghost": "96335658997526528"
   },
   "roles": {
+    "approvedstreamers": "267038468474011650",
     "destinyclansmanager": "803315372613697536",
     "ducttape": "771516264618262607",
     "emberguardian": "801333875329728522",
@@ -63,6 +67,7 @@
     "team": "96345401078087680",
     "trusted": "210912511514509312",
     "trustedplus": "698291753308127265",
+    "twitchsubscriber": "338056125062578176",
     "untrusted": "722107904496500756",
     "volunteer": "940429662335684638"
   }

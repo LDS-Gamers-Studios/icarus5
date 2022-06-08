@@ -21,15 +21,6 @@ const modActions = [
   * Give the mods a heads up that someone isn't getting their DMs.
   * @param {Discord.GuildMember} member The guild member that's blocked.
   */
-function blocked(member) {
-  return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-    u.embed({
-      author: member,
-      color: 0x00ffff,
-      title: `${member.displayName} has me blocked. *sadface*`
-    })
-  ] });
-}
 
 function compareRoles(mod, target) {
   const modHigh = mod.roles.cache.filter(r => r.id != sf.roles.live)
@@ -71,7 +62,7 @@ const modCommon = {
           u.embed()
           .setTitle("User Ban")
           .setDescription(`You have been banned in ${interaction.guild.name} for:\n${reason}`)
-        ] }).catch(() => blocked(target));
+        ] }).catch(() => modCommon.blocked(target));
         await target.ban({ days, reason });
 
         // Edit interaction
@@ -117,7 +108,15 @@ const modCommon = {
       u.cleanInteraction(interaction);
     } catch (error) { u.errorHandler(error, interaction); }
   },
-
+  blocked: function(member, action) {
+    return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+      u.embed({
+        author: member,
+        color: 0x00ffff,
+        title: `${member.displayName} has me blocked. *sadface*\n${action ? `(${action})` : ""}`
+      })
+    ] });
+  },
   /**
    * Generate and send a warning card in #mod-logs
    * @async
@@ -258,7 +257,7 @@ const modCommon = {
           u.embed()
           .setTitle("User Kick")
           .setDescription(`You have been kicked in ${interaction.guild.name} for:\n${reason}`)
-        ] }).catch(() => blocked(target));
+        ] }).catch(() => modCommon.blocked(target));
         await target.kick({ reason });
 
         // Edit interaction
@@ -433,7 +432,7 @@ const modCommon = {
       + "Please remember to follow the Code of Conduct when doing so.\n"
       + "<http://ldsgamers.com/code-of-conduct>\n\n"
       + "If you'd like to join one of our in-server Houses, you can visit <http://3houses.live> to get started!"
-    ).catch(() => blocked(target));
+    ).catch(() => modCommon.blocked(target));
 
     const embed = u.embed({ author: target })
     .setTitle("User Given Trusted")
