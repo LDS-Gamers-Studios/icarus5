@@ -1,0 +1,75 @@
+{
+  "name": "tag",
+  "description": "Create, Modify, or Delete a tag",
+  "options": [
+    {
+      "type": 1,
+      "name": "create",
+      "description": "Create a tag.",
+      "options": [
+        {
+          "type": 3,
+          "name": "name",
+          "description": "The name of the new tag (must not include any spaces).",
+          "required": true
+        },
+        {
+          "type": 3,
+          "name": "response",
+          "description": "Text to respond with."
+        },
+        {
+          "type": 11,
+          "name": "attachment",
+          "description": "File to respond with."
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "modify",
+      "description": "Modify a tag.",
+      "options": [
+        {
+          "type": 3,
+          "name": "name",
+          "description": "The name of the tag to modify.",
+          "required": true
+        },
+        {
+          "type": 3,
+          "name": "response",
+          "description": "Text to respond with."
+        },
+        {
+          "type": 11,
+          "name": "attachment",
+          "description": "File to respond with."
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "delete",
+      "description": "Delete a tag.",
+      "options": [
+        {
+          "type": 3,
+          "name": "name",
+          "description": "The name of the tag to delete.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "placeholders",
+      "description": "Get a list of placeholders you can use in tags."
+    },
+    {
+      "type": 1,
+      "name": "list",
+      "description": "Get a list of tags."
+    }
+  ]
+}

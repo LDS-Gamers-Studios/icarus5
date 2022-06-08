@@ -16,6 +16,7 @@ const guildCommandFiles = [
   "slashGospel.json",
   "slashRank.json",
   "slashMod.json",
+  "slashTag.json",
   "slashVoice.json",
   "userMod.json"
 ];

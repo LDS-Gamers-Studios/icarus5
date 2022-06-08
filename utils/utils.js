@@ -45,6 +45,10 @@ function parseInteraction(inter) {
         data: optionData ?? []
       };
     }
+    return {
+      command: commandParts.join(" "),
+      data: optionData
+    };
   }
 
   if (inter.isContextMenu()) {
@@ -191,6 +195,15 @@ const utils = {
    * Shortcut to nanoid. See docs there for reference.
    */
   customId: nanoid,
+  /**
+   * Converts a date into a timestamp that can be used in a message
+   * @param {Date} date the date
+   * @param {"t"|"T"|"d"|"D"|"f"|"F"|"R"} format the time format
+   */
+  discordTimestamp: function(date = new Date(), format = 'f') {
+    const epoch = Math.floor(date.getTime() / 1000);
+    return `<t:${epoch}:${format}>`;
+  },
   /**
    * Shortcut to Discord.Util.escapeMarkdown. See docs there for reference.
    */
