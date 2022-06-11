@@ -231,10 +231,11 @@ const utils = {
     let i = 0;
     let itt = 0;
     do {
-      field(i + (25 * itt), embed);
-      if (i + (25 * itt) + 1 == length) {
+      embed = field(i + (25 * itt), embed);
+      i++;
+      if (i + (25 * itt) == length) {
         embeds.push(embed);
-      } else if (i == 24) {
+      } else if (i == 25) {
         embeds.push(embed);
         embed = resetEmbed;
         i = 0;

@@ -10,18 +10,35 @@ const Augur = require("augurbot"),
   { ClientCredentialsAuthProvider } = require('@twurple/auth'),
   yaml = require("js-yaml"),
   gamesDBApi = require("../utils/thegamesdb.js"),
-  gamesDB = new gamesDBApi();
+  Youtube = require("../utils/youtubeAPI");
+let ytCycle = 0;
+const gamesDB = new gamesDBApi(),
+  yt = new Youtube(config.google.youtube);
 
+const ldsgYT = 'UCr83QWCwQRUqhSCyQL_kx2Q';
 const extraLife = (new Date().getMonth() == 10),
   extraLifeApi = require("../utils/extraLifeAPI").set({ teamId: 56862, participantId: 453772 }),
   applicationCount = 0;
-
+/**
+ * @typedef status
+ * @property {string} url
+ * @property {string} name
+ * @property {string} title
+ * @property {string|null} gameId
+ * @property {"online"|"offline"} status
+ * @property {Date} since
+ */
 const authProvider = new ClientCredentialsAuthProvider(config.twitch.clientId, config.twitch.clientSecret),
   twitch = new ApiClient({ authProvider }),
   twitchGames = new Map(),
-  twitchStatus = new Map(),
+  /** @type {discord.Collection<string, status>} */
+  twitchStatus = new u.Collection(),
+  /** @type {discord.Collection<string, status>} */
+  youtubeStatus = new u.Collection(),
   bonusStreams = require("../data/streams.json");
-
+function ytURL(id) {
+  return `https://youtube.com/watch?v=${id}`;
+}
 /** @param {string} gameId */
 async function gameInfo(gameId) {
   if (twitchGames.has(gameId)) return twitchGames.get(gameId);
@@ -135,26 +152,25 @@ function isPartnered(member) {
   return member.roles.cache.hasAny(roles);
 }
 /**
+ * @param {"twitch"|"youtube"} srv
  * @param {HelixStream} stream
- * @param {String} srv
  */
 function notificationEmbed(stream, srv = "twitch") {
   const embed = u.embed().setTimestamp();
   if (srv == "twitch") {
     const gameName = twitchGames.get(stream.gameId)?.name;
-    console.log(stream.title);
     embed.setColor('#6441A4')
-        .setThumbnail(stream.getThumbnailUrl(480, 270) + "?t=" + Date.now())
-        .setAuthor({ name: `${stream.userDisplayName} ${gameName ? `is playing ${gameName}` : ''}` })
-        .setTitle(stream.title || "Now Live")
-        .setURL(`https://www.twitch.tv/${encodeURIComponent(stream.userDisplayName)}`);
+      .setThumbnail(stream.getThumbnailUrl(480, 270) + "?t=" + Date.now())
+      .setAuthor({ name: `${stream.userDisplayName} ${gameName ? `is playing ${gameName}` : ''}` })
+      .setTitle(stream.title || "Now Live")
+      .setURL(`https://www.twitch.tv/${encodeURIComponent(stream.userDisplayName)}`);
   } else if (srv == "youtube") {
-    const content = stream.content[0].snippet;
+    const content = stream.snippet;
     embed.setColor("#ff0000")
-        .setThumbnail(content.thumbnails.default.url)
-        .setTitle(content.title)
-        .setAuthor(content.channelTitle)
-        .setURL(`https://www.youtube.com/watch?v=${stream.content[0].id.videoId}`);
+      .setThumbnail(content.thumbnails.default.url)
+      .setTitle(content.title ?? "Now Live")
+      .setAuthor({ name: `${content.channelTitle} is Live!` })
+      .setURL(ytURL(stream.id));
   }
   return embed;
 }
@@ -198,13 +214,21 @@ async function processTwitch(igns) {
     const perPage = 50;
     for (let i = 0; i < igns.length; i += perPage) {
       const streamers = igns.slice(i, i + perPage);
-
       const streams = await twitch.streams.getStreams({ userName: streamers.map(s => s.ign) }).catch(error => { u.errorHandler(error, "Twitch getStreams()"); });
-      console.log(streams);
       if (streams) {
         // Handle Live
         for (const stream of streams.data) {
           const status = twitchStatus.get(stream.userDisplayName.toLowerCase());
+          if (status && (stream.gameId != status.gameId || stream.title != status.title)) {
+            twitchStatus.set(stream.userDisplayName.toLowerCase(), {
+              url: status.url,
+              title: stream.title,
+              gameId: stream.gameId,
+              status: "online",
+              name: status.name,
+              since: status.since
+            });
+          }
           if (!status || ((status.status == "offline") && ((Date.now() - status.since) >= (30 * 60 * 1000)))) {
             const rating = (await gameInfo(stream.gameId))?.rating;
             if (stream.userDisplayName.toLowerCase() == "ldsgamers") {
@@ -214,14 +238,18 @@ async function processTwitch(igns) {
               }).catch(u.noop);
             }
             twitchStatus.set(stream.userDisplayName.toLowerCase(), {
+              url: `https://www.twitch.tv/${encodeURIComponent(stream.userDisplayName)}`,
+              title: stream.title,
               status: "online",
+              gameId: stream.gameId,
+              name: stream.userDisplayName,
               since: Date.now()
             });
             const ign = streamers.find(streamer => streamer.ign.toLowerCase() == stream.userDisplayName.toLowerCase());
             const member = ldsg.members.cache.get(ign.discordId);
             if (member && isPartnered(member)) member.roles.add(liveRole).catch(u.noop);
             const embed = notificationEmbed(stream, "twitch");
-            if (stream.gameId && !rating) return;
+            // if (stream.gameId && !rating) return;
             if ((rating != "M - Mature 17+") && extraLife && member?.roles.cache.has(sf.roles.extralife) && stream.title.toLowerCase().replace(/ /g, '').includes("extralife")) {
               notificationChannel.send(`${ldsg.roles.cache.get(sf.roles.extraliferaiders)}, **${member.displayName}** is live for Extra Life!`, { embeds: [embed] }).catch(u.noop);
             } else if (rating != "M - Mature 17+") {
@@ -239,6 +267,10 @@ async function processTwitch(igns) {
           const status = twitchStatus.get(channel.ign.toLowerCase());
           if (status?.status == "online") {
             twitchStatus.set(channel.ign.toLowerCase(), {
+              url: null,
+              title: null,
+              gameId: null,
+              name: channel.ign,
               status: "offline",
               since: Date.now()
             });
@@ -248,6 +280,73 @@ async function processTwitch(igns) {
     }
   } catch (e) {
     u.errorHandler(e, "Process Twitch");
+  }
+}
+async function processYoutube(igns) {
+  try {
+    const ldsg = Module.client.guilds.cache.get(sf.ldsg),
+      liveRole = ldsg.roles.cache.get(sf.roles.live),
+      notificationChannel = ldsg.channels.cache.get(sf.channels.general);
+    const videos = await yt.getManyUserVids(igns.map(i => {return { id: i.discordId, yt: i.ign };}), 5);
+    for (const [id, video] of videos) {
+      const status = youtubeStatus.get(id);
+      const L = yt.getLive(video.videos);
+      if (L && status && (ytURL(L.id) != status.url || L.snippet.title != status.title)) {
+        youtubeStatus.set(id, {
+          url: ytURL(L.id),
+          title: L.snippet.title,
+          status: "online",
+          name: status.name,
+          since: status.since
+        });
+      }
+      if (!status || ((status.status == "offline") && ((Date.now() - status.since) >= (30 * 60 * 1000)))) {
+        if (L) {
+          // Handle Online
+          if (L.snippet.channelId == ldsgYT) {
+            Module.client.user.setActivity(L.snippet.title, {
+              url: ytURL(L.id),
+              type: "STREAMING"
+            }).catch(u.noop);
+          }
+          youtubeStatus.set(id, {
+            url: ytURL(L.id),
+            title: L.snippet.title,
+            status: "online",
+            name: L.snippet.channelTitle,
+            since: Date.now()
+          });
+          const ign = igns.find(streamer => streamer.ign == L.snippet.channelId);
+          const member = ldsg.members.cache.get(ign.discordId);
+          if (member && isPartnered(member)) member.roles.add(liveRole).catch(u.noop);
+          const embed = notificationEmbed(L, "youtube");
+          if (extraLife && member?.roles.cache.has(sf.roles.extralife) && L.snippet.title.toLowerCase().replace(/ /g, '').includes("extralife")) {
+            notificationChannel.send(`${ldsg.roles.cache.get(sf.roles.extraliferaiders)}, **${member.displayName}** is live for Extra Life!`, { embeds: [embed] }).catch(u.noop);
+          } else {
+            notificationChannel.send({ embeds: [embed] }).catch(u.noop);
+          }
+        } else if (status || !L) {
+          // Handle offline
+          const vid = video.videos[0];
+          if (status) {
+            if (vid.snippet.channelId == ldsgYT) Module.client.user.setActivity("Tiddlywinks").catch(error => u.errorHandler(error, "Clear Icarus streaming status (yt)"));
+            const member = ldsg.members.cache.get(id);
+            if (liveRole.members.has(member?.id)) member.roles.remove(liveRole).catch(error => u.errorHandler(error, `Remove Live role from ${member.displayName}`));
+          }
+          if (!status || status.status == 'online') {
+            youtubeStatus.set(id, {
+              url: null,
+              title: null,
+              name: status.name ?? vid.snippet.channelTitle,
+              status: "offline",
+              since: Date.now()
+            });
+          }
+        }
+      }
+    }
+  } catch (e) {
+    u.errorHandler(e, "Process Youtube");
   }
 }
 /** @param {HelixStream | HelixUser} stream*/
@@ -275,6 +374,27 @@ function twitchEmbed(stream, online = true) {
 
   return embed;
 }
+/**
+ * @param {youtube.Video[] | youtube.Video} stream
+ * @param {boolean} online
+ */
+function youtubeEmbed(stream, online) {
+  const name = stream[0].snippet.channelTitle;
+  const embed = u.embed().setColor('RED');
+
+  if (online) {
+    embed.setTitle(`YouTube Stream: ${name}`)
+      .setURL(ytURL(encodeURIComponent(stream.id.videoId)))
+      .setAuthor({ name })
+      .setTimestamp(new Date(stream.snippet.publishedAt));
+  } else {
+    const top3 = stream.slice(0, 3);
+    embed.setTitle(`${name}'s Recent Videos`);
+    if (top3.length > 0) embed.addFields(top3.map(t => {return { name: new Date(t.snippet.publishedAt).toTimeString(), value: `[${t.snippet.title}](${ytURL(t.id.videoId)})` }; }));
+    else embed.setDescription("Looks like they don't have any videos!");
+  }
+  return embed;
+}
 
 /** @param {discord.CommandInteraction} int*/
 async function approve(int) {
@@ -288,7 +408,7 @@ async function approve(int) {
       await streamer.send("Congratulations! You've been added to the Approved Streamers list in LDSG! " +
       "This allows notifications to show up in #general and grants access to stream to voice channels. " +
       "In order to show notifications in #general, please make sure your correct Twitch or Mixer name is saved in the database " +
-      "with `!addIGN twitch/mixer YourName`.\n\nWhile streaming, please remember the Streaming Guidelines ( https://goo.gl/Pm3mwS ) " +
+      "with `!addIGN twitch/youtube YourName`.\n\nWhile streaming, please remember the Streaming Guidelines ( https://goo.gl/Pm3mwS ) " +
       "and LDSG Code of Conduct ( http://ldsgamers.com/code-of-conduct ). " +
       "Also, please be aware that LDSG may make changes to the Approved Streamers list from time to time at its discretion.").catch(mC.blocked(streamer, 'Made Approved Streamer'));
       await int.editReply("I applied the role to " + streamer.displayName + "!");
@@ -392,43 +512,62 @@ async function info(int) {
 /** @param {discord.CommandInteraction} int*/
 async function live(int) {
   try {
-    const twitchIgns = await Module.db.ign.getList("twitch");
-    const twitchChannels = twitchIgns.filter(ign => int.guild.roles.cache.get(sf.roles.approvedstreamers).members.has(ign.discordId)).map(ign => ign.ign);
-    let streamFetch = [];
+    const tEmbed = u.embed().setColor('#6441A4');
+    const yEmbed = u.embed().setColor('RED');
 
-    // Fetch channels from Twitch
+    const tChannels = [];
+    const yChannels = [];
     let i = 0;
-    do {
-      const userName = twitchChannels.slice(i, i + 100);
-      const streams = await twitch.streams.getStreams({ userName });
-      streamFetch = streamFetch.concat(streams?.data ?? []);
-      i += 100;
-    } while (i < twitchChannels.length);
-
-    const embed = u.embed().setColor('#6441A4');
-
-    const channels = [];
-    i = 0;
-    do {
-      const stream = streamFetch[i];
-      const game = (await gameInfo(stream.gameId))?.name || "Something?";
-      channels.push({
-        name: stream.userDisplayName,
-        game,
+    const twitchFetched = twitchStatus.toJSON();
+    if (twitchFetched.length > 0) {
+      do {
+        const stream = twitchFetched[i];
+        if (stream) {
+          const game = (await gameInfo(stream.gameId))?.name ?? "Something";
+          tChannels.push({
+            name: stream.name,
+            game,
+            title: stream.title,
+            url: stream.url
+          });
+        }
+        i++;
+      } while (i < twitchFetched.size);
+    }
+    for (const [id, stream] of youtubeStatus) {
+      id;
+      yChannels.push({
+        name: stream.name,
         title: stream.title,
-        url: `https://www.twitch.tv/${stream.userDisplayName}`
+        url: stream.url
       });
-    } while (i < streamFetch.length);
+    }
 
-    channels.sort((a, b) => a.name.localeCompare(b.name));
-    const addField = (i2, embed2) => {
-      const channel = channels[i2];
+    tChannels.sort((a, b) => a.name.localeCompare(b.name));
+    yChannels.sort((a, b) => a.name.localeCompare(b.name));
+    const addFieldTwitch = (i2, embed2) => {
+      const channel = tChannels[i2];
       embed2.addField(`${channel.name} playing ${channel.game}`, `[${channel.title}](${channel.url})`, true);
+      return embed2;
     };
-    const embeds = u.multiEmbed(addField, channels.length, embed);
-    embeds[0].setTitle(`Currently Streaming in ${int.guild.name}`);
-
-    int.reply({ embeds: [embeds], ephemeral: true });
+    const addFieldYoutube = (i2, embed2) => {
+      const channel = yChannels[i2];
+      embed2.addField(`${channel.name}`, `[${channel.title}](${channel.url})`, true);
+      return embed2;
+    };
+    let embeds = [];
+    if (tChannels.length > 0) {
+      const tEmbeds = u.multiEmbed(addFieldTwitch, tChannels.length, tEmbed);
+      tEmbeds[0].setTitle(`Currently Streaming on Twitch in ${int.guild.name}`);
+      embeds = embeds.concat(tEmbeds);
+    }
+    if (yChannels.length > 0) {
+      const yEmbeds = u.multiEmbed(addFieldYoutube, yChannels.length, yEmbed);
+      yEmbeds[0].setTitle(`Currently Streaming on Youtube in ${int.guild.name}`);
+      embeds = embeds.concat(yEmbeds);
+    }
+    if (embeds.length == 0) return int.reply({ content: "Looks like there aren't any live streams going on right now.", ephemeral: true });
+    else int.reply({ embeds });
   } catch (e) { u.errorHandler(e, int); }
 }
 
@@ -482,26 +621,59 @@ async function follow(int) {
   try {
     if (!perms.isMgmt(int)) return int.reply({ content: "This command is only for Management!" });
     const suffix = int.options.getString('channel');
-    const platform = "twitch";
+    const platform = int.options.getString('platform');
     if (int.options.getBoolean('list') == true) {
-      let channelInfo = await twitch.users.getUsersByIds(bonusStreams[platform].sort((a, b) => a.localeCompare(b)));
-      channelInfo = channelInfo.sort((a, b) => a.id.localeCompare(b.id));
-      const embed = u.embed().setColor('#6441A4')
+      if (bonusStreams[platform].length == 0) return int.reply({ content: "Looks like there aren't any followed streamers right now!", ephemeral: true });
+      if (platform == 'twitch') {
+        let channelInfo = await twitch.users.getUsersByNames(bonusStreams[platform].sort((a, b) => a.localeCompare(b)));
+        channelInfo = channelInfo.sort((a, b) => a.id.localeCompare(b.id));
+        const embed = u.embed().setColor('#6441A4')
         .setTitle("Streams from non-LDSG members")
-        .setDescription(channelInfo.map(channel => `[${channel.displayName}](https://www.twitch.tv/${channel.displayName})`).join('\n') || "There aren't any followed streamers right now.");
-      return int.reply({ embeds: [embed], ephemeral: true });
+        .setDescription(channelInfo.map(channel => `[${channel.displayName}](https://www.twitch.tv/${channel.displayName})`).join('\n') || "There aren't any followed Twitch streamers right now.");
+        return int.reply({ embeds: [embed], ephemeral: true });
+      } else {
+        let channelInfo = await yt.getChannels(bonusStreams[platform]);
+        channelInfo = channelInfo.sort((a, b) => a.snippet.title.localeCompare(b.snippet.title));
+        const embed = u.embed().setColor('RED')
+        .setTitle("Streams from non-LDSG members")
+        .setDescription(channelInfo.map(channel => `[${channel.snippet.title}](https://www.youtube.com/channel/${channel.id})`).join('\n') || "There aren't any followed YouTube streamers right now.");
+        return int.reply({ embeds: [embed], ephemeral: true });
+      }
     }
+    const embed = u.embed().setAuthor({ name: int.member.displayName, iconURL: int.member.displayAvatarURL() })
+      .setTitle("Channel added to the Followed Channels list");
     if (!suffix) return int.reply({ content: "You need to provide a channel to watch!", ephemeral: true });
     if (["twitch"].includes(platform)) {
+      // FOLLOW TWITCH
       const validUser = (await twitch.search.searchChannels(suffix, { limit: 1 })).data[0];
       if (!validUser) return int.reply({ content: "I wasn't able to find that channel.", ephemeral: true });
-      const react = await u.confirmInteraction(int, `[${validUser.displayName}](https://twitch.tv/${validUser.displayName})`, "Is this the right channel?");
-      if (!react) return;
-      if (bonusStreams[platform].includes(validUser.id)) return int.editReply({ content: "That channel is already being followed!", embeds: [] });
-      bonusStreams[platform] = bonusStreams[platform].concat(validUser.id);
-      fs.writeFileSync("./data/streams.json", JSON.stringify(bonusStreams, null, "\t"));
-      int.editReply({ content: `\`${suffix}\` was added to the stream notifications list`, embeds: [] });
-    } else {return int.reply({ content: "You need to provide a channel to watch!", ephemeral: true });}
+      const url = `https://twitch.tv/${validUser.displayName}`;
+      const react = await u.confirmInteraction(int, `[${validUser.displayName}](${url})`, "Is this the right channel?");
+      if (react) {
+        if (bonusStreams[platform].includes(validUser.name)) return int.editReply({ content: "That channel is already being followed!", embeds: [], components: [] });
+        bonusStreams[platform] = bonusStreams[platform].concat(validUser.name);
+        fs.writeFileSync("./data/streams.json", JSON.stringify(bonusStreams, null, "\t"));
+        int.editReply({ content: `\`${suffix}\` was added to the Followed Channels list`, embeds: [] });
+        embed.setDescription(`[${validUser.displayName}](${url}) (Twitch) was added to the Followed Channels list.`);
+        int.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
+      }
+    } else if (platform == 'youtube') {
+      // FOLLOW YT
+      if (bonusStreams[platform].includes(suffix)) return int.reply({ content: "That channel is already being followed!", embeds: [], components: [] });
+      const validUser = (await yt.getChannels(suffix))[0];
+      if (!validUser) return int.reply({ content: `I wasn't able to find that channel. Make sure you're using their channel ID, not their name.\n(example: \`${ldsgYT}\` instead of \`LDS Gamers\`)`, ephemeral: true });
+      const url = `https://youtube.com/channel/${validUser.id}`;
+      const react = await u.confirmInteraction(int, `[${validUser.snippet.title}](${url})`, "Is this the right channel?");
+      if (react) {
+        if (bonusStreams[platform].includes(validUser.id)) return int.editReply({ content: "That channel isn already being followed!", embeds: [], components: [] });
+        bonusStreams[platform] = bonusStreams[platform].concat(validUser.id);
+        fs.writeFileSync("./data/streams.json", JSON.stringify(bonusStreams, null, "\t"));
+        int.editReply({ content: `\`${validUser.snippet.title}\` was added to the Followed Channels list`, embeds: [] });
+        embed.setDescription(`[${validUser.snippet.title}](${url}) (YT) was added to the Followed Channels list.`);
+        int.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
+      }
+
+    }
   } catch (e) { u.errorHandler(e, int); }
 }
 
@@ -510,27 +682,60 @@ async function unfollow(int) {
   try {
     if (!perms.isMgmt(int)) return int.reply({ content: "This command is only for Management!" });
     const suffix = int.options.getString('channel');
-    const platform = "twitch";
-    if (["twitch"].includes(platform)) {
+    const platform = int.options.getString("platform");
+    const embed = u.embed().setAuthor({ name: int.member.displayName, iconURL: int.member.displayAvatarURL() })
+      .setTitle("Channel removed from the Followed Channels list");
+    if (platform == 'twitch') {
+      // TWTICH UNFOLLOW
       const validUser = (await twitch.search.searchChannels(suffix, { limit: 1 })).data[0];
       if (!validUser) return int.reply({ content: "I wasn't able to find that channel.", ephemeral: true });
-      const react = await u.confirmInteraction(int, `[${validUser.displayName}](https://twitch.tv/${validUser.displayName})`, "Is this the right channel?");
-      if (!react) return;
-      if (!bonusStreams[platform].includes(validUser.id)) return int.editReply({ content: "That channel isn't being followed!", embeds: [] });
-      bonusStreams[platform] = bonusStreams[platform].filter(s => s != validUser.id);
-      fs.writeFileSync("./data/streams.json", JSON.stringify(bonusStreams, null, "\t"));
-      int.editReply({ content: `\`${suffix}\` was removed from the stream notifications list`, embeds: [] });
-    } else {
-      return int.reply("you need to tell me at least one channel to unwatch!");
+      const url = `https://twitch.tv/${validUser.displayName}`;
+      const react = await u.confirmInteraction(int, `[${validUser.displayName}](${url})`, "Is this the right channel?");
+      if (react) {
+        if (!bonusStreams[platform].includes(validUser.name)) return int.editReply({ content: "That channel isn't being followed!", embeds: [], components: [] });
+        bonusStreams[platform] = bonusStreams[platform].filter(s => s != validUser.name);
+        fs.writeFileSync("./data/streams.json", JSON.stringify(bonusStreams, null, "\t"));
+        int.editReply({ content: `\`${suffix}\` was removed from the stream notifications list`, embeds: [] });
+        embed.setDescription(`[${validUser.displayName}](${url}) (Twitch) was removed from the Followed Channels list.`);
+        int.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
+      }
+    } else if (platform == 'youtube') {
+      // YT UNFOLLOW
+      const validUser = bonusStreams[platform].find(s => s == suffix);
+      if (!validUser) return int.reply({ content: `I wasn't able to find that channel on the list. Make sure you're using their channel ID, not their name.\n(example: \`${ldsgYT}\` instead of \`LDS Gamers\`)`, ephemeral: true });
+      const url = `https://youtube.com/channel/${validUser}`;
+      const fetchedChannel = youtubeStatus.get(suffix);
+      const react = await u.confirmInteraction(int, `[${fetchedChannel?.name ?? "Channel"}](${url})`, "Is this the right channel?");
+      if (react) {
+        bonusStreams[platform] = bonusStreams[platform].filter(s => s != validUser);
+        fs.writeFileSync("./data/streams.json", JSON.stringify(bonusStreams, null, "\t"));
+        int.editReply({ content: `\`${fetchedChannel?.name ?? "The channel"}\` was removed from the Followed Channels list`, embeds: [], components: [] });
+        embed.setDescription(`[${fetchedChannel?.name ?? "This Channel"}](${url}) (YT) was removed from the Followed Channels list.`);
+        int.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
+      }
     }
   } catch (e) { u.errorHandler(e, int); }
 }
 
 /** @param {discord.CommandInteraction} int*/
-// VERY OUTDATED AND NEEDS API KEY
-// async function youtube(int) {
-//
-// }
+async function youtube(int) {
+  try {
+    const user = int.options.getUser('user', false) ?? int.user;
+    const ign = await Module.db.ign.find(user.id, 'youtube').catch(u.noop);
+    if (!ign) return int.reply({ content: user + " has not set a YouTube ID with `!addign youtube`.", ephemeral: true });
+    const id = encodeURIComponent(ign.ign);
+    const stream = await yt.fetchChannelContent(id).catch(u.noop);
+    if (stream) {
+      const status = stream.find(s => s.snippet.liveBroadcastContent == 'live');
+      if (status) int.reply({ embeds: [youtubeEmbed(status, true)] });
+      else int.reply({ embeds: [youtubeEmbed(stream, false)] });
+    } else {
+      int.reply({ content: `I couldn't find that channel.`, ephemeral: true });
+    }
+  } catch (e) {
+    u.errorHandler(e, int);
+  }
+}
 
 const Module = new Augur.Module()
 .addEvent("guildMemberUpdate", (oldMember, newMember) => {
@@ -558,20 +763,37 @@ const Module = new Augur.Module()
     for (const [key, status] of data.twitchStatus) {
       twitchStatus.set(key, status);
     }
+    for (const [key, status] of data.youtubeStatus) {
+      youtubeStatus.set(key, status);
+    }
+    ytCycle = data.ytCycle;
   }
 })
-.setUnload(() => ({ twitchStatus, applicationCount }))
+.setUnload(() => ({ twitchStatus, applicationCount, youtubeStatus, ytCycle }))
 .setClockwork(async () => {
   try {
-    const interval = 1 * 30 * 1000;
+    const interval = 5 * 60 * 1000;
     return setInterval(async () => {
       try {
         // Approved Streamers
         const streamers = Module.client.guilds.cache.get(sf.ldsg).roles.cache.get(sf.roles.approvedstreamers).members.map(member => member.id);
-        let igns = await Module.db.ign.find(streamers, "twitch");
-        igns = igns.concat(bonusStreams.twitch.map(c => ({ ign: c, discordId: c })));
+        let ignsTwitch = await Module.db.ign.find(streamers, "twitch");
+        let ignsYoutube = await Module.db.ign.find(streamers, "youtube");
+        ignsTwitch = ignsTwitch.concat(bonusStreams.twitch.map(c => ({ ign: c, discordId: c })));
+        ignsYoutube = ignsYoutube.concat(bonusStreams.youtube.map(c => ({ ign: c, discordId: c })));
 
-        processTwitch(igns);
+        processTwitch(ignsTwitch);
+
+        // Only check every 15 minutes and during specific times to save on API quota
+        if (new Date().getHours() > 9) {
+          ytCycle++;
+          if (ytCycle == 3) {
+            ytCycle = 0;
+            processYoutube(ignsYoutube);
+          }
+        } else {
+          ytCycle = 0;
+        }
 
         // Check for new Approved Streamers applications
         processApplications();
@@ -604,7 +826,7 @@ const Module = new Augur.Module()
     case "info": return info(interaction);
     case "live": return live(interaction);
     case "twitch": return twitchCMD(interaction);
-    // case "youtube": return youtube(interaction); To be worked on later... maybe.
+    case "youtube": return youtube(interaction);
     }
   }
 });

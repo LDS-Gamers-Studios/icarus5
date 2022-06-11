@@ -3,8 +3,8 @@
   "description": "Get info on streams and streamers",
   "options": [
     {
-      "type": 1,
       "name": "approve",
+      "type": 1,
       "description": "[TEAM] Approve an LDSG Streamer for notifications",
       "options": [
         {
@@ -16,8 +16,8 @@
       ]
     },
     {
-      "type": 1,
       "name": "unapprove",
+      "type": 1,
       "description": "[TEAM] Remove someone from the Approved Streamer and Community Streamer roles",
       "options": [
         {
@@ -29,10 +29,26 @@
       ]
     },
     {
-      "type": 1,
       "name": "follow",
+      "type": 1,
       "description": "[MGMT] Add a non-member's channel to notifications",
       "options": [
+        {
+          "type": 3,
+          "name": "platform",
+          "description": "The platform of the channel",
+          "required": true,
+          "choices": [
+            {
+              "name": "Twitch",
+              "value": "twitch"
+            },
+            {
+              "name": "YouTube",
+              "value": "youtube"
+            }
+          ]
+        },
         {
           "type": 3,
           "name": "channel",
@@ -46,56 +62,105 @@
       ]
     },
     {
-      "type": 1,
       "name": "unfollow",
+      "type": 1,
       "description": "[MGMT] Remove a non-member's channel from notifications.",
       "options": [
         {
           "type": 3,
+          "name": "platform",
+          "description": "The platform of the channel",
+          "required": true,
+          "choices": [
+            {
+              "name": "Twitch",
+              "value": "twitch"
+            },
+            {
+              "name": "YouTube",
+              "value": "youtube"
+            }
+          ]
+        },
+        {
+          "type": 3,
           "name": "channel",
-          "description": "The channel name",
-          "required": true
+          "description": "The channel name"
         }
       ]
     },
     {
-      "type": 1,
       "name": "extralife-goal",
+      "type": 1,
       "description": "Check the LDSG Extra Life Goal"
     },
     {
-      "type": 1,
       "name": "extralife-live",
+      "type": 1,
       "description": "See who is live on the LDSG Extra Life Team"
     },
     {
-      "type": 1,
       "name": "multi",
+      "type": 1,
       "description": "Links to multi-stream pages on Multistre.am",
       "options": [
-        { "type": 6, "name": "user1", "description": "A user to add to the multistre.am", "required": true },
-        { "type": 6, "name": "user2", "description": "A user to add", "required": true },
-        { "type": 6, "name": "3", "description": "A user to add" },
-        { "type": 6, "name": "4", "description": "A user to add" },
-        { "type": 6, "name": "5", "description": "A user to add" },
-        { "type": 6, "name": "6", "description": "A user to add" },
-        { "type": 6, "name": "7", "description": "A user to add" },
-        { "type": 6, "name": "8", "description": "A user to add" }
+        {
+          "type": 6,
+          "name": "user1",
+          "description": "A user to add to the multistre.am",
+          "required": true
+        },
+        {
+          "type": 6,
+          "name": "user2",
+          "description": "A user to add",
+          "required": true
+        },
+        {
+          "type": 6,
+          "name": "3",
+          "description": "A user to add"
+        },
+        {
+          "type": 6,
+          "name": "4",
+          "description": "A user to add"
+        },
+        {
+          "type": 6,
+          "name": "5",
+          "description": "A user to add"
+        },
+        {
+          "type": 6,
+          "name": "6",
+          "description": "A user to add"
+        },
+        {
+          "type": 6,
+          "name": "7",
+          "description": "A user to add"
+        },
+        {
+          "type": 6,
+          "name": "8",
+          "description": "A user to add"
+        }
       ]
     },
     {
-      "type": 1,
       "name": "info",
+      "type": 1,
       "description": "Displays LDSG stream status and stream info"
     },
     {
-      "type": 1,
       "name": "live",
+      "type": 1,
       "description": "See who is live in LDSG"
     },
     {
-      "type": 1,
       "name": "twitch",
+      "type": 1,
       "description": "Links to a Twitch stream",
       "options": [
         {
@@ -107,6 +172,18 @@
           "type": 3,
           "name": "channel",
           "description": "The channel to look up (alternative to user)"
+        }
+      ]
+    },
+    {
+      "name": "youtube",
+      "type": 1,
+      "description": "Links to a Youtube stream or lists the channel's recent videos",
+      "options": [
+        {
+          "type": 6,
+          "name": "user",
+          "description": "The user to look up"
         }
       ]
     }
