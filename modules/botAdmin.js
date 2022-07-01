@@ -178,9 +178,10 @@ const Module = new Augur.Module()
   hidden: true,
   permissions: (msg) => msg.guild,
   process: (msg, suffix) => {
-    if (!suffix) msg.reply("you need to tell me an emoji name!").then(u.clean);
-    else {
-      let emoji = msg.guild.emojis.cache.find(r => r.name.toLowerCase() == suffix.toLowerCase());
+    if (!suffix) {
+      msg.reply("you need to tell me an emoji name!").then(u.clean);
+    } else {
+      const emoji = msg.guild.emojis.cache.find(r => r.name.toLowerCase() == suffix.toLowerCase());
       if (!emoji) msg.reply(`I couldn't find an emoji named ${suffix}.`);
       else msg.channel.send(`${emoji} \`${emoji.name}: ${emoji.id}\``);
     }
@@ -193,9 +194,10 @@ const Module = new Augur.Module()
   hidden: true,
   permissions: (msg) => msg.guild,
   process: (msg, suffix) => {
-    if (!suffix) msg.reply("you need to tell me a role name!").then(u.clean);
-    else {
-      let role = msg.guild.roles.cache.find(r => r.name.toLowerCase() == suffix.toLowerCase());
+    if (!suffix) {
+      msg.reply("you need to tell me a role name!").then(u.clean);
+    } else {
+      const role = msg.guild.roles.cache.find(r => r.name.toLowerCase() == suffix.toLowerCase());
       if (!role) msg.reply(`I couldn't find a role named ${suffix}.`);
       else msg.channel.send(`${role.name}: ${role.id}`);
     }
