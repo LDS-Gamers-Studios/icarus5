@@ -30,7 +30,7 @@ const extraLife = (new Date().getMonth() == 10),
  */
 const authProvider = new ClientCredentialsAuthProvider(config.twitch.clientId, config.twitch.clientSecret),
   twitch = new ApiClient({ authProvider }),
-  twitchGames = new Map(),
+  games = new Map(),
   /** @type {discord.Collection<string, status>} */
   twitchStatus = new u.Collection(),
   /** @type {discord.Collection<string, status>} */
@@ -39,16 +39,20 @@ const authProvider = new ClientCredentialsAuthProvider(config.twitch.clientId, c
 function ytURL(id) {
   return `https://youtube.com/watch?v=${id}`;
 }
+function tURL(id) {
+  return `https://www.twitch.tv/${id}`;
+}
 /** @param {string} gameId */
-async function gameInfo(gameId) {
-  if (twitchGames.has(gameId)) return twitchGames.get(gameId);
-  const game = await twitch.games.getGameById(gameId).catch(u.noop);
-  if (game) {
-    twitchGames.set(game.id, game);
+async function gameInfo(gameId, ytPlat = false) {
+  if (games.has(gameId)) return games.get(gameId);
+  let game = await twitch.games.getGameById(gameId).catch(u.noop);
+  if (ytPlat) game = { id: gameId, name: gameId, boxArtUrl: null };
+  if (game?.id) {
+    games.set(game.id, game);
     const ratings = (await gamesDB.byGameName(game.name, { fields: "rating" }).catch(u.noop))
       ?.games?.filter(g => g.game_title.toLowerCase() == game.name.toLowerCase() && g.rating != "Not Rated");
-    twitchGames.get(game.id).rating = ratings?.[0]?.rating;
-    return twitchGames.get(game.id);
+    games.get(game.id).rating = ratings?.[0]?.rating;
+    return games.get(game.id);
   }
 }
 
@@ -58,13 +62,13 @@ async function extraLifeEmbed() {
 
     if (streams?.data?.length > 0) {
       const channels = streams.data.map(stream => {
-        const game = twitchGames.get(stream.gameId)?.name;
+        const game = games.get(stream.gameId)?.name;
         return {
           name: stream.userDisplayName,
           game,
           service: "Twitch",
           title: stream.title,
-          url: `https://www.twitch.tv/${stream.userDisplayName}`
+          url: tURL(stream.userDisplayName)
         };
       }).sort((a, b) => a.name.localeCompare(b.name));
       const addField = (i, embed) => {
@@ -158,7 +162,7 @@ function isPartnered(member) {
 function notificationEmbed(stream, srv = "twitch") {
   const embed = u.embed().setTimestamp();
   if (srv == "twitch") {
-    const gameName = twitchGames.get(stream.gameId)?.name;
+    const gameName = games.get(stream.gameId)?.name;
     embed.setColor('#6441A4')
       .setThumbnail(stream.getThumbnailUrl(480, 270) + "?t=" + Date.now())
       .setAuthor({ name: `${stream.userDisplayName} ${gameName ? `is playing ${gameName}` : ''}` })
@@ -166,10 +170,11 @@ function notificationEmbed(stream, srv = "twitch") {
       .setURL(`https://www.twitch.tv/${encodeURIComponent(stream.userDisplayName)}`);
   } else if (srv == "youtube") {
     const content = stream.snippet;
+    const gameName = games.get(stream.game)?.name;
     embed.setColor("#ff0000")
       .setThumbnail(content.thumbnails.default.url)
       .setTitle(content.title ?? "Now Live")
-      .setAuthor({ name: `${content.channelTitle} is Live!` })
+      .setAuthor({ name: `${content.channelTitle} is ${gameName ? `playing ${gameName}` : "Live!"}` })
       .setURL(ytURL(stream.id));
   }
   return embed;
@@ -194,10 +199,10 @@ function processApplications() {
             .addField("Streaming Platforms", app.streamed_platforms.join("\n"))
             .addField("Streaming Games", app.streamed_games)
             .addField("Stream Links", app.streaming_platform_links)
-            .addField("Discord Commitment", app.discord_commit)
-            .addField("Code Commitment", app.agree_to_conduct);
+            .addField("Discord Commitment", `${app.discord_commit}`)
+            .addField("Code Commitment", `${app.agree_to_conduct}`);
 
-        Module.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] })
+        Module.client.channels.cache.get(sf.channels.teamStreamers).send({ embeds: [embed] })
           .then(() => fs.unlinkSync(path))
           .catch(e => u.errorHandler(e, "Delete Approved Streamer Application Error"));
       }
@@ -291,11 +296,13 @@ async function processYoutube(igns) {
     for (const [id, video] of videos) {
       const status = youtubeStatus.get(id);
       const L = yt.getLive(video.videos);
-      if (L && status && (ytURL(L.id) != status.url || L.snippet.title != status.title)) {
+      if (L) L.game = await yt.getGame(L.id);
+      if (L && status && (ytURL(L.id) != status.url || L.snippet.title != status.title || L.game != status.gameId)) {
         youtubeStatus.set(id, {
           url: ytURL(L.id),
           title: L.snippet.title,
           status: "online",
+          gameId: L.game,
           name: status.name,
           since: status.since
         });
@@ -313,6 +320,7 @@ async function processYoutube(igns) {
             url: ytURL(L.id),
             title: L.snippet.title,
             status: "online",
+            gameId: L.game,
             name: L.snippet.channelTitle,
             since: Date.now()
           });
@@ -358,7 +366,7 @@ function twitchEmbed(stream, online = true) {
     .setAuthor({ name });
 
   if (online) {
-    const gameName = twitchGames.get(stream.gameId)?.name || "Something";
+    const gameName = games.get(stream.gameId)?.name || "Something";
     embed.setDescription(stream.title)
       .setTitle(stream.userDisplayName)
       .setThumbnail(stream.thumbnailUrl.replace("{width}", "480").replace("{height}", "270") + "?t=" + Date.now())
@@ -375,15 +383,16 @@ function twitchEmbed(stream, online = true) {
   return embed;
 }
 /**
- * @param {youtube.Video[] | youtube.Video} stream
+ * @param {Youtube.Video[] | Youtube.Video} stream
  * @param {boolean} online
  */
 function youtubeEmbed(stream, online) {
-  const name = stream[0].snippet.channelTitle;
+  if (Array.isArray(stream)) stream = stream[0];
+  const name = stream.snippet.channelTitle;
   const embed = u.embed().setColor('RED');
 
   if (online) {
-    embed.setTitle(`YouTube Stream: ${name}`)
+    embed.setTitle(`YouTube Stream: ${stream.snippet.title ?? name}`)
       .setURL(ytURL(encodeURIComponent(stream.id.videoId)))
       .setAuthor({ name })
       .setTimestamp(new Date(stream.snippet.publishedAt));
@@ -496,12 +505,12 @@ async function multi(int) {
 async function info(int) {
   const name = "ldsgamers";
   try {
-    const stream = (await twitch.streams.getStreamByUserName(name));
+    const stream = await twitch.streams.getStreamByUserName(name).catch(u.noop);
     if (stream) {
       await gameInfo(stream.gameId);
       int.reply({ embeds: [twitchEmbed(stream)], ephemeral: true });
     } else { // Offline
-      const streamer = await twitch.users.getUserByName(name);
+      const streamer = await twitch.users.getUserByName(name).catch(u.noop);
       int.reply({ embeds: [twitchEmbed(streamer, false)], ephemeral: true });
     }
   } catch (e) {
@@ -539,6 +548,7 @@ async function live(int) {
       yChannels.push({
         name: stream.name,
         title: stream.title,
+        game: stream.gameId,
         url: stream.url
       });
     }
@@ -552,7 +562,7 @@ async function live(int) {
     };
     const addFieldYoutube = (i2, embed2) => {
       const channel = yChannels[i2];
-      embed2.addField(`${channel.name}`, `[${channel.title}](${channel.url})`, true);
+      embed2.addField(`${channel.name} ${channel.game ? `playing ${channel.game}` : ""}`, `[${channel.title}](${channel.url})`, true);
       return embed2;
     };
     let embeds = [];
@@ -625,7 +635,7 @@ async function follow(int) {
     if (int.options.getBoolean('list') == true) {
       if (bonusStreams[platform].length == 0) return int.reply({ content: "Looks like there aren't any followed streamers right now!", ephemeral: true });
       if (platform == 'twitch') {
-        let channelInfo = await twitch.users.getUsersByNames(bonusStreams[platform].sort((a, b) => a.localeCompare(b)));
+        let channelInfo = await twitch.users.getUsersByNames(bonusStreams[platform].sort((a, b) => a.localeCompare(b))).catch(u.noop);
         channelInfo = channelInfo.sort((a, b) => a.id.localeCompare(b.id));
         const embed = u.embed().setColor('#6441A4')
         .setTitle("Streams from non-LDSG members")
@@ -645,7 +655,7 @@ async function follow(int) {
     if (!suffix) return int.reply({ content: "You need to provide a channel to watch!", ephemeral: true });
     if (["twitch"].includes(platform)) {
       // FOLLOW TWITCH
-      const validUser = (await twitch.search.searchChannels(suffix, { limit: 1 })).data[0];
+      const validUser = (await twitch.search.searchChannels(suffix, { limit: 1 }).catch(u.noop))?.data[0];
       if (!validUser) return int.reply({ content: "I wasn't able to find that channel.", ephemeral: true });
       const url = `https://twitch.tv/${validUser.displayName}`;
       const react = await u.confirmInteraction(int, `[${validUser.displayName}](${url})`, "Is this the right channel?");
@@ -687,7 +697,7 @@ async function unfollow(int) {
       .setTitle("Channel removed from the Followed Channels list");
     if (platform == 'twitch') {
       // TWTICH UNFOLLOW
-      const validUser = (await twitch.search.searchChannels(suffix, { limit: 1 })).data[0];
+      const validUser = (await twitch.search.searchChannels(suffix, { limit: 1 }).catch(u.noop))?.data[0];
       if (!validUser) return int.reply({ content: "I wasn't able to find that channel.", ephemeral: true });
       const url = `https://twitch.tv/${validUser.displayName}`;
       const react = await u.confirmInteraction(int, `[${validUser.displayName}](${url})`, "Is this the right channel?");
@@ -759,6 +769,7 @@ const Module = new Augur.Module()
 })
 .setInit((data) => {
   gamesDB._setKey(config.api.thegamesdb);
+  yt._setKey(config.google.youtube);
   if (data) {
     for (const [key, status] of data.twitchStatus) {
       twitchStatus.set(key, status);
