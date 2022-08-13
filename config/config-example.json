@@ -13,6 +13,7 @@
     "model": "database/dbControllers.js",
     "db": "",
     "settings": {
+      "useFindAndModify": false,
       "useNewUrlParser": true,
       "user": "",
       "pass": ""
