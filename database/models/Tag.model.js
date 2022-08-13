@@ -3,6 +3,7 @@ const mongoose = require('mongoose'),
 
 const TagSchema = new Schema({
   tag: String,
+  guildId: String,
   response: String,
   attachment: String,
   url: String
