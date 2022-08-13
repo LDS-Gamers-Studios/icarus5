@@ -24,7 +24,7 @@ const modActions = [
 function blocked(member) {
   return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
     u.embed({
-      author: member,
+      author: { name: member, iconURL: member.displayAvatarURL() },
       color: 0x00ffff,
       title: `${member.displayName} has me blocked. *sadface*`
     })
@@ -77,7 +77,7 @@ const modCommon = {
         // Edit interaction
         await interaction.editReply({
           embeds: [
-            u.embed({ author: target })
+            u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
             .setColor(0x00ff00)
             .setDescription(`${target.toString()} banned for:\n${reason}`)
           ],
@@ -102,7 +102,7 @@ const modCommon = {
 
         // Log it
         interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-          u.embed({ author: target })
+          u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
           .setTitle("User Ban")
           .setDescription(`**${interaction.member}** banned **${target}** for:\n${reason}`)
           .setColor(0x0000ff)
@@ -110,7 +110,7 @@ const modCommon = {
       } else {
         // Never mind
         await interaction.editReply({
-          embeds: [u.embed({ author: interaction.member }).setColor(0x0000ff).setDescription(`Ban ${confirm === false ? "cancelled" : "timed out"}`)],
+          embeds: [u.embed({ author: { name: interaction.member, iconURL: interaction.member.displayAvatarURL() } }).setColor(0x0000ff).setDescription(`Ban ${confirm === false ? "cancelled" : "timed out"}`)],
           components: []
         });
       }
@@ -140,7 +140,7 @@ const modCommon = {
     const client = msg.client ?? member?.client;
 
     const infractionSummary = await client.db.infraction.getSummary(member);
-    const embed = u.embed({ color: 0xff0000, author: member });
+    const embed = u.embed({ color: 0xff0000, author: { name: member, iconURL: member.displayAvatarURL() } });
 
     if (Array.isArray(matches)) matches = matches.join(", ");
     if (matches) embed.addField("Match", matches);
@@ -228,7 +228,7 @@ const modCommon = {
     }
     let text = response.join("\n");
     text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
-    return u.embed({ author: member })
+    return u.embed({ author: { name: member, iconURL: member.displayAvatarURL() } })
       .setTitle("Infraction Summary")
       .setDescription(text)
       .setColor(0x00ff00);
@@ -264,7 +264,7 @@ const modCommon = {
         // Edit interaction
         await interaction.editReply({
           embeds: [
-            u.embed({ author: target })
+            u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
             .setColor(0x00ff00)
             .setDescription(`${target.toString()} kicked for:\n${reason}`)
           ],
@@ -289,7 +289,7 @@ const modCommon = {
 
         // Log it
         interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-          u.embed({ author: target })
+          u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
           .setTitle("User Kick")
           .setDescription(`**${interaction.member}** kicked **${target}** for:\n${reason}`)
           .setColor(0x0000ff)
@@ -297,7 +297,7 @@ const modCommon = {
       } else {
         // Never mind
         await interaction.editReply({
-          embeds: [u.embed({ author: target }).setColor(0x0000ff).setDescription(`Kick ${confirm === false ? "cancelled" : "timed out"}`)],
+          embeds: [u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } }).setColor(0x0000ff).setDescription(`Kick ${confirm === false ? "cancelled" : "timed out"}`)],
           components: []
         });
       }
@@ -331,7 +331,7 @@ const modCommon = {
       }
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: target })
+        u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
         .setTitle("Member Mute")
         .setDescription(`**${interaction.member}** muted **${target}** for:\n${reason}`)
         .setColor(0x0000ff)
@@ -361,7 +361,7 @@ const modCommon = {
       const summary = await interaction.client.db.infraction.getSummary(target.id);
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: target })
+        u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
         .setColor("#0000FF")
         .setDescription(note)
         .addField("Resolved", `${u.escapeText(interaction.user.username)} added a note.`)
@@ -396,7 +396,7 @@ const modCommon = {
     const summary = await interaction.client.db.infraction.getSummary(target.id);
 
     interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-      u.embed({ author: target })
+      u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
       .setColor("#0000FF")
       .setDescription(comment)
       .addField("Resolved", `${interaction.member} changed ${target}'s nickname from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.`)
@@ -410,7 +410,7 @@ const modCommon = {
   timeout: async function(interaction, target, reason) {
     // Log it
     await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-      u.embed({ author: interaction.member })
+      u.embed({ author: { name: interaction.member, iconURL: interaction.member.displayAvatarURL() } })
       .setTitle("User Timeout")
       .setDescription(`**${interaction.member}** timed out ${target}`)
       .addField('Reason', reason)
@@ -435,7 +435,7 @@ const modCommon = {
       + "If you'd like to join one of our in-server Houses, you can visit <http://3houses.live> to get started!"
     ).catch(() => blocked(target));
 
-    const embed = u.embed({ author: target })
+    const embed = u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
     .setTitle("User Given Trusted")
     .setDescription(`${interaction.member} trusted ${target}.`);
     if (target.roles.cache.has(sf.roles.untrusted)) {
@@ -463,7 +463,7 @@ const modCommon = {
       + "Also, please be aware that LDSG may make changes to the Trusted+ list from time to time at its discretion."
     ).catch(u.noop);
 
-    const embed = u.embed({ author: target })
+    const embed = u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
     .setTitle("User Given Trusted+")
     .setDescription(`${interaction.member} gave ${target} the <@&${sf.roles.trustedplus}> role.`);
 
@@ -488,7 +488,7 @@ const modCommon = {
       // muteState.delete(target.id);
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: target })
+        u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
         .setTitle("Member Unmute")
         .setDescription(`**${interaction.member}** unmuted **${target}**`)
         .setColor(0x00ff00)

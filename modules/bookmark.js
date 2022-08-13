@@ -14,7 +14,7 @@ const Module = new Augur.Module()
       if (message) {
         await interaction.editReply({ content: "I'm sending you a DM!", ephemeral: true });
         const embed = u.embed()
-          .setAuthor(message.member?.displayName || message.author?.username, message.author?.displayAvatarURL({ size: 16 }), message.url)
+          .setAuthor({ name: message.member?.displayName || message.author?.username, iconURL: message.author?.displayAvatarURL({ size: 16 }), url: message.url })
           .setDescription(message.cleanContent)
           .setColor(message.member?.displayColor)
           .setTimestamp(message.createdAt);

@@ -88,7 +88,8 @@ async function slashBankGive(interaction) {
       const receipt = await Module.db.bank.addCurrency(deposit);
       const gbBalance = await Module.db.bank.getBalance(recipient.id, "gb");
       const emBalance = await Module.db.bank.getBalance(recipient.id, "em");
-      const embed = u.embed({ author: interaction.client.user })
+      const embed = u.embed()
+      .setAuthor({ name: interaction.client.user.username, iconURL: interaction.client.user.displayAvatarURL() })
       .addField("Reason", reason)
       .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
       .setDescription(`${u.escapeText(giver.toString())} just gave you ${coin}${receipt.value}.`);
@@ -107,7 +108,8 @@ async function slashBankGive(interaction) {
     const receipt = await Module.db.bank.addCurrency(withdrawal);
     const gbBalance = await Module.db.bank.getBalance(giver.id, "gb");
     const emBalance = await Module.db.bank.getBalance(giver.id, "em");
-    const embed = u.embed({ author: interaction.client.user })
+    const embed = u.embed()
+    .setAuthor({ name: interaction.client.user.username, iconURL: interaction.client.user.displayAvatarURL() })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
     .setDescription(`You just gave ${coin}${-receipt.value} to ${u.escapeText(recipient.displayName)}.`);
@@ -116,7 +118,7 @@ async function slashBankGive(interaction) {
     if ((currency == "em") && toIcarus) {
       const hoh = interaction.client.channels.cache.get(sf.channels.headsofhouse);
       const hohEmbed = u.embed()
-      .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
+      .setAuthor({ name: interaction.client.user.username, iconURL: interaction.client.user.displayAvatarURL({ dynamic: true }) })
       .addField("Reason", reason)
       .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
       hoh.send({ content: `<@&${sf.roles.manager}>`, embeds: [hohEmbed] });
@@ -129,7 +131,7 @@ async function slashBankBalance(interaction) {
     const member = interaction.member;
     const gbBalance = await Module.db.bank.getBalance(member, "gb");
     const emBalance = await Module.db.bank.getBalance(member, "em");
-    const embed = u.embed({ author: member })
+    const embed = u.embed({ author: { name: member, iconURL: member.displayAvatarURL() } })
       .setDescription(`${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`);
     interaction.reply({ embeds: [embed] });
   } catch (e) { u.errorHandler(e, interaction); }
@@ -254,7 +256,7 @@ async function slashBankGameRedeem(interaction) {
       interaction.followUp("I wasn't able to send you the game key! Do you have DMs allowed for server members? Please check with a member of Management to get your game key.");
     });
 
-    embed = u.embed({ author: interaction.member })
+    embed = u.embed({ author: { name: interaction.member, iconURL: interaction.member.displayAvatarURL() } })
     .setDescription(`${interaction.user.username} just redeemed a key for a ${game["Game Title"]} (${game.System}) key.`)
     .addField("Cost", gb + game.Cost, true)
     .addField("Balance", gb + (balance.balance - game.Cost), true);
@@ -303,7 +305,7 @@ async function slashBankDiscount(interaction) {
         interaction.followUp("I wasn't able to send you the code! Do you have DMs allowed for server members? Please check with a member of Management to get your discount code.");
       });
       const embed = u.embed()
-      .setAuthor(interaction.member.displayName, interaction.member.user.displayAvatarURL({ dynamic: true }))
+      .setAuthor({ name: interaction.member.displayName, iconURL: interaction.member.user.displayAvatarURL({ dynamic: true }) })
       .addField("Amount", `${gb}${-withdraw.value}\n$${-withdraw.value / 100}`)
       .addField("Balance", `${gb}${balance.balance + withdraw.value}`)
       .setDescription(`**${u.escapeText(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
@@ -352,7 +354,8 @@ async function slashBankAward(interaction) {
     const receipt = await Module.db.bank.addCurrency(award);
     const gbBalance = await Module.db.bank.getBalance(recipient.id, "gb");
     const emBalance = await Module.db.bank.getBalance(recipient.id, "em");
-    let embed = u.embed({ author: interaction.client.user })
+    let embed = u.embed()
+    .setAuthor({ name: interaction.client.user.username, iconURL: interaction.client.user.displayAvatarURL({ dynamic: true }) })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
     .setDescription(`${u.escapeText(giver.displayName)} just ${value > 0 ? `awarded you ${ember}${receipt.value}` : `docked you ${ember}${-receipt.value}`}! This counts toward your House's Points.`);
@@ -362,7 +365,7 @@ async function slashBankAward(interaction) {
     u.clean(interaction, 60000);
 
     embed = u.embed()
-    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
+    .setAuthor({ name: interaction.client.user.username, iconURL: interaction.client.user.displayAvatarURL({ dynamic: true }) })
     .addField("Reason", reason)
     .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
     giver.send({ embeds: [embed] }).catch(u.noop);
@@ -370,7 +373,8 @@ async function slashBankAward(interaction) {
     const house = getHouseInfo(recipient);
 
     const mopbucket = interaction.client.channels.cache.get(sf.channels.mopbucketawards);
-    embed = u.embed({ author: interaction.client.user })
+    embed = u.embed()
+    .setAuthor({ name: interaction.client.user.username, iconURL: interaction.client.user.displayAvatarURL({ dynamic: true }) })
     .setColor(house.color)
     .addField("House", house.name)
     .addField("Reason", reason)

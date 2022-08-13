@@ -23,7 +23,7 @@ const grownups = new Map(),
 function blocked(member) {
   return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
     u.embed({
-      author: member,
+      author: { name: member, iconURL: member.displayAvatarURL() },
       color: 0x00ffff,
       title: `${member} has me blocked. *sadface*`
     })
@@ -193,7 +193,7 @@ async function processCardAction(interaction) {
       infractionDescription = infractionDescription.join("\n");
       if (infractionDescription.length > 4050) infractionDescription = infractionDescription.substr(0, infractionDescription.indexOf("\n", 4000)) + "\n...";
 
-      const infoEmbed = u.embed({ author: member })
+      const infoEmbed = u.embed({ author: { name: member, iconURL: member.displayAvatarURL() } })
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
       .setDescription(infractionDescription)
       .addField("ID", member.id, true)
@@ -266,7 +266,7 @@ async function processCardAction(interaction) {
       const infractionSummary = await Module.db.infraction.getSummary(infraction.discordId);
 
       if (member) {
-        const quote = u.embed({ author: member })
+        const quote = u.embed({ author: { name: member, iconURL: member.displayAvatarURL() } })
         .addField("Channel", `#${interaction.guild.channels.cache.get(infraction.channel).name}`)
         .setDescription(embed.description)
         .setTimestamp(flag.createdAt);

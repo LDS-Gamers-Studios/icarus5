@@ -118,7 +118,7 @@ const Module = new Augur.Module()
       const client = msg.client;
 
       const embed = u.embed()
-      .setAuthor(client.user.username + " Heartbeat", client.user.displayAvatarURL())
+      .setAuthor({ name: client.user.username + " Heartbeat", iconURL: client.user.displayAvatarURL() })
       .setTimestamp();
 
       if (client.shard) {
