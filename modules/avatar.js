@@ -2,6 +2,7 @@ const Augur = require("augurbot"),
   u = require('../utils/utils'),
   sf = require("../config/snowflakes.json"),
   discord = require("discord.js"),
+  petPetGif = require('pet-pet-gif'),
   Jimp = require("jimp");
 
 function errorReading(int) {
@@ -126,6 +127,13 @@ async function personal(int) {
   return await int.editReply({ files: [output] });
 }
 /** @param {discord.CommandInteraction} int */
+async function petpet(int) {
+  const img = targetImg(int);
+  if (!img) return errorReading(int);
+  const gif = await petPetGif(img);
+  return await int.editReply({ files: [{ attachment: gif, name: 'petpet.gif' }] });
+}
+/** @param {discord.CommandInteraction} int */
 async function popart(int) {
   try {
     const img = await jimpRead(targetImg(int));
@@ -170,6 +178,7 @@ const Module = new Augur.Module()
     case "flex": return flex(interaction);
     case "metal": return metal(interaction);
     case "personal": return personal(interaction);
+    case "petpet": return petpet(interaction);
     case "popart": return popart(interaction);
 
     // basic filters
