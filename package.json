@@ -9,18 +9,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Gaiwecoor/icarus5.git"
+    "url": "git+https://github.com/LaughLax/icarus5.git"
   },
   "author": "Kevin \"Gaiwecoor\" Dixon",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Gaiwecoor/icarus5/issues"
+    "url": "https://github.com/LaughLax/icarus5/issues"
   },
-  "homepage": "https://github.com/Gaiwecoor/icarus5#readme",
+  "homepage": "https://github.com/LaughLax/icarus5#readme",
   "dependencies": {
     "augurbot": "github:gaiwecoor/augurbot#dev",
     "axios": "^0.21.1",
-    "discord.js": "^13.6.0",
+    "discord.js": "^13.8.0",
     "forever": "^4.0.1",
     "google-spreadsheet": "^3.1.15",
     "moment": "^2.29.1",
