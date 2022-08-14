@@ -131,7 +131,7 @@ async function slashBankBalance(interaction) {
     const member = interaction.member;
     const gbBalance = await Module.db.bank.getBalance(member, "gb");
     const emBalance = await Module.db.bank.getBalance(member, "em");
-    const embed = u.embed({ author: { name: member, iconURL: member.displayAvatarURL() } })
+    const embed = u.embed({ author: { name: member.displayName, iconURL: member.displayAvatarURL() } })
       .setDescription(`${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`);
     interaction.reply({ embeds: [embed] });
   } catch (e) { u.errorHandler(e, interaction); }
@@ -256,7 +256,7 @@ async function slashBankGameRedeem(interaction) {
       interaction.followUp("I wasn't able to send you the game key! Do you have DMs allowed for server members? Please check with a member of Management to get your game key.");
     });
 
-    embed = u.embed({ author: { name: interaction.member, iconURL: interaction.member.displayAvatarURL() } })
+    embed = u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } })
     .setDescription(`${interaction.user.username} just redeemed a key for a ${game["Game Title"]} (${game.System}) key.`)
     .addField("Cost", gb + game.Cost, true)
     .addField("Balance", gb + (balance.balance - game.Cost), true);

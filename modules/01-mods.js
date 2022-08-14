@@ -14,7 +14,7 @@ const Augur = require("augurbot"),
 function blocked(member) {
   return member.client.channels.cache.get(sf.channels.modlogs).send({ embeds: [
     u.embed({
-      author: { name: member, iconURL: member.displayAvatarURL() },
+      author: { name: member.displayName, iconURL: member.displayAvatarURL() },
       color: 0x00ffff,
       description: `${member} has me blocked. *sadface*`
     })
@@ -36,7 +36,7 @@ async function getSummaryEmbed(member, time, guild) {
   let text = response.join("\n");
   text = text.length > 4090 ? text.substring(0, 4090) + "..." : text;
 
-  return u.embed({ author: { name: member, iconURL: member.displayAvatarURL() } })
+  return u.embed({ author: { name: member.displayName, iconURL: member.displayAvatarURL() } })
     .setTitle("Infraction Summary")
     .setDescription(text)
     .setColor(0x00ff00);
@@ -66,7 +66,7 @@ async function slashModFilter(interaction) {
   }
   if (apply) {
     if (filtered != word && pf.add_word(word)) {
-      const embed = u.embed({ author: { name: member, iconURL: member.displayAvatarURL() } })
+      const embed = u.embed({ author: { name: member.displayName, iconURL: member.displayAvatarURL() } })
       .setTitle("Word added to the language filter.")
       .setDescription(`${member} added "${word}" to the language filter.`);
       await modLogs.send({ embeds: [embed] });
@@ -75,7 +75,7 @@ async function slashModFilter(interaction) {
       await interaction.editReply(`"${word}" was already in the language filter.`);
     }
   } else if (pf.remove_word(word)) {
-    const embed = u.embed({ author: { name: member, iconURL: member.displayAvatarURL() } })
+    const embed = u.embed({ author: { name: member.displayName, iconURL: member.displayAvatarURL() } })
     .setTitle("Word removed from language filter.")
     .setDescription(`${member} removed "${word}" from the language filter.`);
     await modLogs.send({ embeds: [embed] });
@@ -172,7 +172,7 @@ async function slashModOffice(interaction) {
       // await target.voice.setMute(true, reason);
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
+        u.embed({ author: { name: target.displayName, iconURL: target.displayAvatarURL() } })
         .setTitle("Member Sent to Office")
         .setDescription(`**${interaction.member}** sent **${target}** to the office for:\n${reason}`)
         .setColor(0x0000ff)
@@ -204,7 +204,7 @@ async function slashModOffice(interaction) {
       // muteState.delete(target.id);
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: { name: target, iconURL: target.displayAvatarURL() } })
+        u.embed({ author: { name: target.displayName, iconURL: target.displayAvatarURL() } })
         .setTitle("Member Released from Office")
         .setDescription(`**${interaction.member}** let **${target}** out of the office.`)
         .setColor(0x00ff00)
@@ -245,7 +245,7 @@ async function slashModPurge(interaction) {
     }
     // Log it
     await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-      u.embed({ author: { name: interaction.member, iconURL: interaction.member.displayAvatarURL() } })
+      u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } })
       .setTitle("Channel Purge")
       .setDescription(`**${interaction.member}** purged ${number - num} messages in ${interaction.channel}`)
       .addField('Reason', reason)
@@ -305,7 +305,7 @@ async function slashModSlowmode(interaction) {
 
     await interaction.editReply(`${timer}-second slowmode activated for ${duration} minute${duration > 1 ? 's' : ''}.`);
     await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-      u.embed({ author: { name: interaction.member, iconURL: interaction.member.displayAvatarURL() } })
+      u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } })
       .setTitle("Channel Slowmode")
       .setDescription(`${interaction.member} set a ${timer}-second slow mode for ${duration} minute${duration > 1 ? 's' : ''} in ${ch}.`)
       .setColor(0x00ff00)
@@ -338,7 +338,7 @@ async function slashModTrust(interaction) {
     'watch': sf.channels.modlogsplus
   }[type];
 
-  const embed = u.embed({ author: { name: member, iconURL: member.displayAvatarURL() } });
+  const embed = u.embed({ author: { name: member.displayName, iconURL: member.displayAvatarURL() } });
 
   if (apply) {
     switch (type) {
