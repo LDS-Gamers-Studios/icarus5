@@ -137,7 +137,7 @@ const modCommon = {
     let { matches } = flagInfo;
     const { pingMods, snitch, flagReason, furtherInfo } = flagInfo;
 
-    const client = msg.client ?? member?.client;
+    const client = msg?.client ?? member?.client;
 
     const infractionSummary = await client.db.infraction.getSummary(member);
     const embed = u.embed({ color: 0xff0000, author: member });
