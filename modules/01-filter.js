@@ -15,7 +15,7 @@ let pf = new profanityFilter();
 
 const grownups = new Map(),
   processing = new Set();
-
+// first value is for trusted, second is for non-trusted
 const thresh = {
   channels: [7, 3],
   messages: [10, 5],
@@ -59,29 +59,35 @@ async function spamming(client) {
     else if (limit('channels', a.id) <= channels) verdict = 1;
     else if (limit('messages', a.id) <= a.messages.length) verdict = 2;
     a.verdict = verdict;
-    a.count = [null, channels, a.messages.length, sameMSGCount.map(m => m.length).join(',')][verdict];
+    a.count = [null, channels, a.messages.length, sameMSGCount.map(m => m.length).join('+')][verdict];
     return a;
   }).filter(a => a.verdict != 0);
   for (const member of mapped) {
     const msg = member.messages[0];
     const message = ldsg.channels.cache.get(msg.channelId)?.messages.cache.get(msg.id);
     const memb = ldsg.members.cache.get(member.id);
+    const channels = unique(member.messages.map(m => `<#${m.channelId}>`));
     const verdictString = [
       null,
-      `Posted in too many channels (${member.count}/${limit('channels', member.id)}) too fast`,
-      `Posted too many messages (${member.count}/${limit('messages', member.id)}) too fast`,
+      `Posted in too many channels (${member.count}/${limit('channels', member.id)}) too fast\nChannels:\n${channels.join('\n')}`,
+      `Posted too many messages (${member.count}/${limit('messages', member.id)}) too fast\nChannels:\n${channels.join('\n')}`,
       `Posted the same message too many times (${member.count}/${limit('same', member.id)})`,
     ];
-    let failedtodelete = false;
+    let notDeleted = false;
     if (member.verdict == 3) {
-      for (const m of member.messages) {
-        const realMsg = ldsg.channels.cache.get(m.channelId).messages.cache.get(m.id);
+      let i = 0;
+      do {
         try {
-          realMsg.delete();
-        } catch (error) {failedtodelete = true;}
-      }
+          const m = member.messages[i];
+          const realMsg = ldsg.channels.cache.get(m.channelId).messages.cache.get(m.id);
+          await realMsg.delete();
+        } catch (error) {
+          notDeleted = true;
+        }
+        i++;
+      } while (i < member.messages.length);
     }
-    c.createFlag({ msg: message, member: memb, snitch: client.user, flagReason: verdictString[member.verdict], furtherInfo: failedtodelete ? "I couldn't delete some of the messages." : null, pingMods: member.verdict == 3 });
+    c.createFlag({ msg: message, member: memb, snitch: client.user, flagReason: verdictString[member.verdict] + "\nThere may be additional spammage that I didn't catch.", furtherInfo: notDeleted ? "I couldn't delete some of the messages." : null, pingMods: member.verdict == 3 });
   }
 }
 
@@ -106,7 +112,7 @@ function filter(msg, text) {
  * @param {Discord.Message} msg Edited message
  */
 function processMessageLanguage(old, msg) {
-  if (!msg && old && !old.author.bot) {
+  if (!msg && old && !old.author.bot && !old.webhookId) {
     const id = old.author.id;
     const messages = active.get(id)?.messages ?? [];
     messages.push({ id: old.id, channelId: old.channel.id, content: old.content });
