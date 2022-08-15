@@ -1,6 +1,7 @@
 const Augur = require("augurbot"),
   banned = require("../data/banned.json"),
   Discord = require("discord.js"),
+  config = require('../config/config.json'),
   profanityFilter = require("profanity-matcher"),
   u = require("../utils/utils"),
   sf = require("../config/snowflakes.json"),
@@ -16,12 +17,7 @@ let pf = new profanityFilter();
 const grownups = new Map(),
   processing = new Set();
 // first value is for trusted, second is for non-trusted
-const thresh = {
-  channels: [7, 3],
-  messages: [10, 5],
-  same: [5, 3],
-  time: 1 * 15 * 1000
-};
+const thresh = config.spamThreshold;
 /**
  * @typedef activeMember
  * @prop {string} id
@@ -44,6 +40,7 @@ function blocked(member) {
     })
   ] });
 }
+
 /** @param {Discord.Client} client*/
 async function spamming(client) {
   const ldsg = client.guilds.cache.get(sf.ldsg);
@@ -67,27 +64,14 @@ async function spamming(client) {
     const message = ldsg.channels.cache.get(msg.channelId)?.messages.cache.get(msg.id);
     const memb = ldsg.members.cache.get(member.id);
     const channels = unique(member.messages.map(m => `<#${m.channelId}>`));
+    const cleaned = member.verdict == 3 ? await c.spamCleanup(member, ldsg, true) : null;
     const verdictString = [
       null,
       `Posted in too many channels (${member.count}/${limit('channels', member.id)}) too fast\nChannels:\n${channels.join('\n')}`,
       `Posted too many messages (${member.count}/${limit('messages', member.id)}) too fast\nChannels:\n${channels.join('\n')}`,
       `Posted the same message too many times (${member.count}/${limit('same', member.id)})`,
     ];
-    let notDeleted = false;
-    if (member.verdict == 3) {
-      let i = 0;
-      do {
-        try {
-          const m = member.messages[i];
-          const realMsg = ldsg.channels.cache.get(m.channelId).messages.cache.get(m.id);
-          await realMsg.delete();
-        } catch (error) {
-          notDeleted = true;
-        }
-        i++;
-      } while (i < member.messages.length);
-    }
-    c.createFlag({ msg: message, member: memb, snitch: client.user, flagReason: verdictString[member.verdict] + "\nThere may be additional spammage that I didn't catch.", furtherInfo: notDeleted ? "I couldn't delete some of the messages." : null, pingMods: member.verdict == 3 });
+    c.createFlag({ msg: message, member: memb, snitch: client.user, flagReason: verdictString[member.verdict] + "\nThere may be additional spammage that I didn't catch.", furtherInfo: cleaned?.notDeleted ? `I couldn't delete some of the messages, but I managed to get ${cleaned.deleted}/${cleaned.toDelete} of all their spammed messages` : null, pingMods: false });// member.verdict == 3 });
   }
 }
 
