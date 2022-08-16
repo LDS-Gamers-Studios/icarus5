@@ -32,16 +32,15 @@ const Module = new Augur.Module()
       if (playing) games.get(playing.name).players++;
     }
 
-    let gameList = games.filter(g => g.players > 1)
-      .sort((a, b) => {
-        if (b.players == a.players) return a.game.localeCompare(b.game);
-        else return b.players - a.players;
-      }).toJSON();
+    const gameList = games.sort((a, b) => {
+      if (b.players == a.players) return a.game.localeCompare(b.game);
+      else return b.players - a.players;
+    }).toJSON();
     const s = gameList.length > 0 ? 's' : '';
     const embed = u.embed().setTimestamp()
       .setTitle(`Currently played game${s} in ${int.guild.name}`)
-      .setDescription(`The top ${Math.min(gameList.length, 25)} game${s} currently being played in ${int.guild.name} (with more than one player):`);
-    if (gameList.length > 0) gameList = gameList.map((g, i) => i < 25 ? embed.addFields({ name: g.game, value: `${g.players}` }) : null);
+      .setDescription(`The top ${Math.min(gameList.length, 25)} game${s} currently being played in ${int.guild.name}:`);
+    if (gameList.length > 0) gameList.map((g, i) => i < 25 ? embed.addFields({ name: g.game, value: `${g.players}` }) : null);
     else embed.setDescription("Well, this is awkward ... I couldn't find any games with more than one member playing.");
     int.reply({ embeds: [embed], ephemeral: true });
   }
