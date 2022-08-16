@@ -9,6 +9,13 @@
     154,
     34
   ],
+  "spamThreshold":  {
+    "channels": [7, 3],
+    "messages": [10, 5],
+    "same": [5, 3],
+    "time": 15000,
+    "cleanupLimit": 900000
+  },
   "db": {
     "model": "database/dbControllers.js",
     "db": "",

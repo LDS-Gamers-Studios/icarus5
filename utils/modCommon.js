@@ -412,11 +412,12 @@ const modCommon = {
     let toDelete = new u.Collection();
     let deleted = 0;
     let notDeleted = false;
-    const contents = auto ? unique(target.messages.map(m => m.content.toLowerCase())) : [target.content];
+    const contents = auto ? unique(target.messages.map(m => m.content.toLowerCase())) : [target.content.toLowerCase()];
     for (const [, channel] of guild.channels.cache) {
       if (channel.isText() && channel.messages.cache.size > 0) {
-        const messages = channel.messages.cache.filter(m => Date.now() - (config.spamThreshold.cleanupLimit * auto ? 1 : 2) <= m.createdTimestamp && m.author.id == target.id && contents.includes(m.content.toLowerCase()));
+        const messages = channel.messages.cache.filter(m => Date.now() - (config.spamThreshold.cleanupLimit * (auto ? 1 : 2)) <= m.createdTimestamp && m.author.id == (target.author?.id ?? target.id) && contents.includes(m.content.toLowerCase()));
         if (messages.size > 0) toDelete = toDelete.concat(messages);
+        console.log(messages.size);
       }
     }
     let i = 0;
