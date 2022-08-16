@@ -64,14 +64,19 @@ async function spamming(client) {
     const message = ldsg.channels.cache.get(msg.channelId)?.messages.cache.get(msg.id);
     const memb = ldsg.members.cache.get(member.id);
     const channels = unique(member.messages.map(m => `<#${m.channelId}>`));
-    const cleaned = member.verdict == 3 ? await c.spamCleanup(member, ldsg, true) : null;
     const verdictString = [
       null,
       `Posted in too many channels (${member.count}/${limit('channels', member.id)}) too fast\nChannels:\n${channels.join('\n')}`,
       `Posted too many messages (${member.count}/${limit('messages', member.id)}) too fast\nChannels:\n${channels.join('\n')}`,
       `Posted the same message too many times (${member.count}/${limit('same', member.id)})`,
     ];
-    c.createFlag({ msg: message, member: memb, snitch: client.user, flagReason: verdictString[member.verdict] + "\nThere may be additional spammage that I didn't catch.", furtherInfo: cleaned?.notDeleted ? `I couldn't delete some of the messages, but I managed to get ${cleaned.deleted}/${cleaned.toDelete} of all their spammed messages` : null, pingMods: false });// member.verdict == 3 });
+    const flag = await c.createFlag({ msg: message, member: memb, snitch: client.user, flagReason: verdictString[member.verdict] + "\nThere may be additional spammage that I didn't catch.", pingMods: false });// member.verdict == 3 });
+    const cleaned = member.verdict == 3 ? await c.spamCleanup(member, ldsg, true) : null;
+    if (cleaned.notDeleted) {
+      const embed = flag.embeds[0];
+      embed.fields.push({ name: "Further Information", value: `I couldn't delete some of the messages, but I managed to get ${cleaned.deleted}/${cleaned.toDelete} of all their spammed messages` });
+      await flag.edit({ embeds: [embed] });
+    }
   }
 }
 
@@ -99,7 +104,7 @@ function processMessageLanguage(old, msg) {
   if (!msg && old && !old.author.bot && !old.webhookId) {
     const id = old.author.id;
     const messages = active.get(id)?.messages ?? [];
-    messages.push({ id: old.id, channelId: old.channel.id, content: old.content });
+    messages.push({ id: old.id, channelId: old.channel.id, content: old.content.toLowerCase() });
     active.set(id, { id: id, messages: messages });
   }
   if (!msg) msg = old;

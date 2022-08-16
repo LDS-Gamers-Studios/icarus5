@@ -214,6 +214,7 @@ const modCommon = {
       };
       await client.db.infraction.save(infraction);
     }
+    return card;
   },
 
   getSummaryEmbed: async function(member, time, guild) {
@@ -407,6 +408,7 @@ const modCommon = {
 
     await interaction.editReply({ content: `${target}'s nickname changed from ${u.escapeText(oldNick)} to ${u.escapeText(newNick)}.` });
   },
+
   spamCleanup: async function(target, guild, auto = false) {
     const unique = (items) => [...new Set(items)];
     let toDelete = new u.Collection();
@@ -417,7 +419,6 @@ const modCommon = {
       if (channel.isText() && channel.messages.cache.size > 0) {
         const messages = channel.messages.cache.filter(m => Date.now() - (config.spamThreshold.cleanupLimit * (auto ? 1 : 2)) <= m.createdTimestamp && m.author.id == (target.author?.id ?? target.id) && contents.includes(m.content.toLowerCase()));
         if (messages.size > 0) toDelete = toDelete.concat(messages);
-        console.log(messages.size);
       }
     }
     let i = 0;
@@ -434,6 +435,7 @@ const modCommon = {
     }
     return { deleted, notDeleted, toDelete: toDelete.size };
   },
+
   timeout: async function(interaction, target, reason) {
     // Log it
     await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
