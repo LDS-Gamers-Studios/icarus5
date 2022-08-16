@@ -1,0 +1,11 @@
+{
+  "name": "playing",
+  "description": "Find who is playing a game in the server, or list all games being played.",
+  "options": [
+    {
+      "type": 3,
+      "name": "game",
+      "description": "The game to search for"
+    }
+  ]
+}
