@@ -1,77 +1,62 @@
 const Augur = require("augurbot");
 const u = require("../utils/utils");
+const discord = require('discord.js');
+const config = require('../config/config.json');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
 const sf = require("../config/snowflakes.json");
-
-const Ign = {
-  categories: [
-    "Game Platforms",
-    "Streaming",
-    "Social",
-    "Personal"
-  ],
-  aliases: new Map(), // alias : name, probably
-  gameids: new Map() // I'm not too sure what this holds.
-};
-
-class GameSystem {
-  constructor(data) {
-    this.system = data.System;
-    this.name = data.Name;
-    this.category = (data.Category ? data.Category : "Game Platforms");
-    this.display = (this.Category != "Personal");
-    this.link = data.Link;
-  }
-
-  toObject() {
-    return ({
-      system: this.system,
-      name: this.name,
-      category: this.category,
-      display: this.display,
-      link: this.link
-    });
-  }
-}
-
+/** @type {discord.Collection<string, ign>} */
+let IGNs = new u.Collection();
+const findIGN = (system) => IGNs.find(i => i.system == system || i.aliases.includes(system));
+const categories = [
+  "Game Platforms",
+  "Streaming",
+  "Social",
+  "Personal"
+];
+/**
+ * @typedef ign
+ * @prop {string} system
+ * @prop {string[]} aliases
+ * @prop {string} name
+ * @prop {string} category
+ * @prop {string} link
+ */
 /**
  * Creates and formats the embed for the IGN system.
- * @param {*} user The member that we're displaying the command for.
- * @param {*} igns A mapping of system: username/ign
- * @returns The embed object to send.
+ * @param {discord.GuildMember} user The member that we're displaying the command for.
+ * @param {string[]} systems A mapping of system: username/ign
+ * @returns {discord.MessageEmbed} the embed to send
  */
-function createIgnEmbed(user, igns) {
-  if (igns.length > 0) {
-    const embed = u.embed()
-      .setAuthor({ name: user.displayName, iconURL: user.displayAvatarURL });
-
-    if (igns.length > 1) { embed.setTitle('IGNs for ' + u.escapeText(user.displayName)); }
-
-    const hasLink = /(http(s?):\/\/)?(\w+\.)+\w+\//ig;
-
-    Ign.categories.forEach(category => {
-      igns
-        .filter(ign => Ign.gameids.get(ign.system)?.category == category)
-        .sort((a, b) => Ign.gameids.get(a.system).name.localeCompare(Ign.gameids.get(b.system).name))
-        .forEach(ign => {
-          let name = ign.ign;
-          if (name.length > 100) name = name.substr(0, 100) + " ...";
-          if (Ign.aliases.has(ign.system)) ign.system = Ign.aliases.get(ign.system);
-          if (Ign.gameids.get(ign.system).link && !hasLink.test(name)) name = `[${name}](${Ign.gameids.get(ign.system).link.replace(/{ign}/ig, encodeURIComponent(name))})`;
-          embed.addField(Ign.gameids.get(ign.system).name, name, true);
-        });
-    });
-
-    return embed;
-  } else { return false; } // Why are we mixing types
+function createIgnEmbed(user, igns, systems) {
+  const embed = u.embed().setAuthor({ name: user.displayName, iconURL: user.displayAvatarURL });
+  if (systems.length == 0) return null;
+  if (systems.length > 1) { embed.setTitle('IGNs for ' + u.escapeText(user.displayName)); }
+  const hasLink = /(http(s?):\/\/)?(\w+\.)+\w+\//ig;
+  const mapped = systems.map(s => findIGN(s)).filter(s => s != null);
+  if (mapped.length == 0) return null;
+  for (const category of categories) {
+    const sys = mapped.filter(s => s.category == category)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((system, i) => {
+        if (i > 24) return;
+        let name = igns.find(ign => ign.system == system.system)?.ign;
+        console.log(name);
+        if (!name) return null;
+        if (name.length > 100) name = name.substr(0, 100) + " ...";
+        if (system.link && !hasLink.test(name)) name = `[${name}](${system.link.replace(/{ign}/ig, encodeURIComponent(name))})`;
+        embed.addField(`${system.name}`, `${name}`, true);
+      });
+    sys;
+  }
+  return embed.fields.length > 0 ? embed : null;
 }
-
+/** @param {discord.CommandInteraction} interaction */
 async function slashIgnView(interaction) {
-  const user = interaction.options.getMember("target", false) || interaction.user;
+  const user = interaction.options.getMember("target", false) || interaction.member;
   let system = interaction.options.getString("system", false);
-  system = (system ? system.toLowerCase().split(' ').map(s => (Ign.aliases.has(s) ? Ign.aliases.get(s) : s)) : null);
+  system = system?.toLowerCase().split(' ');
   const igns = await Module.db.ign.find(user.id, system);
-
-  const embed = createIgnEmbed(user, igns);
+  const embed = createIgnEmbed(user, Array.isArray(igns) ? igns : [igns], system ?? igns.map(i => i.system));
 
   if (embed) {
     interaction.reply({ embeds: [embed] });
@@ -80,160 +65,105 @@ async function slashIgnView(interaction) {
   }
 
 }
-
+/** @param {discord.CommandInteraction} interaction */
 async function slashIgnSet(interaction) {
-  let system = interaction.options.getString("system");
-  let ign = interaction.options.getString("ign");
-  system = system.toLowerCase();
-  if (Ign.aliases.has(system)) { system = Ign.aliases.get(system); }
-  if (Ign.gameids.get(system)) {
-    if (system == "birthday") {
-      try {
-        const bd = new Date(ign);
-        if (bd == 'Invalid Date') {
-          interaction.reply({ content: "I couldn't understand that date. Please use Month Day format (e.g. Apr 1 or 4/1)." });
-          return;
-        } else {
-          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
-          ign = months[bd.getMonth()] + " " + bd.getDate();
-        }
-      } catch (e) {
-        interaction.reply({ content: "I couldn't understand that date. Please use Month Day format (e.g. Apr 1 or 4/1)." });
-        return;
+  let system = interaction.options.getString("system").toLowerCase();
+  let ign = interaction.options.getString("ign").toLowerCase();
+  const findSystem = findIGN(system);
+  if (findSystem) system = findSystem.system;
+  if (!findSystem) return interaction.reply({ content: `\`${system}\` isn't a recognized system.`, ephemeral: true });
+  if (system == "birthday") {
+    try {
+      const bd = new Date(ign);
+      if (bd == 'Invalid Date') {
+        return interaction.reply({ content: "I couldn't understand that date. Please use Month Day format (e.g. Apr 1 or 4/1).", ephemeral: true });
+      } else {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+        ign = `${months[bd.getMonth()]} ${bd.getDate()}`;
       }
+    } catch (e) {
+      return interaction.reply({ content: "I couldn't understand that date. Please use Month Day format (e.g. Apr 1 or 4/1).", ephemeral: true });
     }
-    const finalIgn = await Module.db.ign.save(interaction.user.id, system, ign);
-    // Report results. Not too sure how the mongo driver works but here goes.
-    const embed = createIgnEmbed(interaction.member, finalIgn);
-    interaction.reply({ embeds: [embed] });
-
-  } else {
-    interaction.reply({ content: "\"" + system + "\" isn't a recognized system.", ephemeral: true });
   }
+  const finalIgn = await Module.db.ign.save(interaction.user.id, system, ign);
+  const embed = createIgnEmbed(interaction.member, [finalIgn], [system]);
+  interaction.reply({ embeds: [embed], ephemeral: true });
 
 }
-
+/** @param {discord.CommandInteraction} interaction */
 async function slashIgnRemove(interaction) {
   let system = interaction.options.getString("system").toLowerCase();
-
-  if (Ign.aliases.has(system)) {
-    system = Ign.aliases.get(system);
+  const findSystem = findIGN(system);
+  if (findSystem) {
+    system = findSystem.system;
     const ign = await Module.db.ign.delete(interaction.user.id, system);
-    if (ign) {
-      interaction.reply({ content: `Removed your IGN ${ign.ign} for ${ign.system}.`, ephemeral: true });
-    } else {
-      interaction.reply({ content: `It doesn't look like you had an IGN saved for ${ign.system}. Regardless, it's gone now.`, ephemeral: true });
-    }
+    if (ign) return interaction.reply({ content: `Removed your IGN \`${ign.ign}\` for ${ign.system}.`, ephemeral: true });
+    return interaction.reply({ content: `It doesn't look like you had an IGN saved for ${system}. Regardless, it's gone now.`, ephemeral: true });
   } else {
-    interaction.reply({ content: "I didn't recognize the system you entered." });
+    interaction.reply({ content: "I didn't recognize the system you entered.", ephemeral: true });
   }
 }
-
+/** @param {discord.CommandInteraction} interaction */
 async function slashIgnWhoplays(interaction) {
   const PAGESIZE = 60; // Entries per message for this module.
-
   let system = interaction.options.getString("system").toLowerCase();
-  if (Ign.aliases.has(system)) {
-    system = Ign.aliases.get(system);
-    if (Ign.gameids.get(system)) {
-      const users = await Module.db.ign.getList(system);
-      if (users.length > 0) {
-        const guild = interaction.guild;
-
-        const wePlay = users
-          .filter(user => guild.members.cache.has(user.discordId))
-          .sort((a, b) => {
-            if (system != "birthday") {
-              return guild.members.cache.get(a.discordId).displayName.toLowerCase().localeCompare(guild.members.cache.get(b.discordId).displayName.toLowerCase());
-            } else {
-              const aDate = new Date(a.ign);
-              const bDate = new Date(b.ign);
-              return aDate - bDate;
-            }
-          })
-          .map(user => `· **${u.escapeText(guild.members.cache.get(user.discordId).displayName)}**: ${(user.ign.startsWith("http") ? "<" + u.escapeText(user.ign) + ">" : u.escapeText(user.ign))}`);
-
-        const listChunks = [];
-        for (let i = 0; i < wePlay.length; i += PAGESIZE) {
-          listChunks.push(wePlay.slice(i, i + PAGESIZE));
-        }
-
-        interaction.reply({ content: `__**The following members have saved an IGN for ${Ign.gameids.get(system).name}:**__\n` + listChunks[0].join("\n") });
-        if (listChunks.length > 1) {
-          listChunks.slice(1).forEach(chunk => {
-            interaction.followUp({ content: chunk.join("\n") });
-          });
-        }
+  const findSystem = findIGN(system);
+  if (!findSystem) return interaction.reply({ content: `\`${system}\` isn't a valid system.`, ephemeral: true });
+  system = findSystem?.system;
+  const users = await Module.db.ign.getList(system);
+  if (users.length == 0) return interaction.reply({ content: `No members have saved an IGN for ${findSystem.name} yet.` });
+  const guild = interaction.guild;
+  const wePlay = users.map(user => guild.members.cache.get(user.discordId))
+    .filter(usr => usr != null)
+    .sort((a, b) => {
+      if (system != "birthday") {
+        return a.displayName.toLowerCase().localeCompare(b.displayName.toLowerCase());
       } else {
-        interaction.reply({ content: `No members have saved an IGN for ${Ign.gameids.get(system).name} yet.` });
+        const aDate = new Date(a.ign);
+        const bDate = new Date(b.ign);
+        return aDate - bDate;
       }
-    } else {
-      interaction.reply({ content: "\"" + system + "\" isn't a valid system.", ephemeral: true });
-    }
+    })
+    .map(user => {
+      const ign = users.find(usr => usr.discordId == user.id).ign;
+      return `· **${u.escapeText(user.displayName)}**: ${(ign.startsWith("http") ? "<" + u.escapeText(ign) + ">" : u.escapeText(ign))}`;
+    });
 
+  const listChunks = [];
+  for (let i = 0; i < wePlay.length; i += PAGESIZE) {
+    listChunks.push(wePlay.slice(i, i + PAGESIZE));
+  }
+
+  interaction.reply({ content: `__**The following members have saved an IGN for ${findSystem.name}:**__\n` + listChunks[0].join("\n") });
+  if (listChunks.length > 1) {
+    listChunks.slice(1).forEach(chunk => {
+      interaction.followUp({ content: chunk.join("\n") });
+    });
   }
 }
 
 const Module = new Augur.Module()
-  .addInteractionCommand({
-    name: "ign",
-    guildId: sf.ldsg,
-    commandId: sf.commands.slashIgn, // Register it!
-    process: async (interaction) => {
-      switch (interaction.options.getSubcommand(true)) {
-      case "view":
-        slashIgnView(interaction);
-        break;
-      case "set":
-        slashIgnSet(interaction);
-        break;
-      case "remove":
-        slashIgnRemove(interaction);
-        break;
-      case "whoplays":
-        slashIgnWhoplays(interaction);
-        break;
-      }
+.addInteractionCommand({
+  name: "ign",
+  guildId: sf.ldsg,
+  commandId: sf.commands.slashIgn,
+  process: async (interaction) => {
+    switch (interaction.options.getSubcommand(true)) {
+    case "view": return slashIgnView(interaction);
+    case "set": return slashIgnSet(interaction);
+    case "remove": return slashIgnRemove(interaction);
+    case "whoplays": return slashIgnWhoplays(interaction);
     }
-  })
-  .addEvent("loadConfig", async () => {
-    try {
-      const systems = await Module.config.sheets.get("IGN").getRows();
-      Ign.gameids = new u.Collection(systems.map(s => [s["System"], new GameSystem(s)]));
-
-      let helpList = ["```md"];
-
-      for (const category of Ign.categories) {
-        const categoryList = ["# " + category];
-        for (const system of Ign.gameids.filter(s => s.display && s.category == category).sort((a, b) => a.system.localeCompare(b.system)).values()) {
-          categoryList.push(`* ${system.system} (${system.name})`);
-        }
-        if (categoryList.length > 1) {
-          helpList = helpList.concat(categoryList);
-          helpList.push("");
-        }
-      }
-
-      helpList.push("```");
-      helpList = helpList.join("\n");
-
-      // In the past, this code was used to generate the help text.
-      // In the future, this could be used to make autocomplete for the system names.
-
-      const aliases = await Module.config.sheets.get("IGN Aliases").getRows();
-      Ign.aliases = new u.Collection(aliases.map(a => [a["Alias"], a["System"]]));
-
-      const fs = require("fs");
-      fs.writeFileSync("./storage/ignInfo.json", JSON.stringify({
-        categories: Ign.categories,
-        aliases: Array.from(Ign.aliases.entries()),
-        gameids: Array.from(Ign.gameids.entries())
-      }));
-    } catch (error) { u.errorHandler(error, "ign.js loadConfig"); }
-  })
-  .setUnload(() => {
-    const path = require("path");
-    delete require.cache[require.resolve(path.resolve(process.cwd(), "./utils/IgnInfo.js"))];
-  });
+  }
+})
+.setInit(async () => {
+  const doc = new GoogleSpreadsheet(config.google.sheets.config);
+  try {
+    await doc.useServiceAccountAuth(config.google.creds);
+    await doc.loadInfo();
+    const aliases = await doc.sheetsByTitle["IGN Aliases"].getRows();
+    IGNs = new u.Collection(aliases.map(x => [x["System"], { system: x["System"], name: x["Name"], aliases: x["Aliases"].split(','), category: x["Category"] ?? "Game Platforms", link: x["Link"] }]));
+  } catch (e) { u.errorHandler(e, "Load IGN Aliases"); }
+});
 
 module.exports = Module;

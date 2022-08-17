@@ -10,9 +10,9 @@ module.exports = {
    * @param {string} system Which system IGN to delete
    * @returns {Promise<ign>}
    */
-  delete: function(discordId, system) {
+  delete: async function(discordId, system) {
     if (discordId.id) discordId = discordId.id;
-    return Ign.findOneAndRemove({ discordId, system }).exec();
+    return await Ign.findOneAndRemove({ discordId, system }).exec();
   },
   /**
    * Find an IGN
@@ -21,12 +21,12 @@ module.exports = {
    * @param {(string)} system Which system IGN to find
    * @returns {Promise<Array<ign>|ign>}
    */
-  find: function(discordId, system) {
+  find: async function(discordId, system) {
     if (discordId.id) discordId = discordId.id;
-    if (Array.isArray(system)) return Ign.find({ discordId, system: { $in: system } }).exec();
-    else if (Array.isArray(discordId)) return Ign.find({ discordId: { $in: discordId }, system }).exec();
-    else if (system) return Ign.findOne({ discordId, system }).exec();
-    else return Ign.find({ discordId }).exec();
+    if (Array.isArray(system)) return await Ign.find({ discordId, system: { $in: system } }).exec();
+    else if (Array.isArray(discordId)) return await Ign.find({ discordId: { $in: discordId }, system }).exec();
+    else if (system) return await Ign.findOne({ discordId, system }).exec();
+    else return await Ign.find({ discordId }).exec();
   },
   /**
    * Find a list of IGNs for a given system
@@ -34,8 +34,8 @@ module.exports = {
    * @param {string} system Whcih system list to fetch
    * @returns {Promise<Array<ign>>}
    */
-  getList: function(system) {
-    return Ign.find({ system }).exec();
+  getList: async function(system) {
+    return await Ign.find({ system }).exec();
   },
   /**
    * Save a user's IGN
@@ -45,9 +45,9 @@ module.exports = {
    * @param {string} ign The IGN to save
    * @returns {Promise{ign}}
    */
-  save: function(discordId, system, ign) {
+  save: async function(discordId, system, ign) {
     if (discordId.id) discordId = discordId.id;
-    return Ign.findOneAndUpdate(
+    return await Ign.findOneAndUpdate(
       { discordId, system },
       { $set: { ign } },
       { upsert: true, new: true }
