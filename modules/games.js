@@ -3,6 +3,7 @@ const Augur = require("augurbot"),
   eliteAPI = require('../utils/EliteApi'),
   discord = require('discord.js'),
   moment = require('moment'),
+  perms = require('../utils/perms'),
   chessAPI = new (require('chess-web-api'))({ queue: true }),
   u = require("../utils/utils"),
   config = require('../config/config.json'),
@@ -217,12 +218,72 @@ async function minecraftSkin(int) {
   const skinUrl = `https://visage.surgeplay.com/full/512/${uuid.id}`;
   int.reply({ files: [{ attachment: skinUrl, name: `${name}.png` }] });
 }
-
+/** @param {discord.CommandInteraction} int */
+async function destiny(int) {
+  const setClan = async () => {
+    if (!perms.isAdmin(int) && !int.member.roles.cache.hasAny([sf.roles.destinyclansadmin, sf.roles.destinyclansmanager])) return int.reply({ content: "Only destiny clan admins/managers and above can use this command!", ephemeral: true });
+    const user = int.options.getMember('user');
+    const clan = int.options.getString('clan');
+    const remove = int.options.getBoolean('remove') ?? false;
+    if (!clan && !remove) return int.reply({ content: `I need a clan to ${remove ? "remove them from" : "add them to!"}`, ephemeral: true });
+    try {
+      if (!remove) {
+        const channel = int.guild.channels.cache.get(sf.channels.destiny[clan]);
+        const has = channel.permissionOverwrites.cache.has(user.id);
+        if (!channel) return int.reply({ content: "sorry, I couldn't fetch the right channel. Try again in a bit?", ephemeral: true });
+        if (has) return int.reply({ content: `${user} is already in that clan!`, ephemeral: true });
+        await channel.permissionOverwrites.create(user, { "VIEW_CHANNEL": true });
+        await channel.send(`Welcome to the clan, ${user}!`);
+        return int.reply({ content: `Added ${user} to the ${clan} clan!`, ephemeral: true });
+      } else {
+        const removed = [];
+        if (clan) {
+          const channel = int.guild.channels.cache.get(sf.channels.destiny[clan]);
+          const has = channel.permissionOverwrites.cache.has(user.id);
+          if (!channel) return int.reply({ content: "sorry, I couldn't fetch the right channel. Try again in a bit?", ephemeral: true });
+          if (!has) return int.reply({ content: `${user} isn't in that clan!`, ephemeral: true });
+          await channel.permissionOverwrites.delete(user);
+          removed.push(channel.toString());
+        } else {
+          for (const id in sf.channels.destiny) {
+            const channel = int.guild.channels.cache.get(sf.channels.destiny[id]);
+            if (channel?.permissionOverwrites.cache.has(user.id)) {
+              await channel.permissionOverwrites.delete(user);
+              removed.push(channel.toString());
+            }
+          }
+        }
+        if (removed.length == 0) return int.reply({ content: `${user} isn't in a clan!`, ephemeral: true });
+        return int.reply({ content: `Removed ${user} from the ${removed.join(', ')} clan(s).`, ephemeral: true });
+      }
+    } catch (error) {
+      u.errorHandler(error, int);
+    }
+  };
+  const setValiant = async () => {
+    if (!perms.isAdmin(int) && !int.member.roles.cache.hasAny([sf.roles.destinyclansmanager, sf.roles.destinyvaliantadmin])) return int.reply({ content: "Only destiny valiant admins can use this command.", ephemeral: true });
+    const user = int.options.getMember('user');
+    const remove = int.options.getBoolean('remove') ?? false;
+    try {
+      const has = user.roles.cache.has(sf.roles.destinyvaliant);
+      if ((has && !remove) || (!has && remove)) return int.reply({ content: `${user} ${remove ? "doesn't have the role yet." : "already has the role."}`, ephemeral: true });
+      await user.roles[remove ? "remove" : "add"](sf.roles.destinyvaliant);
+      return int.reply({ content: `${user} was ${remove ? "removed from" : "added to"} the valiant warrior role`, ephemeral: true });
+    } catch (error) {
+      u.errorHandler(error, int);
+    }
+  };
+  switch (int.options.getString('action')) {
+  case "clan": return setClan();
+  case "valiant": return setValiant();
+  }
+}
 Module.addInteractionCommand({ name: "game",
   commandId: sf.commands.slashGames,
   process: async (int) => {
     switch (int.options.getSubcommand()) {
     case "chess": return chess(int);
+    case "destiny": return destiny(int);
     case "elite": return elite(int);
     case "minecraft-skin": return minecraftSkin(int);
     case "playing": return getPlaying(int);
