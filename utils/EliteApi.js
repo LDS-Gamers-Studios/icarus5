@@ -1,5 +1,6 @@
 const https = require("https");
-
+// none of the "new" api functions work with https
+const axios = require('axios');
 function request({ path, method = "GET", hostname = "www.edsm.net", params = {} }) {
   return new Promise((fulfill, reject) => {
     const options = {
@@ -26,6 +27,16 @@ function request({ path, method = "GET", hostname = "www.edsm.net", params = {} 
     req.end();
   });
 }
+async function axiosRequest({ path, method, hostname = "https://www.edsm.net", params }) {
+  const fetched = await axios({
+    method,
+    url: path,
+    baseURL: hostname,
+    params
+  });
+  if (!params) console.log(fetched?.data);
+  return fetched?.data;
+}
 
 function fetchSystemFactions(systemName) {
   return request({
@@ -40,8 +51,64 @@ function fetchGalnetFeed() {
     path: "/galnet-feed"
   });
 }
+async function getSystemInfo(systemName) {
+  try {
+    const starSystem = await axiosRequest({
+      path: "api-v1/system",
+      params: {
+        showPrimaryStar: 1,
+        showInformation: 1,
+        showPermit: 1,
+        showId: 1,
+        systemName: systemName
+      }
+    });
+    if (Array.isArray(starSystem)) return null;
+
+    if (starSystem.information === {}) starSystem.information = null;
+
+    const bodiesResponse = await axiosRequest({
+      path: "api-system-v1/bodies",
+      params: {
+        systemName: systemName
+      }
+    });
+    starSystem.bodies = bodiesResponse.bodies;
+    starSystem.bodiesURL = bodiesResponse.url;
+
+    const stationsResponse = await axiosRequest({
+      path: "api-system-v1/stations",
+      params: {
+        systemName: systemName
+      }
+    });
+    starSystem.stations = stationsResponse.stations;
+    starSystem.stationsURL = stationsResponse.url;
+
+    const factionsResponse = await axiosRequest({
+      path: "api-system-v1/factions",
+      params: {
+        systemName: systemName
+      }
+    });
+    starSystem.factions = factionsResponse.factions;
+    starSystem.factionsURL = factionsResponse.url;
+
+    return starSystem;
+  } catch (error) { throw new Error(error); }
+}
+async function getEliteStatus() {
+  try {
+    return await axiosRequest({ path: "api-status-v1/elite-server" });
+  } catch (error) {
+    throw new Error(error);
+  }
+}
 
 module.exports = {
+  axiosRequest,
   fetchGalnetFeed,
-  fetchSystemFactions
+  fetchSystemFactions,
+  getSystemInfo,
+  getEliteStatus
 };
