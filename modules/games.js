@@ -212,7 +212,7 @@ async function minecraftSkin(int) {
   let name = int.options.getString('username');
   if (user) name ??= await Module.db.ign.find(user.id ?? int.user.id, 'minecraft')?.ign;
   if (user && !name) return int.reply({ content: `${user} has not set a Minecraft name in their IGN`, ephemeral: true });
-  if (!name) return int.reply({ content: "I need a discord user or username to look up.", ephemeral: true });
+  if (!name) return int.reply({ content: "I need a Discord user or Minecraft username to look up.", ephemeral: true });
   const uuid = await eliteAPI.axiosRequest({ hostname: `https://api.mojang.com/users/profiles/minecraft/${name}` });
   if (!uuid?.id) return int.reply({ content: "I couldn't find that player", ephemeral: true });
   const skinUrl = `https://visage.surgeplay.com/full/512/${uuid.id}`;
@@ -221,7 +221,7 @@ async function minecraftSkin(int) {
 /** @param {discord.CommandInteraction} int */
 async function destiny(int) {
   const setClan = async () => {
-    if (!perms.isAdmin(int) && !int.member.roles.cache.hasAny([sf.roles.destinyclansadmin, sf.roles.destinyclansmanager])) return int.reply({ content: "Only destiny clan admins/managers and above can use this command!", ephemeral: true });
+    if (!perms.isAdmin(int) && !int.member.roles.cache.hasAny([sf.roles.destinyclansadmin, sf.roles.destinyclansmanager])) return int.reply({ content: `Only <@&${sf.roles.destinyclansadmin}> and above can use this command!`, ephemeral: true });
     const user = int.options.getMember('user');
     const clan = int.options.getString('clan');
     const remove = int.options.getBoolean('remove') ?? false;
@@ -261,14 +261,14 @@ async function destiny(int) {
     }
   };
   const setValiant = async () => {
-    if (!perms.isAdmin(int) && !int.member.roles.cache.hasAny([sf.roles.destinyclansmanager, sf.roles.destinyvaliantadmin])) return int.reply({ content: "Only destiny valiant admins can use this command.", ephemeral: true });
+    if (!perms.isAdmin(int) && !int.member.roles.cache.hasAny([sf.roles.destinyclansmanager, sf.roles.destinyvaliantadmin])) return int.reply({ content: `Only <@&${sf.roles.destinyvaliantadmin}> and above can use this command.`, ephemeral: true });
     const user = int.options.getMember('user');
     const remove = int.options.getBoolean('remove') ?? false;
     try {
       const has = user.roles.cache.has(sf.roles.destinyvaliant);
       if ((has && !remove) || (!has && remove)) return int.reply({ content: `${user} ${remove ? "doesn't have the role yet." : "already has the role."}`, ephemeral: true });
       await user.roles[remove ? "remove" : "add"](sf.roles.destinyvaliant);
-      return int.reply({ content: `${user} was ${remove ? "removed from" : "added to"} the valiant warrior role`, ephemeral: true });
+      return int.reply({ content: `${user} was ${remove ? "removed from" : "added to"} the <@${sf.roles.destinyvaliant}> role`, ephemeral: true });
     } catch (error) {
       u.errorHandler(error, int);
     }
