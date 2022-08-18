@@ -75,8 +75,8 @@ async function sponsorchannel(int) {
 async function uncoolkids(int) {
   if (sponsorChannels.get(int.user.id) == '') return int.reply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started.", ephemeral: true });
   if (!sponsorChannels.get(int.user.id)) return int.reply({ content: "You need to be a Pro Sponsor or above to use this command!", ephemeral: true });
-  if (!channel) return int.reply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this", ephemeral: true });
   const channel = int.guild.channels.cache.get(sponsorChannels.get(int.member.id));
+  if (!channel) return int.reply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this", ephemeral: true });
   const target = int.options.getUser("user");
   if (target.id == int.member.id) return int.reply({ content: "You can't remove yourself!", ephemeral: true });
   if (target.id == int.client.user.id) return int.reply({ content: "You can't get rid of me that easily!", ephemeral: true });
@@ -104,7 +104,7 @@ const Module = new Augur.Module()
     await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
     const channels = await doc.sheetsByTitle["Sponsor Channels"].getRows();
-    sponsorChannels = new u.Collection().set(channels.map(x => [x["Sponsor ID"], x["Channel ID"]]));
+    sponsorChannels = new u.Collection(channels.map(x => [x["Sponsor ID"], x["Channel ID"]]));
   } catch (e) { u.errorHandler(e, "Load Sponsor Channels"); }
 });
 
