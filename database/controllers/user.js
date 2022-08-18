@@ -1,27 +1,34 @@
 const Discord = require("discord.js"),
-  moment = require("moment");
+  moment = require("moment"),
+  User = require("../models/User.model");
 
-const User = require("../models/User.model");
+/**
+ * @typedef {string|Discord.User|Discord.GuildMember} discordId
+ *
+ * @typedef updated
+ * @property {user[]} users Users that were updated
+ * @property {number} xp XP given to users
+ *
+ * @typedef user
+ * @property {string} discordId
+ * @property {number} currentXP
+ * @property {number} totalXP
+ * @property {number} posts
+ * @property {number} stars
+ * @property {number} preferences
+ * @property {number} ghostBucks
+ * @property {string} house
+ * @property {boolean} excludeXP
+ * @property {boolean} twitchFollow
+ * @property {string[]} role
+ *
+ * @typedef leaderboardOptions
+ * @property {Discord.Collection|[]} members Collection or Array of snowflakes to include in the leaderboard
+ * @property {number} limit limit the number of results
+ * @property {discordId} member A user to include in the results, no matter their ranking.
+ * @property {boolean} season Whether to fetch the current season (`true`, default) or lifetime (`false`) leaderboard.
+ */
 const models = {
-  /**
-   * @typedef {string|Discord.User|Discord.GuildMember} discordId
-   * @typedef updated
-   * @property {user[]} users Users that were updated
-   * @property {number} xp XP given to users
-   *
-   * @typedef user
-   * @property {string} discordId
-   * @property {number} currentXP
-   * @property {number} totalXP
-   * @property {number} posts
-   * @property {number} stars
-   * @property {number} preferences
-   * @property {number} ghostBucks
-   * @property {string} house
-   * @property {boolean} excludeXP
-   * @property {boolean} twitchFollow
-   * @property {string[]} role
-   */
 
   /**
    * Add XP to a set of users
@@ -55,6 +62,7 @@ const models = {
       return response;
     }
   },
+
   /**
    * Fetch a user record from the database.
    * @param {discordId} discordId The user record to fetch.
@@ -65,17 +73,11 @@ const models = {
     discordId = discordId.id ?? discordId;
     let user = await User.findOne({ discordId }).exec();
     if (!user && createIfNotFound) {
-      user = await models.newUser(discordId).exec();
+      user = await models.newUser(discordId);
     }
     return user;
   },
-  /**
-   * @typedef leaderboardOptions
-   * @property {Discord.Collection|[]} members Collection or Array of snowflakes to include in the leaderboard
-   * @property {number} limit limit the number of results
-   * @property {discordId} member A user to include in the results, no matter their ranking.
-   * @property {boolean} season Whether to fetch the current season (`true`, default) or lifetime (`false`) leaderboard.
-   */
+
   /**
    * Get the top X of the leaderboard
    * @param {leaderboardOptions} options Options for the leaderboard fetch
@@ -105,13 +107,14 @@ const models = {
     // Get requested user
     const hasMember = records.some(r => r.discordId == member);
     if (member && !hasMember) {
-      const record = await models.getRank(member, members).exec();
+      const record = await models.getRank(member, members);
       if (!season) record.rank = record.lifetime;
       if (record) records.push(record);
     }
 
     return records;
   },
+
   /**
    * Get a user's rank
    * @param {discordId} member The member whose ranking you want to view.
@@ -139,14 +142,16 @@ const models = {
 
     return record;
   },
+
   /**
    * Run a user database query
    * @param {object} query
    * @returns {Promise<user[]>}
    */
-  getUsers: function(query) {
-    return User.find(query).exec();
+  getUsers: async function(query) {
+    return await User.find(query).exec();
   },
+
   /**
    * Create a new user record
    * @param {discordId} discordId The guild member record to create
@@ -171,9 +176,10 @@ const models = {
         twitchFollow: false,
         roles: []
       });
-      return newMember.save().exec();
+      return newMember.save();
     }
   },
+
   /**
    * Update a member's track XP preference
    * @param {discordId} discordId The guild member to update.
@@ -183,34 +189,34 @@ const models = {
   trackXP: async function(discordId, track = true) {
     if (discordId.id) discordId = discordId.id;
     return await User.findOneAndUpdate(
-      { discordId: discordId.id ?? discordId },
+      { discordId: discordId },
       { $set: { excludeXP: !track } },
       { new: true, upsert: false }
     ).exec();
   },
+
   /**
    * Update a member's roles in the database
-   * @param {discordId} discordId The member to update
+   * @param {Discord.GuildMember} member The guild member to update
    * @returns {Promise<user>}
    */
-  updateRoles: async function(discordId) {
-    if (discordId.id) discordId = discordId.id;
+  updateRoles: async function(member) {
     return await User.findOneAndUpdate(
-      { discordId: discordId.id },
-      { $set: { roles: Array.from(discordId.roles.cache.keys()) } },
+      { discordId: member.id },
+      { $set: { roles: Array.from(member.roles.cache.keys()) } },
       { new: true, upsert: false }
     ).exec();
   },
+
   /**
    * Updates a guild member's tenure in the server database.
-   * @param {discordId} discordId The guild member to update.
-   * @returns {Promise<User>}
+   * @param {Discord.GuildMember} member The guild member to update.
+   * @returns {Promise<user>}
    */
-  updateTenure: async function(discordId) {
-    if (discordId.id) discordId = discordId.id;
+  updateTenure: async function(member) {
     return await User.findOneAndUpdate(
-      { discordId: discordId.id },
-      { $inc: { priorTenure: (moment().diff(moment(discordId.joinedAt), "days") || 0) } },
+      { discordId: member.id },
+      { $inc: { priorTenure: (moment().diff(moment(member.joinedAt), "days") || 0) } },
       { new: true, upsert: false }
     ).exec();
   }
