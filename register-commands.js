@@ -1,8 +1,7 @@
 const config = require("./config/config.json"),
   sf = require("./config/snowflakes.json"),
   path = require("path"),
-  axios = require("axios"),
-  { Collection } = require("./utils/utils.js");
+  axios = require("axios");
 
 /************************
  * BEGIN "CONFIG" BLOCK *
@@ -12,6 +11,7 @@ const globalCommandFiles = [
 ];
 const guildCommandFiles = [
   "messageMod.json",
+  "slashAvatar.json",
   "slashBank.json",
   "slashGospel.json",
   "slashRank.json",
@@ -19,12 +19,7 @@ const guildCommandFiles = [
   "slashVoice.json",
   "userMod.json"
 ];
-const permissionData = new Collection();
-permissionData.set(sf.commands.slashMod, [{
-  id: sf.roles.mod,
-  type: 1,
-  permission: true
-}]);
+
 /**********************
  * END "CONFIG" BLOCK *
  **********************/
@@ -108,16 +103,3 @@ axios({
   }
   console.log();
 }).catch(displayError);
-
-for (const commandId of permissionData.keys()) {
-  axios({
-    method: "put",
-    url: `https://discord.com/api/v8/applications/${applicationId}/guilds/${sf.ldsg}/commands/${commandId}/permissions`,
-    headers: { Authorization: `Bot ${config.token}` },
-    data: { permissions: permissionData.get(commandId) }
-  }).then((response) => {
-    console.log("=====Permissions registered for 1 command=====");
-    console.log(response.data);
-    console.log();
-  }).catch(displayError);
-}
