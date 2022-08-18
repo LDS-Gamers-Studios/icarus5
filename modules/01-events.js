@@ -60,7 +60,7 @@ const Module = new Augur.Module()
     } else {
       guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({
-          author: { name: user.username, iconURL: user.displayAvatarURL() },
+          author: user,
           title: `${user.username} has been banned`,
           color: 0x0000ff
         })
@@ -155,7 +155,7 @@ const Module = new Augur.Module()
       if (!member.client.ignoreNotifications?.has(member.id)) {
         const user = await Module.db.user.fetchUser(member);
         const embed = u.embed({
-          author: { name: member.displayName, iconURL: member.displayAvatarURL() },
+          author: member,
           title: `${member.displayName} has left the server`,
           color: 0x5865f2,
         })
@@ -173,7 +173,7 @@ const Module = new Augur.Module()
     const newMember = ldsg.members.cache.get(newUser.id);
     if (newMember && (!newMember.roles.cache.has(sf.roles.trusted) || newMember.roles.cache.has(sf.roles.untrusted))) {
       const user = await Module.db.user.fetchUser(newMember).catch(u.noop);
-      const embed = u.embed({ author: { name: oldUser.username, iconURL: oldUser.displayAvatarURL() } })
+      const embed = u.embed({ author: oldUser })
       .setTitle("User Update")
       .setFooter({ text: `${user.posts} Posts in ${moment(newMember?.joinedTimestamp).fromNow(true)}` });
       if (oldUser.tag !== newUser.tag) {

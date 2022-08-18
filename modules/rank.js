@@ -53,7 +53,7 @@ async function slashRankView(interaction) {
       const level = Rank.level(record.totalXP);
       const nextLevel = Rank.minXp(level + 1).toLocaleString();
 
-      const embed = u.embed({ author: { name: member.displayName, iconURL: member.displayAvatarURL() } })
+      const embed = u.embed({ author: member })
       .setTitle("LDSG Season Chat Ranking")
       .setURL("https://my.ldsgamers.com/leaderboard")
       .setFooter({ text: "https://my.ldsgamers.com/leaderboard" })
@@ -89,7 +89,7 @@ async function rankClockwork(client) {
             modLogs.send({
               content: `${member} has posted ${user.posts} times in chat without being trusted!`,
               embeds: [
-                u.embed({ author: { name: member.displayName, iconURL: member.displayAvatarURL() } })
+                u.embed({ author: member })
               .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
               .addField("ID", member.id, true)
               .addField("Activity", `Posts: ${user.posts}`, true)

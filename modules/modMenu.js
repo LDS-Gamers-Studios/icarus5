@@ -45,7 +45,7 @@ async function menu(options, interaction, target) {
         .addOptions(options),
     );
   const targetUser = getTargetUser(targetUser);
-  const e = u.embed({ author: { name: targetUser.displayName ?? targetUser.username ?? "", iconURL: targetUser.displayAvatarURL() ?? "" } })
+  const e = u.embed({ author: targetUser })
     .setColor("RED");
   let embeds = [ e ];
   if (target instanceof Discord.Message) {
@@ -103,7 +103,7 @@ const processes = {
       extra = await u.awaitDM(`You selected "${reason}." Please provide more information (one message only).`, interaction.member, 300);
       if (!extra) {
         await interaction.editReply({ embeds: [
-          u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } }).setColor(0x0000ff)
+          u.embed({ author: interaction.member }).setColor(0x0000ff)
           .setDescription(`Flag cancelled. The reason you selected requires more information.`)
         ], content: null });
         return;
@@ -130,7 +130,7 @@ const processes = {
   },
   userAvatar: async function(interaction, target) {
     const user = getTargetUser(target);
-    const embed = u.embed({ author: { name: user.displayName ?? user.username ?? "", iconURL: user.displayAvatarURL() } })
+    const embed = u.embed({ author: user })
     .setDescription(`${u.escapeText(user.displayName ?? user.username)}'s Avatar`)
     .setImage(user.displayAvatarURL({ size: 512, dynamic: true }));
     interaction.editReply({ embeds: [embed] });
@@ -171,7 +171,7 @@ const processes = {
     const dm = await u.awaitDM("What is the note would you like to add?", interaction.member);
     if (!dm) {
       await interaction.editReply({ embeds: [
-        u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } }).setColor(0x0000ff)
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Note cancelled`)
       ], content: null });
       return;
@@ -206,7 +206,7 @@ const processes = {
     const dm = await u.awaitDM("What is the reason for this timeout?", interaction.member);
     if (!dm) {
       await interaction.editReply({ embeds: [
-        u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } }).setColor(0x0000ff)
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Timeout cancelled`)
       ], content: null });
       return;
@@ -219,7 +219,7 @@ const processes = {
     const dm = await u.awaitDM("What is the reason for this kick?", interaction.member);
     if (!dm) {
       await interaction.editReply({ embeds: [
-        u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } }).setColor(0x0000ff)
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Kick cancelled`)
       ], content: null });
       return;
@@ -232,7 +232,7 @@ const processes = {
     const dm = await u.awaitDM("What is the reason for this ban?", interaction.member);
     if (!dm) {
       await interaction.editReply({ embeds: [
-        u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } }).setColor(0x0000ff)
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Ban cancelled`)
       ], content: null });
       return;
@@ -247,7 +247,7 @@ const processes = {
     const dm = await u.awaitDM("What is the reason for this purge?", interaction.member);
     if (!dm) {
       await interaction.editReply({ embeds: [
-        u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } }).setColor(0x0000ff)
+        u.embed({ author: interaction.member }).setColor(0x0000ff)
         .setDescription(`Channel purge cancelled`)
       ], content: null });
       return;
@@ -270,7 +270,7 @@ const processes = {
 
     // Log it
     await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-      u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } })
+      u.embed({ author: interaction.member })
       .setTitle("Channel Purge")
       .setDescription(`**${interaction.member}** purged messages in ${interaction.channel}`)
       .addField('Reason', dm.content)
