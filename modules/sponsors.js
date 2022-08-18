@@ -90,9 +90,9 @@ const Module = new Augur.Module()
   commandId: sf.commands.slashSponsors,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand()) {
-    case "coolkids": return await coolkids(interaction);
+    case "coolkid": return await coolkids(interaction);
     case "channel": return await sponsorchannel(interaction);
-    case "uncoolkids": return await uncoolkids(interaction);
+    case "uncoolkid": return await uncoolkids(interaction);
     }
   }
 })
