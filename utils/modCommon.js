@@ -85,7 +85,7 @@ const modCommon = {
         });
 
         // Save infraction
-        interaction.client.db.infraction.save({
+        await u.db.infraction.save({
           discordId: target.id,
           description: `[User Ban]: ${reason}`,
           value: 30,
@@ -98,7 +98,7 @@ const modCommon = {
           id: target.id,
           roles: { cache: targetRoles }
         };
-        interaction.client.db.user.updateRoles(fakeTarget);
+        u.db.user.updateRoles(fakeTarget);
 
         // Log it
         interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
@@ -139,7 +139,7 @@ const modCommon = {
 
     const client = msg.client ?? member?.client;
 
-    const infractionSummary = await client.db.infraction.getSummary(member);
+    const infractionSummary = await u.db.infraction.getSummary(member);
     const embed = u.embed({ color: 0xff0000, author: member });
 
     if (Array.isArray(matches)) matches = matches.join(", ");
@@ -272,7 +272,7 @@ const modCommon = {
         });
 
         // Save infraction
-        interaction.client.db.infraction.save({
+        await u.db.infraction.save({
           discordId: target.id,
           description: `[User Kick]: ${reason}`,
           value: 30,
@@ -285,7 +285,7 @@ const modCommon = {
           id: target.id,
           roles: { cache: targetRoles }
         };
-        interaction.client.db.user.updateRoles(fakeTarget);
+        u.db.user.updateRoles(fakeTarget);
 
         // Log it
         interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
@@ -352,13 +352,13 @@ const modCommon = {
 
   note: async function(interaction, target, note) {
     try {
-      await interaction.client.db.infraction.save({
+      await u.db.infraction.save({
         discordId: target.id,
         value: 0,
         description: note,
         mod: interaction.user.id
       });
-      const summary = await interaction.client.db.infraction.getSummary(target.id);
+      const summary = await u.db.infraction.getSummary(target.id);
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
         u.embed({ author: target })
@@ -385,7 +385,7 @@ const modCommon = {
 
     const comment = `Set nickname to ${u.escapeText(newNick)} from ${u.escapeText(oldNick)}.`;
 
-    await interaction.client.db.infraction.save({
+    await u.db.infraction.save({
       discordId: target.id,
       value: 0,
       description: comment,
@@ -393,7 +393,7 @@ const modCommon = {
       channel: interaction.channel.id,
       mod: interaction.member.id
     });
-    const summary = await interaction.client.db.infraction.getSummary(target.id);
+    const summary = await u.db.infraction.getSummary(target.id);
 
     interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
       u.embed({ author: target })
