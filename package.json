@@ -20,7 +20,7 @@
   "dependencies": {
     "augurbot": "github:gaiwecoor/augurbot#dev",
     "axios": "^0.21.1",
-    "discord.js": "^13.6.0",
+    "discord.js": "^13.8.0",
     "forever": "^4.0.1",
     "google-spreadsheet": "^3.1.15",
     "jimp": "^0.16.1",
