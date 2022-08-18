@@ -463,7 +463,7 @@ const modCommon = {
       + "Also, please be aware that LDSG may make changes to the Trusted+ list from time to time at its discretion."
     ).catch(u.noop);
 
-    const embed = u.embed({ author: { name: target.displayName, iconURL: target.displayAvatarURL() } })
+    const embed = u.embed({ author: target })
     .setTitle("User Given Trusted+")
     .setDescription(`${interaction.member} gave ${target} the <@&${sf.roles.trustedplus}> role.`);
 
@@ -488,7 +488,7 @@ const modCommon = {
       // muteState.delete(target.id);
 
       await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
-        u.embed({ author: { name: target.displayName, iconURL: target.displayAvatarURL() } })
+        u.embed({ author: target })
         .setTitle("Member Unmute")
         .setDescription(`**${interaction.member}** unmuted **${target}**`)
         .setColor(0x00ff00)

@@ -301,8 +301,7 @@ async function slashBankDiscount(interaction) {
       .catch(() => {
         interaction.followUp("I wasn't able to send you the code! Do you have DMs allowed for server members? Please check with a member of Management to get your discount code.");
       });
-      const embed = u.embed()
-      .setAuthor({ name: interaction.member.displayName, iconURL: interaction.member.user.displayAvatarURL({ dynamic: true }) })
+      const embed = u.embed({ author: interaction.member })
       .addField("Amount", `${gb}${-withdraw.value}\n$${-withdraw.value / 100}`)
       .addField("Balance", `${gb}${balance.balance + withdraw.value}`)
       .setDescription(`**${u.escapeText(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
