@@ -65,7 +65,7 @@ async function slashSponsorsInvite(int) {
 
   const channelId = sponsorChannels.get(int.user.id);
   if (!isProSponsor(int.member)) return int.editReply({ content: "You need to be a Pro Sponsor or above to use this command!" });
-  if (channelId == '') return int.editReply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started." });
+  if (channelId == "") return int.editReply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started." });
 
   const channel = int.guild.channels.cache.get(channelId);
   const target = int.options.getUser("user", true);
@@ -132,7 +132,7 @@ const Module = new Augur.Module()
     await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
     const channels = await doc.sheetsByTitle["Sponsor Channels"].getRows();
-    sponsorChannels = new u.Collection(channels.map(x => [x["Sponsor ID"], x["Channel ID"]]));
+    sponsorChannels = new u.Collection(channels.map(x => [x["Sponsor ID"], x["Channel ID"] ?? ""]));
   } catch (e) { u.errorHandler(e, "Load Sponsor Channels"); }
 });
 
