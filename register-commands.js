@@ -11,10 +11,9 @@ const globalCommandFiles = [
   "messageBookmark.json"
 ];
 const guildCommandFiles = [
-  "fun.json",
   "messageMod.json",
-  "react.json",
   "slashBank.json",
+  "slashFun.json",
   "slashGospel.json",
   "slashRank.json",
   "slashMod.json",

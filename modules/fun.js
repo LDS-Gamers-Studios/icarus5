@@ -176,7 +176,7 @@ async function repost(int) {
 
 const Module = new Augur.Module()
 .addInteractionCommand({ name: "fun",
-  commandId: sf.commands.fun,
+  commandId: sf.commands.slashFun,
   process: async interaction => {
     let response;
     switch (interaction.options.getSubcommand(true)) {

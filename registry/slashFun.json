@@ -135,6 +135,48 @@
       "type": 1,
       "name": "repost",
       "description": "That's a repost"
+    },
+    {
+      "type": 1,
+      "description": "React to a message",
+      "options": [
+        {
+          "type": 3,
+          "name": "reaction",
+          "description": "the type of reaction to post",
+          "choices": [
+            {
+              "name": "Disagree",
+              "value": "disagree"
+            },
+            {
+              "name": "Happy Dance",
+              "value": "happydance"
+            },
+            {
+              "name": "I See",
+              "value": "isee"
+            },
+            {
+              "name": "Oh Snap",
+              "value": "ohsnap"
+            },
+            {
+              "name": "Salty",
+              "value": "salty"
+            },
+            {
+              "name": "Shrug",
+              "value": "shrug"
+            },
+            {
+              "name": "Wut",
+              "value": "wut"
+            }
+          ],
+          "required": true
+        }
+      ]
     }
   ]
 }
