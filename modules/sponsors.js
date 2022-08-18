@@ -28,6 +28,7 @@ async function sponsorchannel(int) {
   await int.deferReply({ ephemeral: true });
   if (!int.member.roles.cache.has(sf.roles.management, sf.roles.manager)) return int.editReply({ content: "Only Managers and Management can use this command", ephemeral: true });
   try {
+    if (int.options.getUser('user').bot) return int.editReply({ content: "Bots don't deserve pro sponsor channels" });
     const sponsor = isProSponsor(int.options.getMember("user"));
     if (!sponsor) return int.editReply({ content: "That person isn't a pro sponsor or above!", ephemeral: true });
     if (sponsorChannels.get(sponsor.id)) return int.editReply({ content: `${sponsor} already has a channel at ${int.guild.channels.cache.get(sponsorChannels.get(sponsor.id))}!`, ephemeral: true });
