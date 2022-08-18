@@ -1,16 +1,16 @@
 {
   "name": "sponsors",
-  "description": "Set up Pro Sponsor channels",
+  "description": "Set up Pro Sponsor channels.",
   "options": [
     {
       "type": 1,
       "name": "coolkid",
-      "description": "Invite someone to your Pro Sponsor channel",
+      "description": "Invite someone to your Pro Sponsor channel.",
       "options": [
         {
           "type": 6,
           "name": "user",
-          "description": "The user to add",
+          "description": "Who do you want to invite?",
           "required": true
         }
       ]
@@ -18,12 +18,12 @@
     {
       "type": 1,
       "name": "uncoolkid",
-      "description": "Remove someone from your Pro Sponsor channel",
+      "description": "Remove someone from your Pro Sponsor channel.",
       "options": [
         {
           "type": 6,
           "name": "user",
-          "description": "The user to remove",
+          "description": "Who do you want to remove?",
           "required": true
         }
       ]
@@ -31,12 +31,12 @@
     {
       "type": 1,
       "name": "channel",
-      "description": "Create up a Pro Sponsor channel for someone",
+      "description": "Create up a Pro Sponsor channel for someone.",
       "options": [
         {
           "type": 6,
           "name": "user",
-          "description": "The user to create a channel for",
+          "description": "Whose channel are you creating?",
           "required": true
         }
       ]

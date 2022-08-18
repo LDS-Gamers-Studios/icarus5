@@ -10,28 +10,34 @@ function isProSponsor(member) {
   return member.roles.cache.some(r => [sf.roles.legendarysponsor, sf.roles.prosponsor].includes(r.id)) ? member : null;
 }
 
-async function coolkids(int) {
-  const channel = int.guild.channels.cache.get(sponsorChannels.get(int.user.id));
+async function slashSponsorsCoolkid(int) {
+  await int.deferReply({ ephemeral: true });
+
+  const channelId = sponsorChannels.get(int.user.id);
+  if (!isProSponsor(int.member)) return int.editReply({ content: "You need to be a Pro Sponsor or above to use this command!" });
+  if (channelId == '') return int.editReply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started." });
+
+  const channel = int.guild.channels.cache.get(channelId);
   const target = int.options.getUser("user", true);
-  if (sponsorChannels.get(int.user.id) == '') return int.reply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started.", ephemeral: true });
-  if (!sponsorChannels.get(int.user.id)) return int.reply({ content: "You need to be a Pro Sponsor or above to use this command!", ephemeral: true });
-  if (!channel) return int.reply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this", ephemeral: true });
-  if (channel.permissionOverwrites.cache.get(target.id)) return int.reply({ content: `${target} is already in the channel!`, ephemeral: true });
+  if (!channel) return int.editReply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this" });
+  if (channel.permissionOverwrites.cache.get(target.id)) return int.editReply({ content: `${target} is already in the channel!` });
+
   try {
     await channel.permissionOverwrites.create(target, { 'VIEW_CHANNEL': true }, "Pro Sponsor Invite");
     channel?.send(`Welcome, ${target}!`);
-    int.reply({ content: `${target} was added to your Pro Sponsor channel!`, ephemeral: true });
+    int.editReply({ content: `${target} was added to your Pro Sponsor channel!` });
   } catch (error) { u.errorHandler(error, int); }
 }
 
-async function sponsorchannel(int) {
+async function slashSponsorsChannel(int) {
   await int.deferReply({ ephemeral: true });
-  if (!int.member.roles.cache.has(sf.roles.management, sf.roles.manager)) return int.editReply({ content: "Only Managers and Management can use this command", ephemeral: true });
+
+  if (!int.member.roles.cache.has(sf.roles.management, sf.roles.manager)) return int.editReply({ content: "Only Managers and Management can use this command." });
   try {
-    if (int.options.getUser('user').bot) return int.editReply({ content: "Bots don't deserve pro sponsor channels" });
+    if (int.options.getUser('user').bot) return int.editReply({ content: "Bots can't have a Pro Sponsor channel!" });
     const sponsor = isProSponsor(int.options.getMember("user"));
-    if (!sponsor) return int.editReply({ content: "That person isn't a pro sponsor or above!", ephemeral: true });
-    if (sponsorChannels.get(sponsor.id)) return int.editReply({ content: `${sponsor} already has a channel at ${int.guild.channels.cache.get(sponsorChannels.get(sponsor.id))}!`, ephemeral: true });
+    if (!sponsor) return int.editReply({ content: "That person isn't a Pro Sponsor or above!" });
+    if (sponsorChannels.get(sponsor.id)) return int.editReply({ content: `${sponsor} already has a channel at ${int.guild.channels.cache.get(sponsorChannels.get(sponsor.id))}!` });
 
     const channel = await int.guild.channels.create(`${sponsor.displayName}-hangout`, {
       type: 'GUILD_TEXT',
@@ -65,25 +71,30 @@ async function sponsorchannel(int) {
       } catch (e) { u.errorHandler(e, "Modify Sponsor Channels");}
     }
 
-    await int.editReply({ content: `${sponsor}'s Pro Sponsor channal was created! ${gSheets ? "" : "(I wasn't able to save it to the google sheet)"}` });
+    await int.editReply({ content: `${sponsor}'s Pro Sponsor channel was created! ${gSheets ? "" : "I wasn't able to save it to the Google Sheet."}` });
     await channel.send(`${sponsor}, welcome to your private channel! Thank you for being a Pro Sponsor! Your contributions each month are very much appreciated! Please accept this channel as a token of our appreciation.\n\nYou should have some administrative abilities for this channel (including changing the name and description), as well as the ability to add people to the channel with \`/coolkid @user\`. If you would like to change default permissions for users in the channel, please contact a member of Management directly.`);
   } catch (e) {
     u.errorHandler(e, int);
   }
 }
 
-async function uncoolkids(int) {
-  if (sponsorChannels.get(int.user.id) == '') return int.reply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started.", ephemeral: true });
-  if (!sponsorChannels.get(int.user.id)) return int.reply({ content: "You need to be a Pro Sponsor or above to use this command!", ephemeral: true });
-  const channel = int.guild.channels.cache.get(sponsorChannels.get(int.member.id));
-  if (!channel) return int.reply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this", ephemeral: true });
+async function slashSponsorsUncoolkid(int) {
+  await int.deferReply({ ephemeral: true });
+
+  const channelId = sponsorChannels.get(int.user.id);
+  if (!isProSponsor(int.member)) return int.editReply({ content: "You need to be a Pro Sponsor or above to use this command!" });
+  if (channelId == '') return int.editReply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started." });
+
+  const channel = int.guild.channels.cache.get(channelId);
   const target = int.options.getUser("user");
-  if (target.id == int.member.id) return int.reply({ content: "You can't remove yourself!", ephemeral: true });
-  if (target.id == int.client.user.id) return int.reply({ content: "You can't get rid of me that easily!", ephemeral: true });
-  if (!channel.permissionOverwrites.cache.get(target.id)) return int.reply({ content: `${target} isn't in this channel!`, ephemeral: true });
+  if (!channel) return int.editReply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this." });
+  if (target.id == int.member.id) return int.editReply({ content: "You can't remove yourself!" });
+  if (target.id == int.client.user.id) return int.editReply({ content: "You can't get rid of me that easily!" });
+  if (!channel.permissionOverwrites.cache.get(target.id)) return int.editReply({ content: `${target} isn't in this channel!` });
+
   try {
     await channel.permissionOverwrites.delete(target, "Pro Sponsor Boot");
-    int.reply({ content: `${target} was removed from your Pro Sponsor channel`, ephemeral: true });
+    int.reply({ content: `${target} was removed from your Pro Sponsor channel` });
   } catch (error) { u.errorHandler(error, int); }
 }
 const Module = new Augur.Module()
@@ -91,9 +102,9 @@ const Module = new Augur.Module()
   commandId: sf.commands.slashSponsors,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand()) {
-    case "coolkid": return await coolkids(interaction);
-    case "channel": return await sponsorchannel(interaction);
-    case "uncoolkid": return await uncoolkids(interaction);
+    case "coolkid": return await slashSponsorsCoolkid(interaction);
+    case "channel": return await slashSponsorsChannel(interaction);
+    case "uncoolkid": return await slashSponsorsUncoolkid(interaction);
     }
   }
 })
