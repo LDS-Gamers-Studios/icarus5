@@ -138,6 +138,7 @@
     },
     {
       "type": 1,
+      "name": "react",
       "description": "React to a message",
       "options": [
         {
