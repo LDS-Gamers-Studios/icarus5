@@ -1,5 +1,6 @@
 const Augur = require("augurbot"),
   config = require('../config/config.json'),
+  p = require("../utils/perms"),
   u = require("../utils/utils"),
   { GoogleSpreadsheet } = require("google-spreadsheet"),
   sf = require("../config/snowflakes.json");
@@ -32,7 +33,7 @@ async function slashSponsorsCoolkid(int) {
 async function slashSponsorsChannel(int) {
   await int.deferReply({ ephemeral: true });
 
-  if (!int.member.roles.cache.has(sf.roles.management, sf.roles.manager)) return int.editReply({ content: "Only Managers and Management can use this command." });
+  if (!p.isMgr(int.member) && !p.isMgmt(int.member)) return int.editReply({ content: "Only Managers and Management can use this command." });
   try {
     if (int.options.getUser('user').bot) return int.editReply({ content: "Bots can't have a Pro Sponsor channel!" });
     const sponsor = isProSponsor(int.options.getMember("user"));
