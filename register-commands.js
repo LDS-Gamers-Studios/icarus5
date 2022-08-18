@@ -19,7 +19,6 @@ const guildCommandFiles = [
   "slashVoice.json",
   "userMod.json"
 ];
-
 /**********************
  * END "CONFIG" BLOCK *
  **********************/
