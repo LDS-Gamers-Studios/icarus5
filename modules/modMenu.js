@@ -278,6 +278,25 @@ const processes = {
     ] });
     await interaction.followUp({ content: `Channel purged.`, ephemeral: true });
   },
+  spamCleanup: async function(interaction, target) {
+    const dm = await u.awaitDM("What is the reason for the cleanup?", interaction.member);
+    if (!dm) {
+      return await interaction.editReply({ embeds: [
+        u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } }).setColor(0x0000ff)
+          .setDescription(`Spam cleanup cancelled`)
+      ], content: null });
+    }
+    await interaction.editReply("Beginning cleanup...");
+    const cleaned = await c.spamCleanup(target, interaction.guild);
+    if (cleaned.deleted < 2) return interaction.editReply({ content: "I wasn't able to find any other messages with this content." });
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+      u.embed({ author: { name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() } })
+      .setTitle("Spam Cleanup")
+      .setDescription(`**${interaction.member}** cleaned up ${cleaned.deleted} spam message(s) from ${target.member}`)
+      .addField('Reason', dm.content)
+      .setColor(0x00ff00)
+    ] });
+  },
   announceMessage: async function(interaction, target) {
     const author = target.member;
     const embed = u.embed({ author })
@@ -305,7 +324,7 @@ async function modMenu(inter) {
   .set(isMod + isTrusted, ['flag'])
   .set(isMod, ['banUser', 'kickUser', 'muteUser', 'noteUser', 'renameUser',
     'trustUser', 'trustPlusUser', 'unmuteUser' ]) // 'fullinfo', 'summary', 'timeoutUser', 'warnUser', 'watchUser',
-  .set(isMod + isMsg, ['purgeChannel']) // , 'warnMessage'
+  .set(isMod + isMsg, ['purgeChannel', 'spamCleanup']) // , 'warnMessage'
   .set(isMgr + isMsg, ['announceMessage']);
 
   const menuItems = getMenuItems(menuOptions, allMenuItems, includeKey);

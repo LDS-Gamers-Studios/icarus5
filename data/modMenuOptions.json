@@ -132,6 +132,13 @@
     "emoji": "❌",
     "default": false
   },
+  "spamCleanup": {
+    "label": "Spam Cleanup",
+    "value": "spamCleanup",
+    "description": "Delete all recent messages from this user with this content",
+    "emoji": "🧹",
+    "default": false
+  },
   "announceMessage": {
     "label": "Announce Message",
     "value": "announceMessage",
