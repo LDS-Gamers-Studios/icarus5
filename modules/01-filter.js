@@ -130,8 +130,8 @@ function processDiscordInvites(msg) {
           if (msg.webhookId) {
             for (const invite of matched) msg.content = msg.content.replace(invite, "[Discord Invite]");
             u.clean(msg, 0);
-            msg.embeds = [u.embed().setAuthor({ name: msg.author.username, iconURL: msg.author.displayAvatarURL() }).setDescription(msg.content)].concat(msg.embeds);
-            return msg.channel.send({ embeds: msg.embeds, attachments: msg.attachments });
+            const embeds = [u.embed({ author: msg.author }).setDescription(msg.content)].concat(msg.embeds);
+            return msg.channel.send({ embeds: embeds, attachments: msg.attachments });
           }
           c.createFlag({ msg, member: msg.member, matches: external });
           u.clean(msg, 0);
