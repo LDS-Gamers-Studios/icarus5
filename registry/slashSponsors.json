@@ -4,7 +4,7 @@
   "options": [
     {
       "type": 1,
-      "name": "coolkid",
+      "name": "invite",
       "description": "Invite someone to your Pro Sponsor channel.",
       "options": [
         {
@@ -17,7 +17,7 @@
     },
     {
       "type": 1,
-      "name": "uncoolkid",
+      "name": "uninvite",
       "description": "Remove someone from your Pro Sponsor channel.",
       "options": [
         {
@@ -30,8 +30,21 @@
     },
     {
       "type": 1,
+      "name": "leave",
+      "description": "Leave someone's Pro Sponsor channel.",
+      "options": [
+        {
+          "type": 7,
+          "name": "channel",
+          "description": "Which Pro Sponsor channel do you want to leave?",
+          "required": true
+        }
+      ]
+    },
+    {
+      "type": 1,
       "name": "channel",
-      "description": "Create up a Pro Sponsor channel for someone.",
+      "description": "[MGMT] Create a Pro Sponsor channel for someone.",
       "options": [
         {
           "type": 6,

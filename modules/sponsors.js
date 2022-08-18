@@ -11,25 +11,6 @@ function isProSponsor(member) {
   return member.roles.cache.some(r => [sf.roles.legendarysponsor, sf.roles.prosponsor].includes(r.id)) ? member : null;
 }
 
-async function slashSponsorsCoolkid(int) {
-  await int.deferReply({ ephemeral: true });
-
-  const channelId = sponsorChannels.get(int.user.id);
-  if (!isProSponsor(int.member)) return int.editReply({ content: "You need to be a Pro Sponsor or above to use this command!" });
-  if (channelId == '') return int.editReply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started." });
-
-  const channel = int.guild.channels.cache.get(channelId);
-  const target = int.options.getUser("user", true);
-  if (!channel) return int.editReply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this" });
-  if (channel.permissionOverwrites.cache.get(target.id)) return int.editReply({ content: `${target} is already in the channel!` });
-
-  try {
-    await channel.permissionOverwrites.create(target, { 'VIEW_CHANNEL': true }, "Pro Sponsor Invite");
-    channel?.send(`Welcome, ${target}!`);
-    int.editReply({ content: `${target} was added to your Pro Sponsor channel!` });
-  } catch (error) { u.errorHandler(error, int); }
-}
-
 async function slashSponsorsChannel(int) {
   await int.deferReply({ ephemeral: true });
 
@@ -79,7 +60,26 @@ async function slashSponsorsChannel(int) {
   }
 }
 
-async function slashSponsorsUncoolkid(int) {
+async function slashSponsorsInvite(int) {
+  await int.deferReply({ ephemeral: true });
+
+  const channelId = sponsorChannels.get(int.user.id);
+  if (!isProSponsor(int.member)) return int.editReply({ content: "You need to be a Pro Sponsor or above to use this command!" });
+  if (channelId == '') return int.editReply({ content: "Looks like you don't have a Pro Sponsor channel set up! Contact someone in Management to get started." });
+
+  const channel = int.guild.channels.cache.get(channelId);
+  const target = int.options.getUser("user", true);
+  if (!channel) return int.editReply({ content: "I couldn't access your Pro Sponsor channel! Please talk to someone in Management about fixing this" });
+  if (channel.permissionOverwrites.cache.get(target.id)) return int.editReply({ content: `${target} is already in the channel!` });
+
+  try {
+    await channel.permissionOverwrites.create(target, { 'VIEW_CHANNEL': true }, "Pro Sponsor Invite");
+    channel?.send(`Welcome, ${target}!`);
+    int.editReply({ content: `${target} was added to your Pro Sponsor channel!` });
+  } catch (error) { u.errorHandler(error, int); }
+}
+
+async function slashSponsorsUninvite(int) {
   await int.deferReply({ ephemeral: true });
 
   const channelId = sponsorChannels.get(int.user.id);
@@ -95,7 +95,22 @@ async function slashSponsorsUncoolkid(int) {
 
   try {
     await channel.permissionOverwrites.delete(target, "Pro Sponsor Boot");
-    int.reply({ content: `${target} was removed from your Pro Sponsor channel` });
+    int.editReply({ content: `${target} was removed from your Pro Sponsor channel` });
+  } catch (error) { u.errorHandler(error, int); }
+}
+
+async function slashSponsorsLeave(int) {
+  await int.deferReply({ ephemeral: true });
+
+  const channel = int.options.getChannel('channel');
+  const channelId = sponsorChannels.find(s => s == channel.id);
+  if (!channelId) return int.editReply({ content: "That isn't a Pro Sponsor channel!" });
+  if (channelId == sponsorChannels.get(int.member.id)) return int.editReply({ content: "You can't leave your own Pro Sponsor channel!" });
+  if (!channel.permissionOverwrites.cache.has(int.member.id)) return int.editReply({ content: "You aren't in that Pro Sponsor channel!" });
+
+  try {
+    await channel.permissionOverwrites.delete(int.member, "Left Pro Sponsor Channel");
+    int.editReply({ content: `I've removed you from ${channel}` });
   } catch (error) { u.errorHandler(error, int); }
 }
 const Module = new Augur.Module()
@@ -103,9 +118,10 @@ const Module = new Augur.Module()
   commandId: sf.commands.slashSponsors,
   process: async (interaction) => {
     switch (interaction.options.getSubcommand()) {
-    case "coolkid": return await slashSponsorsCoolkid(interaction);
     case "channel": return await slashSponsorsChannel(interaction);
-    case "uncoolkid": return await slashSponsorsUncoolkid(interaction);
+    case "invite": return await slashSponsorsInvite(interaction);
+    case "uninvite": return await slashSponsorsUninvite(interaction);
+    case "leave": return await slashSponsorsLeave(interaction);
     }
   }
 })
