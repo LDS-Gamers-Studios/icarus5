@@ -1,0 +1,161 @@
+{
+  "name": "game",
+  "description": "Get information on games",
+  "options": [
+    {
+      "type": 1,
+      "name": "chess",
+      "description": "Get Chess.com games",
+      "options": [
+        {
+          "type": 6,
+          "name": "user",
+          "description": "The discord user to search for"
+        },
+        {
+          "type": 3,
+          "name": "username",
+          "description": "The username of the chess.com player"
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "destiny",
+      "description": "[DESTINY MANAGER/ADMIN] Add or remove someone from a clan channel or the valiant warriors role",
+      "options": [
+        {
+          "type": 3,
+          "name": "action",
+          "description": "The action to take",
+          "choices": [
+            {
+              "name": "Clan",
+              "value": "clan"
+            },
+            {
+              "name": "Valiant",
+              "value": "valiant"
+            }
+          ],
+          "required": true
+        },
+        {
+          "type": 6,
+          "name": "user",
+          "description": "The user to add/remove",
+          "required": true
+        },
+        {
+          "type": 3,
+          "name": "clan",
+          "description": "Required for setting a user's clan",
+          "choices": [
+            {
+              "name": "Spartans (PC 1)",
+              "value": "spartans"
+            },
+            {
+              "name": "Lightbreakers (PC 2)",
+              "value": "lightbreakers"
+            },
+            {
+              "name": "Paladins (PC 3)",
+              "value": "paladins"
+            },
+            {
+              "name": "Curmudgeons (PS 1)",
+              "value": "curmudgeons"
+            },
+            {
+              "name": "Guardians (XB 1)",
+              "value": "guardians"
+            },
+            {
+              "name": "Iron Lords (XB 2)",
+              "value": "ironlords"
+            }
+          ]
+        },
+        {
+          "type": 5,
+          "name": "remove",
+          "description": "Set to true if you want to remove them from the clan/role"
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "elite",
+      "description": "Elite Dangerous information",
+      "options": [
+        {
+          "type": 3,
+          "name": "info",
+          "description": "The information to get",
+          "choices": [
+            {
+              "name": "Status",
+              "value": "status"
+            },
+            {
+              "name": "Time",
+              "value": "time"
+            },
+            {
+              "name": "System",
+              "value": "system"
+            },
+            {
+              "name": "Factions",
+              "value": "factions"
+            },
+            {
+              "name": "Bodies",
+              "value": "bodies"
+            },
+            {
+              "name": "Stations",
+              "value": "stations"
+            }
+          ],
+          "required": true
+        },
+        {
+          "type": 3,
+          "name": "system-name",
+          "description": "The name of the system (needed for all but time and status)"
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "minecraft-skin",
+      "description": "Get a picture of someone's minecraft skin",
+      "options": [
+        {
+          "type": 6,
+          "name": "user",
+          "description": "The discord user to search for"
+        },
+        {
+          "type": 3,
+          "name": "username",
+          "description": "The username of the minecraft player"
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "playing",
+      "description": "Find who is playing a game in the server, or list all games being played.",
+      "options": [
+        {
+          "type": 3,
+          "name": "game",
+          "description": "The game to search for (leave blank for a list of all games being played)"
+        }
+      ]
+    }
+  ]
+}
