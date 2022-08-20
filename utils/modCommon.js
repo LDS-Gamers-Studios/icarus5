@@ -158,7 +158,7 @@ const modCommon = {
       client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
       if (msg.webhookId) return;
     } else if (msg.webhookId) {
-      if (msg.webhookId) embed.addField("User", msg.author.toString());
+      if (msg.webhookId) embed.addField("User", msg.author.username);
     } else {
       embed.addField("User", member.toString(), true);
     }
