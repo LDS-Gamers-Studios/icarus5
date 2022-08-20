@@ -153,8 +153,12 @@ const modCommon = {
     }
 
     if (msg && msg.channel.parentId == sf.channels.minecraftcategory) {
-      embed.addField("User", (member.displayName ?? (await member.fetch()).displayName), true);
+      if (msg.webhookId) embed.addField("User", msg.author.username ?? (await msg.channel.fetchWebhooks()).get(msg.webhookId)?.name ?? "Unknown User");
+      else embed.addField("User", (member.displayName ?? (await member.fetch()).displayName), true);
       client.channels.cache.get(sf.channels.minecraftmods).send({ embeds: [embed] });
+      if (msg.webhookId) return;
+    } else if (msg.webhookId) {
+      if (msg.webhookId) embed.addField("User", msg.author.toString());
     } else {
       embed.addField("User", member.toString(), true);
     }
