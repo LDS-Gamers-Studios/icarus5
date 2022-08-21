@@ -58,7 +58,8 @@ async function slashIgnView(interaction) {
   let system = interaction.options.getString("system", false);
   if (findIGN(system)) system = findIGN(system).system;
   const igns = await Module.db.ign.find(user.id, system);
-  const embed = createIgnEmbed(user, Array.isArray(igns) ? igns : [igns], system ? [system] : igns.map(i => i.system));
+
+  const embed = createIgnEmbed(user, Array.isArray(igns) ? igns : [igns].filter(i => i != null), system ? [system] : igns.map(i => i.system));
 
   if (embed) {
     interaction.reply({ embeds: [embed] });
@@ -113,8 +114,9 @@ async function slashIgnWhoplays(interaction) {
   if (!findSystem) return interaction.reply({ content: `\`${system}\` isn't a valid system.`, ephemeral: true });
   system = findSystem?.system;
   const users = await Module.db.ign.getList(system);
-  if (users.length == 0) return interaction.reply({ content: `No members have saved an IGN for ${findSystem.name} yet.` });
+  if (users.length == 0) return interaction.reply({ content: `No members have saved an IGN for ${findSystem.name} yet.`, ephemeral: true });
   const guild = interaction.guild;
+  const embed = u.embed().setTitle(`The following members have saved an IGN for ${findSystem.name}`);
   const wePlay = users.map(user => guild.members.cache.get(user.discordId))
     .filter(usr => usr != null)
     .sort((a, b) => {
@@ -135,8 +137,8 @@ async function slashIgnWhoplays(interaction) {
   for (let i = 0; i < wePlay.length; i += PAGESIZE) {
     listChunks.push(wePlay.slice(i, i + PAGESIZE));
   }
-
-  interaction.reply({ content: `__**The following members have saved an IGN for ${findSystem.name}:**__\n` + listChunks[0].join("\n") });
+  embed.setDescription(listChunks[0].join('\n'));
+  interaction.reply({ embeds: [embed] });
   if (listChunks.length > 1) {
     listChunks.slice(1).forEach(chunk => {
       interaction.followUp({ content: chunk.join("\n") });
