@@ -3,14 +3,14 @@ const Augur = require("augurbot"),
   sf = require('../config/snowflakes.json'),
   u = require("../utils/utils");
 
-let tags = new Map();
+let tags = new u.Collection();
 /** @param {discord.Message} msg */
 
-const findTag = (cmd, guildId) => cmd ? tags.find(t => t.tag == cmd && t.guildId == guildId) : tags.filter(t => t.guildId == guildId);
+const findTag = (cmd, guildId) => cmd ? tags.find(t => t.tag.toLowerCase() == cmd.toLowerCase() && t.guildId == guildId) : tags.filter(t => t.guildId == guildId);
 
 function runTag(msg) {
   const cmd = u.parse(msg);
-  const tag = findTag(cmd?.command, msg.guild.id);
+  const tag = findTag(cmd?.command ?? { toLowerCase: u.noop }, msg.guild.id);
   const files = [];
   const target = msg.mentions?.users?.first();
   if (tag) {
@@ -145,7 +145,7 @@ const Module = new Augur.Module()
 .addEvent("ready", async () => {
   try {
     const cmds = await Module.db.tags.fetchAllTags();
-    tags = new Map(cmds.map(c => [c.tag, c]));
+    tags = new u.Collection(cmds.map(c => [c.tag, c]));
     console.log(`Loaded ${cmds.length} custom tags${(Module.client.shard ? " on Shard " + Module.client.shard.id : "")}.`);
   } catch (error) { u.errorHandler(error, "Load Custom Tags"); }
 })
@@ -156,6 +156,13 @@ const Module = new Augur.Module()
   if (oldMsg.guild.id && !msg.author.bot) return runTag(msg);
 })
 .setInit(data => { if (data) tags = data; })
-.setUnload(() => tags);
+.setUnload(() => tags)
+.addEvent('interactionCreate', async interaction => {
+  if (interaction.type == "APPLICATION_COMMAND_AUTOCOMPLETE" && interaction.commandId == sf.commands.slashTag) {
+    const focusedValue = interaction.options.getFocused()?.toLowerCase();
+    const filtered = tags.filter(tag => tag.tag.toLowerCase().startsWith(focusedValue));
+    await interaction.respond(filtered.map(choice => ({ name: choice.tag, value: choice.tag })));
+  }
+});
 
 module.exports = Module;
