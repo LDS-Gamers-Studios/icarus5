@@ -425,9 +425,8 @@ async function slashModWarn(interaction) {
     + reason;
   await member.send(response).catch(() => blocked(member));
 
-  const embed = u.embed()
+  const embed = u.embed({ author: member })
     .setColor("#0000FF")
-    .setAuthor(member.displayName, member.user.displayAvatarURL())
     .setDescription(reason)
     .addField("Resolved", `${u.escapeText(interaction.user.username)} issued a ${value} point warning.`)
     .setTimestamp();

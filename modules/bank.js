@@ -115,8 +115,7 @@ async function slashBankGive(interaction) {
 
     if ((currency == "em") && toIcarus) {
       const hoh = interaction.client.channels.cache.get(sf.channels.headsofhouse);
-      const hohEmbed = u.embed()
-      .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
+      const hohEmbed = u.embed({ author: interaction.client.user })
       .addField("Reason", reason)
       .setDescription(`**${u.escapeText(giver.displayName)}** gave me ${coin}${value}.`);
       hoh.send({ content: `<@&${sf.roles.manager}>`, embeds: [hohEmbed] });
@@ -302,8 +301,7 @@ async function slashBankDiscount(interaction) {
       .catch(() => {
         interaction.followUp("I wasn't able to send you the code! Do you have DMs allowed for server members? Please check with a member of Management to get your discount code.");
       });
-      const embed = u.embed()
-      .setAuthor(interaction.member.displayName, interaction.member.user.displayAvatarURL({ dynamic: true }))
+      const embed = u.embed({ author: interaction.member })
       .addField("Amount", `${gb}${-withdraw.value}\n$${-withdraw.value / 100}`)
       .addField("Balance", `${gb}${balance.balance + withdraw.value}`)
       .setDescription(`**${u.escapeText(interaction.member.displayName)}** just redeemed ${gb} for a store coupon code.`);
@@ -361,8 +359,7 @@ async function slashBankAward(interaction) {
     await interaction.reply(ember + (value > 0 ? `${value} awarded to` : `${-value} docked from`) + ` ${u.escapeText(recipient.displayName)} for ${reason}`);
     u.clean(interaction, 60000);
 
-    embed = u.embed()
-    .setAuthor(interaction.client.user.username, interaction.client.user.displayAvatarURL({ dynamic: true }))
+    embed = u.embed({ author: interaction.client.user })
     .addField("Reason", reason)
     .setDescription(`You just gave ${ember}${receipt.value} to ${u.escapeText(recipient.displayName)}. This counts toward their House's Points.`);
     giver.send({ embeds: [embed] }).catch(u.noop);

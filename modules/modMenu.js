@@ -44,8 +44,8 @@ async function menu(options, interaction, target) {
         .setPlaceholder('Nothing Selected')
         .addOptions(options),
     );
-
-  const e = u.embed({ author: getTargetUser(target) })
+  const targetUser = getTargetUser(targetUser);
+  const e = u.embed({ author: targetUser })
     .setColor("RED");
   let embeds = [ e ];
   if (target instanceof Discord.Message) {
@@ -147,7 +147,7 @@ const processes = {
       } else {
         const embed = u.embed()
         .setTimestamp()
-        .setAuthor(target.member.displayName + " 📌", target.member.user.displayAvatarURL())
+        .setAuthor({ name: target.member.displayName + " 📌", iconURL: target.member.user.displayAvatarURL() })
         .setDescription(target.cleanContent)
         .addField("Pin Requested By", user.toString())
         .addField("Channel", target.channel.toString())

@@ -124,7 +124,7 @@ const utils = {
    */
   confirmInteraction: async (interaction, prompt = "Are you sure?", title = "Confirmation Dialog") => {
     const reply = (interaction.deferred || interaction.replied) ? "editReply" : "reply";
-    const embed = utils.embed({ author: interaction.member || interaction.user })
+    const embed = utils.embed({ author: interaction.member ?? interaction.user })
       .setColor(0xff0000)
       .setTitle(title)
       .setDescription(prompt);
