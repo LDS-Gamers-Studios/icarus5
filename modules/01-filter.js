@@ -165,13 +165,17 @@ async function processCardAction(interaction) {
       return;
     }
 
+    processing.add(flag.id);
+
     const mod = interaction.member,
       embed = u.embed(flag.embeds[0]),
       infraction = await Module.db.infraction.getByFlag(flag);
 
-    if (mod.id == infraction.discordId) return interaction.reply({ content: "You can't handle your own flag!", ephemeral: true });
+    if (mod.id == infraction.discordId) {
+      await interaction.reply({ content: "You can't handle your own flag!", ephemeral: true });
+      return processing.delete(flag.id);
+    }
 
-    processing.add(flag.id);
 
     // NEED TO ADD RETRACTIONS
 

@@ -283,7 +283,7 @@ async function slashModSlowmode(interaction) {
     const old = molasses.get(ch.id);
     if (old) {
       clearTimeout(old);
-      molasses.delete(old);
+      molasses.delete(ch.id);
     }
 
     interaction.editReply("Slowmode deactivated.");
