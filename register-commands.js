@@ -7,11 +7,11 @@ const config = require("./config/config.json"),
  * BEGIN "CONFIG" BLOCK *
  ************************/
 const globalCommandFiles = [
-  "messageBookmark.json"
+  "messageBookmark.json",
+  "slashAvatar.json",
 ];
 const guildCommandFiles = [
   "messageMod.json",
-  "slashAvatar.json",
   "slashBank.json",
   "slashGospel.json",
   "slashRank.json",

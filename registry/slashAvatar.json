@@ -26,7 +26,7 @@
         { "name": "Flex", "value": "flex" },
         { "name": "Flip Both", "value": "flipxy" },
         { "name": "Flip Horizontal", "value": "flipx" },
-        { "name": "Flip Vertical", "value": "flipx" },
+        { "name": "Flip Vertical", "value": "flipy" },
         { "name": "Grayscale", "value": "grayscale" },
         { "name": "Invert", "value": "invert" },
         { "name": "Metal", "value": "metal" },
