@@ -4,15 +4,17 @@ const discord = require('discord.js');
 const config = require('../config/config.json');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const sf = require("../config/snowflakes.json");
+
 /** @type {discord.Collection<string, ign>} */
 let IGNs = new u.Collection();
-const findIGN = (system) => IGNs.find(i => i.system == system || i.aliases.includes(system));
+const findIGN = (system) => IGNs.find(i => i.system.toLowerCase() == system?.toLowerCase() || i.name.toLowerCase() == system?.toLowerCase() || i.aliases.includes(system));
 const categories = [
   "Game Platforms",
   "Streaming",
   "Social",
   "Personal"
 ];
+
 /**
  * @typedef ign
  * @prop {string} system
@@ -21,6 +23,7 @@ const categories = [
  * @prop {string} category
  * @prop {string} link
  */
+
 /**
  * Creates and formats the embed for the IGN system.
  * @param {discord.GuildMember} user The member that we're displaying the command for.
@@ -38,9 +41,8 @@ function createIgnEmbed(user, igns, systems) {
     const sys = mapped.filter(s => s.category == category)
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((system, i) => {
-        if (i > 24) return;
+        if (i > 24) return null;
         let name = igns.find(ign => ign.system == system.system)?.ign;
-        console.log(name);
         if (!name) return null;
         if (name.length > 100) name = name.substr(0, 100) + " ...";
         if (system.link && !hasLink.test(name)) name = `[${name}](${system.link.replace(/{ign}/ig, encodeURIComponent(name))})`;
@@ -54,9 +56,9 @@ function createIgnEmbed(user, igns, systems) {
 async function slashIgnView(interaction) {
   const user = interaction.options.getMember("target", false) || interaction.member;
   let system = interaction.options.getString("system", false);
-  system = system?.toLowerCase().split(' ');
+  if (findIGN(system)) system = findIGN(system).system;
   const igns = await Module.db.ign.find(user.id, system);
-  const embed = createIgnEmbed(user, Array.isArray(igns) ? igns : [igns], system ?? igns.map(i => i.system));
+  const embed = createIgnEmbed(user, Array.isArray(igns) ? igns : [igns], system ? [system] : igns.map(i => i.system));
 
   if (embed) {
     interaction.reply({ embeds: [embed] });
@@ -164,6 +166,13 @@ const Module = new Augur.Module()
     const aliases = await doc.sheetsByTitle["IGN Aliases"].getRows();
     IGNs = new u.Collection(aliases.map(x => [x["System"], { system: x["System"], name: x["Name"], aliases: x["Aliases"].split(','), category: x["Category"] ?? "Game Platforms", link: x["Link"] }]));
   } catch (e) { u.errorHandler(e, "Load IGN Aliases"); }
+})
+.addEvent('interactionCreate', async interaction => {
+  if (interaction.type == "APPLICATION_COMMAND_AUTOCOMPLETE" && interaction.commandId == sf.commands.slashIGN) {
+    const focusedValue = interaction.options.getFocused();
+    const filtered = IGNs.filter(choice => choice.name.startsWith(focusedValue));
+    await interaction.respond(filtered.map(choice => ({ name: choice.name, value: choice.name })));
+  }
 });
 
 module.exports = Module;
