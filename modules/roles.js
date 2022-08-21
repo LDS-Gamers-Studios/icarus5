@@ -1,5 +1,4 @@
 const Augur = require("augurbot"),
-  nodeSchedule = require('node-schedule'),
   sf = require('../config/snowflakes.json'),
   { GoogleSpreadsheet } = require("google-spreadsheet"),
   config = require("../config/config.json"),
@@ -103,17 +102,18 @@ async function removeRole(int) {
   const member = int.member;
   const addRoles = roles.filter(r => r.type == 'ADD').map(r => int.guild.roles.cache.get(r.id));
   const foundRole = addRoles.find(r => r.id == role.id);
+  const color = roles.find(r => r.baseRole == role.id && r.type == 'EQUIP');
   if (sf.adminId.includes(int.member.id)) {
     try {
       if (!member.roles.cache.has(role.id)) return int.reply({ content: "You don't have that role!", ephemeral: true });
-      await member.roles.remove(role);
+      await member.roles.remove([role.id, color?.id ?? null].filter(r => r != null));
       return int.reply({ content: "Role removed", ephemeral: true });
     } catch (e) {
       return int.reply({ content: "I couldn't remove that role.", ephemeral: true });
     }
   } else if (foundRole) {
     if (!member.roles.cache.has(foundRole.id)) return int.reply({ content: "You don't have that role!", ephemeral: true });
-    await member.roles.remove(foundRole.id);
+    await member.roles.remove([foundRole.id, color?.id ?? null].filter(r => r != null));
     int.reply({ content: `I took away the ${foundRole} role`, ephemeral: true });
   } else {
     int.reply({ content: "you didn't give me a valid role to remove.", ephemeral: true });
@@ -185,21 +185,13 @@ const Module = new Augur.Module()
   }
 })
 .setInit(async () => {
-  const doc = new GoogleSpreadsheet(config.google.sheets.config);
-  await doc.useServiceAccountAuth(config.google.creds);
-  async function fetchInfo() {
+  try {
+    const doc = new GoogleSpreadsheet(config.google.sheets.config);
+    await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
     const channels = await doc.sheetsByTitle["Roles"].getRows();
     roles = new u.Collection(channels.map(r => [r['Color Role ID'], { id: r['Color Role ID'], baseRole: r['Base Role ID'], inherited: r['Parent Roles']?.split(', ') ?? [], keepInherited: Boolean(r['Keep Other Roles']), type: r['Type'] }])).filter(r => r.id != "");
-  }
-  fetchInfo();
-  try {
-    const schedule = new nodeSchedule.RecurrenceRule();
-    schedule.minute = 0;
-    nodeSchedule.scheduleJob('equipRolesCheck', schedule, () => {
-      fetchInfo();
-    });
-  } catch (e) { u.errorHandler(e, "Load Voice Channel Names"); }
+  } catch (e) { u.errorHandler(e, "Load Color & Equip Roles"); }
 });
 
 module.exports = Module;
