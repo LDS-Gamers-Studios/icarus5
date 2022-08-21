@@ -1,6 +1,7 @@
 const Augur = require("augurbot"),
   discord = require('discord.js'),
   sf = require('../config/snowflakes.json'),
+  perms = require('../utils/perms'),
   u = require("../utils/utils");
 
 let tags = new u.Collection();
@@ -14,8 +15,14 @@ function runTag(msg) {
   const files = [];
   const target = msg.mentions?.members?.first();
   if (tag) {
-    let response = tag.response
-      ?.replace(/<@author>/ig, msg.author.toString())
+    let response = tag.response;
+    const regex = /<@random ?(.*?)>/gm;
+    if (regex.test(response)) {
+      const replace = (str) => u.rand(str.replace(regex, '$1').split('|'));
+      response = response.replace(regex, replace);
+    }
+    response = response?.replace(/<@author>/ig, msg.author.toString())
+      .replace(/<@channel>/ig, msg.channel.toString())
       .replace(/<@authorname>/ig, msg.member.displayName);
     if ((/(<@target>)|(<@targetname>)/i).test(response)) {
       if (!target) return msg.reply("You need to `@mention` a user with that command!").then(u.clean);
@@ -45,6 +52,7 @@ const Module = new Augur.Module()
 .addInteractionCommand({
   name: "tag",
   commandId: sf.commands.slashTag,
+  permissions: (int) => perms.isMgr(int) || perms.isMgmt(int) || perms.isAdmin(int),
   process: async (int) => {
     switch (int.options.getSubcommand()) {
     case "create": return await createTag();
@@ -126,6 +134,10 @@ const Module = new Augur.Module()
         "`<@authorname>`: The user's nickname",
         "`<@target>`: Pings someone who is pinged by the user",
         "`<@targetname>`: The nickname of someone who is pinged by the user",
+        "`<@channel>`: The channel the command is used in",
+        "`<@random item1|item2|item3...>`: Randomly selects one of the items. Separate with `|`",
+        "",
+        "Example: <@target> took over <@channel>, but <@author> <@random is complicit|might have something to say about it>."
       ];
       const embed = u.embed().setTitle("Tag Placeholders").setDescription(`You can use these when creating or modifying tags for some user customization. The \`<@thing>\` gets replaced with the proper value when the command is run. \n\n${placeholderDescriptions.join('\n')}`);
       return int.reply({ embeds: [embed], ephemeral: true });
