@@ -280,13 +280,20 @@ async function slashModSlowmode(interaction) {
 
   if (duration <= 0) {
     ch.edit({ rateLimitPerUser: 0 }).catch(e => u.errorHandler(e, interaction));
-
-    if (molasses.has(ch.id)) {
-      clearTimeout(molasses.get(ch.id));
+    const old = molasses.get(ch.id);
+    if (old) {
+      clearTimeout(old);
       molasses.delete(ch.id);
     }
 
     interaction.editReply("Slowmode deactivated.");
+    await interaction.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [
+      u.embed({ author: { name: interaction.member } })
+        .setTitle("Channel Slowmode")
+        .setDescription(`${interaction.member} disabled slowmode in ${ch}`)
+        .setColor(0x00ff00)
+        .setFooter({ text: old ? "" : "It's possible that the bot ran into an error while automatically resetting" })
+    ] });
   } else {
     // Reset duration if already in slowmode
     const prev = molasses.get(ch.id);

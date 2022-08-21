@@ -164,11 +164,18 @@ async function processCardAction(interaction) {
       await interaction.reply({ content: "Someone is already processing this flag!", ephemeral: true });
       return;
     }
+
     processing.add(flag.id);
 
     const mod = interaction.member,
       embed = u.embed(flag.embeds[0]),
       infraction = await Module.db.infraction.getByFlag(flag);
+
+    if (mod.id == infraction.discordId) {
+      await interaction.reply({ content: "You can't handle your own flag!", ephemeral: true });
+      return processing.delete(flag.id);
+    }
+
 
     // NEED TO ADD RETRACTIONS
 
