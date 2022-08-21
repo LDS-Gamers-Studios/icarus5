@@ -171,8 +171,8 @@ const Module = new Augur.Module()
 })
 .addEvent('interactionCreate', async interaction => {
   if (interaction.type == "APPLICATION_COMMAND_AUTOCOMPLETE" && interaction.commandId == sf.commands.slashIGN) {
-    const focusedValue = interaction.options.getFocused();
-    const filtered = IGNs.filter(choice => choice.name.startsWith(focusedValue));
+    const focusedValue = interaction.options.getFocused()?.toLowerCase();
+    const filtered = IGNs.filter(choice => choice.name.toLowerCase().startsWith(focusedValue));
     await interaction.respond(filtered.map(choice => ({ name: choice.name, value: choice.name })));
   }
 });
