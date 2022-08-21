@@ -67,11 +67,6 @@
       "type": 1,
       "name": "help",
       "description": "Get a list of placeholders you can use in tags."
-    },
-    {
-      "type": 1,
-      "name": "list",
-      "description": "Get a list of tags."
     }
   ]
 }

@@ -12,10 +12,10 @@ function runTag(msg) {
   const cmd = u.parse(msg);
   const tag = findTag(cmd?.command ?? { toLowerCase: u.noop }, msg.guild.id);
   const files = [];
-  const target = msg.mentions?.users?.first();
+  const target = msg.mentions?.members?.first();
   if (tag) {
     let response = tag.response
-      .replace(/<@author>/ig, msg.author.toString())
+      ?.replace(/<@author>/ig, msg.author.toString())
       .replace(/<@authorname>/ig, msg.member.displayName);
     if ((/(<@target>)|(<@targetname>)/i).test(response)) {
       if (!target) return msg.reply("You need to `@mention` a user with that command!").then(u.clean);
@@ -51,7 +51,6 @@ const Module = new Augur.Module()
     case "modify": return await modifyTag();
     case "delete": return await deleteTag();
     case "help": return await placeholders();
-    case "list": return await list();
     }
     async function createTag() {
       const name = int.options.getString('name').toLowerCase();
@@ -129,15 +128,6 @@ const Module = new Augur.Module()
         "`<@targetname>`: The nickname of someone who is pinged by the user",
       ];
       const embed = u.embed().setTitle("Tag Placeholders").setDescription(`You can use these when creating or modifying tags for some user customization. The \`<@thing>\` gets replaced with the proper value when the command is run. \n\n${placeholderDescriptions.join('\n')}`);
-      return int.reply({ embeds: [embed], ephemeral: true });
-    }
-    async function list() {
-      const guildTags = findTag(null, int.guild.id);
-      if (guildTags.length == 0) return int.reply({ content: `Looks like ${int.guild.name} doesn't have any tags.`, ephemeral: true });
-      const embed = u.embed().setTitle(`Tags in ${int.guild.name}`)
-        .setDescription(guildTags.sort((a, b) => a.tag - b.tag).map(t => `${Module.config.prefix}${t.tag} - ${t.response ?? ""} ${t.url ? `[${t.attachment ?? "file"}](${t.url})` : ""}`).join('\n\n'))
-        .setThumbnail(int.guild.iconURL())
-        .setFooter({ text: `There are ${guildTags.length} tags` });
       return int.reply({ embeds: [embed], ephemeral: true });
     }
   }
