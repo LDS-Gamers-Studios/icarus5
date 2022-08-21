@@ -281,9 +281,9 @@ async function slashModSlowmode(interaction) {
   if (duration <= 0) {
     ch.edit({ rateLimitPerUser: 0 }).catch(e => u.errorHandler(e, interaction));
     const old = molasses.get(ch.id);
-    if (molasses.has(ch.id)) {
-      clearTimeout(molasses.get(ch.id));
-      molasses.delete(ch.id);
+    if (old) {
+      clearTimeout(old);
+      molasses.delete(old);
     }
 
     interaction.editReply("Slowmode deactivated.");
