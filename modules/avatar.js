@@ -26,7 +26,7 @@ const errorReading = (int) => int.editReply("Sorry, but I couldn't get the image
 async function jimpRead(url) {
   try {
     const img = await Jimp.read(url);
-    // resize large images
+    // resize large images so that the largest dimension is 256p
     if (img.getWidth() > 256 || img.getHeight() > 256) {
       const w = img.getWidth(), h = img.getHeight();
       const largest = Math.max(w, h);
@@ -39,6 +39,23 @@ async function jimpRead(url) {
 }
 
 /**
+ * Get the image from an interaction.
+ * @param {discord.CommandInteraction} int
+ * @param {number} size size of the image
+ * @returns {Promise<string>} image url
+ */
+async function targetImg(int, size = 256) {
+  if (int.options.getAttachment('file')) {
+    const url = int.options.getAttachment('file').url;
+    if (!await jimpRead(url)) return null;
+    else return url;
+  }
+  const target = (int.options[int.guild ? "getMember" : "getUser"]('user')) ?? int.user;
+  return target.displayAvatarURL({ format: 'png', size, dynamic: true });
+}
+
+/**
+ * Apply a filter function with parameters. Useful for when there isn't much logic to it
  * @param {discord.CommandInteraction} int
  * @param {string} filter filter to apply
  * @param {any[]} params array of params to pass into the filter function
@@ -51,6 +68,8 @@ async function basicFilter(int, img, filter, params) {
 }
 
 /**
+ * For filters like andywarhol and popart, where the image gets pasted 4 times with a bit of space in-between.
+ * `run` will be called 4 times and provides an index
  * @param {Jimp} img the base image
  * @param {number} o offest (default 12)
  * @param {process} run the process to run (x, y, canvas, index)
@@ -69,56 +88,28 @@ function fourCorners(img, o = 12, run) {
   return canvas;
 }
 
-/**
- * @param {discord.CommandInteraction} int
- * @param {number} size size of the image
- * @returns {Promise<string>} image url
- */
-async function targetImg(int, size = 256) {
-  if (int.options.getAttachment('file')) {
-    const url = int.options.getAttachment('file').url;
-    if (!await jimpRead(url)) return null;
-    else return url;
-  }
-  const target = (int.options[int.guild ? "getMember" : "getUser"]('user')) ?? int.user;
-  return target.displayAvatarURL({ format: 'png', size, dynamic: true });
-}
-
 /** @type {filterFunction} */
 async function andywarhol(int, img) {
-  const canvas = fourCorners(img, 12, (x, y, c) => {
+  const output = await fourCorners(img, 12, (x, y, c) => {
     img.color([{ apply: 'spin', params: [60] }]);
     c.blit(img, x, y);
-  });
-  const output = await canvas.getBufferAsync(Jimp.MIME_PNG);
-  return await int.editReply({ files: [output] });
-}
-
-/** @type {filterFunction} */
-async function blurple(int, img) {
-  img.color([
-    { apply: "desaturate", params: [100] },
-    { apply: "saturate", params: [47.7] },
-    { apply: "hue", params: [227] }
-  ]);
-  const output = await img.getBufferAsync(Jimp.MIME_PNG);
+  }).getBufferAsync(Jimp.MIME_PNG);
   return await int.editReply({ files: [output] });
 }
 
 /** @type {filterFunction} */
 async function colorme(int, img) {
   const color = Math.floor(Math.random() * 359);
-  img.color([{ apply: 'hue', params: [color] }]);
-  const output = await img.getBufferAsync(Jimp.MIME_PNG);
+  const output = await img.color([{ apply: 'hue', params: [color] }]).getBufferAsync(Jimp.MIME_PNG);
   return int.editReply({ content: `Hue: ${color}`, files: [output] });
 }
 
 /** @type {filterFunction} */
 async function deepfry(int, img) {
-  img.posterize(20);
-  img.color([{ apply: 'saturate', params: [100] }]);
-  img.contrast(1);
-  const output = await img.getBufferAsync(Jimp.MIME_PNG);
+  const output = await img.posterize(20)
+    .color([{ apply: 'saturate', params: [100] }])
+    .contrast(1)
+    .getBufferAsync(Jimp.MIME_PNG);
   return int.editReply({ files: [output] });
 }
 
@@ -130,8 +121,10 @@ async function flex(int, img) {
   right.flip(false, Math.random() > 0.5);
   if (!img.hasAlpha()) img.circle();
   img.resize(128, 128);
-  canvas.blit(left, 0, 4).blit(right, 248, 4).blit(img, 120, 0);
-  const output = await canvas.getBufferAsync(Jimp.MIME_PNG);
+  const output = await canvas.blit(left, 0, 4)
+    .blit(right, 248, 4)
+    .blit(img, 120, 0)
+    .getBufferAsync(Jimp.MIME_PNG);
   return int.editReply({ files: [output] });
 }
 
@@ -142,8 +135,10 @@ async function metal(int, img) {
   const canvas = new Jimp(368, 128, 0x00000000);
   if (!img.hasAlpha()) img.circle();
   img.resize(128, 128);
-  canvas.blit(right, 0, 4).blit(left, 248, 4).blit(img, 120, 0);
-  const output = await canvas.getBufferAsync(Jimp.MIME_PNG);
+  const output = await canvas.blit(right, 0, 4)
+    .blit(left, 248, 4)
+    .blit(img, 120, 0)
+    .getBufferAsync(Jimp.MIME_PNG);
   return int.editReply({ files: [output] });
 }
 
@@ -152,8 +147,7 @@ async function personal(int, img) {
   const canvas = await Jimp.read('./media/personalBase.png');
   img.resize(350, 350);
   if (!img.hasAlpha()) img.circle();
-  canvas.blit(img, 1050, 75);
-  const output = await canvas.getBufferAsync(Jimp.MIME_PNG);
+  const output = await canvas.blit(img, 1050, 75).getBufferAsync(Jimp.MIME_PNG);
   return await int.editReply({ files: [output] });
 }
 
@@ -165,25 +159,20 @@ async function petpet(int) {
 
 /** @type {filterFunction} */
 async function popart(int, img) {
-  try {
-    const canvas = fourCorners(img, 12, (x, y, c, i) => {
-      if (i == 0) img.color([{ apply: "desaturate", params: [100] }, { apply: 'saturate', params: [50] }]);
-      else img.color([{ apply: "spin", params: [i == 3 ? 120 : 60] }]);
-      c.blit(img, x, y);
-    });
-    const output = await canvas.getBufferAsync(Jimp.MIME_PNG);
-    return await int.editReply({ files: [output] });
-  } catch (error) {
-    console.log(error);
-  }
+  const output = await fourCorners(img, 12, (x, y, c, i) => {
+    if (i == 0) img.color([{ apply: "desaturate", params: [100] }, { apply: 'saturate', params: [50] }]);
+    else img.color([{ apply: "spin", params: [i == 3 ? 120 : 60] }]);
+    c.blit(img, x, y);
+  }).getBufferAsync(Jimp.MIME_PNG);
+  return await int.editReply({ files: [output] });
 }
 
 /** @param {discord.CommandInteraction} int */
 async function avatar(int) {
   const targetImage = await targetImg(int);
-  const targetUser = (int.options[int.guild ? "getMember" : "getUser"]('user') ?? int.member).displayName ?? int.user.username;
+  const targetUser = (int.options[int.guild ? "getMember" : "getUser"]('user')) ?? int.user;
   const format = targetImage.includes('.gif') ? 'gif' : 'png';
-  const embed = u.embed().setTitle(targetUser).setImage(`attachment://image.${format}`);
+  const embed = u.embed().setTitle(targetUser.displayName ?? targetUser.username).setImage(`attachment://image.${format}`);
   return int.editReply({ embeds: [embed], files: [{ attachment: targetImage, name: `image.${format}` }] });
 }
 
@@ -196,12 +185,12 @@ const Module = new Augur.Module()
     if (file && !interaction.options.getString('filter')) return interaction.reply({ content: "You need to specify a filter to apply if you're uploading a file", ephemeral: true });
     if (file && file.size > 4000000) return interaction.reply({ content: "That file is too big for me to process! It needs to be under 4MB.", ephemeral: true });
     await interaction.deferReply();
+
     const img = await jimpRead(await targetImg(interaction));
     if (!img && interaction.options.getString('filter')) return errorReading(interaction);
 
     switch (interaction.options.getString('filter')) {
     case "andywarhol": return andywarhol(interaction, img);
-    case "blurple": return blurple(interaction, img);
     case "colorme": return colorme(interaction, img);
     case "deepfry": return deepfry(interaction, img);
     case "flex": return flex(interaction, img);
@@ -217,7 +206,9 @@ const Module = new Augur.Module()
     case "flipx": return basicFilter(interaction, img, 'flip', [true, false]);
     case "flipy": return basicFilter(interaction, img, 'flip', [false, true]);
     case "flipxy": return basicFilter(interaction, img, 'flip', [true, true]);
+    case "blurple": return basicFilter(interaction, img, 'color', [[{ apply: "desaturate", params: [100] }, { apply: "saturate", params: [47.7] }, { apply: "hue", params: [227] }]]);
     case "grayscale": return basicFilter(interaction, img, 'color', [[{ apply: "desaturate", params: [100] }]]);
+
     default: return avatar(interaction);
     }
   }
