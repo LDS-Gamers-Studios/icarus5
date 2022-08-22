@@ -4,8 +4,13 @@
   "options": [
     {
       "type": 1,
+      "name": "list",
+      "description": "Get a list of tags"
+    },
+    {
+      "type": 1,
       "name": "create",
-      "description": "Create a tag.",
+      "description": "[MGR] Create a tag.",
       "options": [
         {
           "type": 3,
@@ -28,7 +33,7 @@
     {
       "type": 1,
       "name": "modify",
-      "description": "Modify a tag.",
+      "description": "[MGR] Modify a tag.",
       "options": [
         {
           "type": 3,
@@ -52,7 +57,7 @@
     {
       "type": 1,
       "name": "delete",
-      "description": "Delete a tag.",
+      "description": "[MGR] Delete a tag.",
       "options": [
         {
           "type": 3,
@@ -66,7 +71,21 @@
     {
       "type": 1,
       "name": "help",
-      "description": "Get a list of placeholders you can use in tags."
+      "description": "[MGR] Get a list of placeholders you can use in tags."
+    },
+    {
+      "type": 1,
+      "name": "value",
+      "description": "[MGR] Get the raw response of a tag. Useful for modifying.",
+      "options": [
+        {
+          "type": 3,
+          "name": "name",
+          "description": "The name of the tag to view.",
+          "required": true,
+          "autocomplete": true
+        }
+      ]
     }
   ]
 }
