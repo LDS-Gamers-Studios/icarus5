@@ -27,6 +27,7 @@
     "mongoose": "^5.13.7",
     "nanoid": "^3.1.25",
     "profanity-matcher": "^1.0.1",
+    "request": "^2.88.2",
     "rss-parser": "^3.12.0",
     "steamapi": "^2.1.3"
   },
