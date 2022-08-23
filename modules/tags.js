@@ -63,7 +63,7 @@ const Module = new Augur.Module()
       const name = int.options.getString('name').toLowerCase();
       const response = int.options.getString('response');
       const attachment = int.options.getAttachment('attachment');
-      if (findTag(name, int.guild.id)) return int.reply({ content: "Looks like that tag already exists. Try `/tag modify` or `/tag delete` instead.", ephemeral: true });
+      if (findTag(name, int.guild.id)) return int.reply({ content: `"Looks like that tag already exists. Try </tag modify:${sf.commands.slashTag}> or </tag delete:${sf.commands.slashTag}> instead."`, ephemeral: true });
       if (!response && !attachment) return int.reply({ content: "I need either a response or a file.", ephemeral: true });
       const command = await Module.db.tags.addTag({
         tag: name,
@@ -87,7 +87,7 @@ const Module = new Augur.Module()
       const response = int.options.getString('response');
       const attachment = int.options.getAttachment('attachment');
       const currentTag = findTag(name, int.guild.id);
-      if (!currentTag) return int.reply({ content: "Looks like that tag doesn't exist. Try one of the options when using the command, or use /tag list.", ephemeral: true });
+      if (!currentTag) return int.reply({ content: `"Looks like that tag doesn't exist. Use </tag list:${sf.commands.slashTag}> for a list of tags."`, ephemeral: true });
       if (!response && !attachment) return int.reply({ content: "I need either a response or a file.", ephemeral: true });
       const command = await Module.db.tags.modifyTag({
         tag: name,
@@ -96,7 +96,7 @@ const Module = new Augur.Module()
         attachment: attachment?.name ?? null,
         url: attachment?.url ?? null
       });
-      if (!command) return int.reply({ content: "I wasn't able to save that. Please try again later or with a different name." });
+      if (!command) return int.reply({ content: "I wasn't able to save that. Please try again later or contact a dev to see what went wrong." });
       tags.set(command.tag, command);
       const embed = u.embed({ author: int.member })
         .setTitle("Tag modified")
@@ -114,7 +114,7 @@ const Module = new Augur.Module()
     }
     async function deleteTag() {
       const name = int.options.getString('name').toLowerCase();
-      if (!findTag(name, int.guild.id)) return int.reply({ content: "Looks like that tag doesn't exist. Try one of the options when using the command, or use /tag list.", ephemeral: true });
+      if (!findTag(name, int.guild.id)) return int.reply({ content: `"Looks like that tag doesn't exist. Use </tag list:${sf.commands.slashTag}> for a list of tags."`, ephemeral: true });
       const command = await Module.db.tags.deleteTag(name, int.guild.id);
       const embed = u.embed({ author: int.member })
         .setTitle("Tag Deleted")
@@ -142,7 +142,7 @@ const Module = new Augur.Module()
     async function rawTag() {
       const name = int.options.getString('name').toLowerCase();
       const tag = findTag(name, int.guild.id);
-      if (!tag) return int.reply({ content: "Looks like that tag doesn't exist. Try one of the options when using the command, or use /tag list.", ephemeral: true });
+      if (!tag) return int.reply({ content: `"Looks like that tag doesn't exist. Use </tag list:${sf.commands.slashTag}> for a list of tags."`, ephemeral: true });
       const embed = u.embed({ author: int.member })
         .setTitle(tag.tag)
         .setDescription(tag.response)
@@ -159,12 +159,8 @@ const Module = new Augur.Module()
     }
   }
 })
-.addEvent("messageCreate", (msg) => {
-  if (msg.guild && !msg.author.bot) return runTag(msg);
-})
-.addEvent("messageUpdate", (oldMsg, msg) => {
-  if (oldMsg.guild.id && !msg.author.bot) return runTag(msg);
-})
+.addEvent("messageCreate", (msg) => { if (msg.guild && !msg.author.bot) return runTag(msg); })
+.addEvent("messageUpdate", (oldMsg, msg) => { if (oldMsg.guild.id && !msg.author.bot) return runTag(msg); })
 .setInit(async () => {
   try {
     const cmds = await Module.db.tags.fetchAllTags();
