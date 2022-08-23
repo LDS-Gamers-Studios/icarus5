@@ -15,6 +15,7 @@ const findTag = (tag, guildId) => tag ? tags.find(t => t.tag.toLowerCase() == ta
 /** @param {discord.Message} msg */
 function runTag(msg) {
   const cmd = u.parse(msg);
+  const randomChannels = msg.guild.channels.cache.filter(c => c.type != "GUILD_CATEGORY" && !c.permissionOverwrites?.cache.get(msg.guild.id)?.deny?.has("VIEW_CHANNEL")).map(c => c.toString());
   const tag = findTag(cmd?.command ?? { toLowerCase: u.noop }, msg.guild.id);
   const files = [];
   const target = msg.mentions?.members?.first();
@@ -26,8 +27,9 @@ function runTag(msg) {
       response = response.replace(regex, replace);
     }
     response = response?.replace(/<@author>/ig, msg.author.toString())
+    .replace(/<@authorname>/ig, msg.member.displayName)
       .replace(/<@channel>/ig, msg.channel.toString())
-      .replace(/<@authorname>/ig, msg.member.displayName);
+      .replace(/<@randomchannel>/, u.rand(randomChannels) ?? msg.channel.toString());
     if ((/(<@target>)|(<@targetname>)/ig).test(tag.response)) {
       if (!target) return msg.reply("You need to `@mention` a user with that command!").then(u.clean);
       response = response.replace(/<@target>/ig, target.toString())
@@ -77,10 +79,15 @@ const Module = new Augur.Module()
       const embed = u.embed({ author: int.member })
         .setTitle("Tag created")
         .setDescription(`${int.member} added the tag "${name}"`);
-      if (command.response) embed.addField("Response", command.response);
-      if (command.url) embed.setImage(command.url);
-      int.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
-      int.reply({ embeds: [embed.setDescription('')], ephemeral: true });
+      try {
+        if (command.response) embed.addField("Response", command.response);
+        if (command.url) embed.setImage(command.url);
+        int.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
+        int.reply({ embeds: [embed.setDescription('')], ephemeral: true });
+      } catch (error) {
+        int.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed.addField("Error", "The preview was too long to send.")] });
+        int.reply({ content: `I saved the tag \`${name}\`, but I wasn't able to send you the preview`, ephemeral: true });
+      }
     }
     async function modifyTag() {
       const name = int.options.getString('name').toLowerCase();
@@ -101,16 +108,21 @@ const Module = new Augur.Module()
       const embed = u.embed({ author: int.member })
         .setTitle("Tag modified")
         .setDescription(`${int.member} modified the tag "${name}"`);
-      if (command.response != currentTag.response) {
-        embed.addField("Old Response", currentTag.response ?? 'None');
-        embed.addField("New Response", command.response ?? 'None');
+      try {
+        if (command.response != currentTag.response) {
+          embed.addField("Old Response", currentTag.response ?? 'None');
+          embed.addField("New Response", command.response ?? 'None');
+        }
+        if (command.url != currentTag.url) {
+          embed.addField("Old File", `${currentTag.attachment ? `[${currentTag.attachment}](${command.url})` : 'None'}`);
+          embed.addField("New File", `${command?.attachment ? `[${command.attachment}](${command.url})` : 'None'}`);
+        }
+        int.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
+        int.reply({ embeds: [embed.setDescription("")], ephemeral: true });
+      } catch (error) {
+        int.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [u.embed({ author: int.member }).addField("Error", "The preview was too long to send")] });
+        int.reply({ content: `I saved the tag \`${name}\`, but I wasn't able to send you the preview`, ephemeral: true });
       }
-      if (command.url != currentTag.url) {
-        embed.addField("Old File", `${currentTag.attachment ? `[${currentTag.attachment}](${command.url})` : 'None'}`);
-        embed.addField("New File", `${command?.attachment ? `[${command.attachment}](${command.url})` : 'None'}`);
-      }
-      int.guild.channels.cache.get(sf.channels.modlogs).send({ embeds: [embed] });
-      int.reply({ embeds: [embed.setDescription("")], ephemeral: true });
     }
     async function deleteTag() {
       const name = int.options.getString('name').toLowerCase();
@@ -132,6 +144,7 @@ const Module = new Augur.Module()
         "`<@target>`: Pings someone who is pinged by the user",
         "`<@targetname>`: The nickname of someone who is pinged by the user",
         "`<@channel>`: The channel the command is used in",
+        "`<@randomchannel> A random public channel`",
         "`<@random [item1|item2|item3...]>`: Randomly selects one of the items. Separate with `|`. (No, there can't be `<@random>`s inside of `<@random>`s)",
         "",
         "Example: <@target> took over <@channel>, but <@author> <@random is complicit|might have something to say about it>."
