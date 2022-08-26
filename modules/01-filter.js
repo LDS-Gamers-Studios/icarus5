@@ -15,6 +15,8 @@ let pf = new profanityFilter();
 
 const grownups = new Map(),
   processing = new Set();
+
+/** @type {Discord.Collection<string, {id: string, locked: boolean, mods: Set<string>}} */
 let overrides = new u.Collection();
 
 /**
@@ -160,7 +162,7 @@ function processDiscordInvites(msg) {
 async function deleteOverride(flagId, channel) {
   const getMod = (m) => channel.guild.members.cache.get(m);
   const locked = overrides.find(o => o.id == channel.id && o.locked);
-  const mods = overrides.get(flagId).mods;
+  const mods = overrides.get(flagId)?.mods;
   overrides.forEach(o => o.locked == locked ? true : false);
   overrides.delete(flagId);
   for (const mod of mods) {
@@ -233,7 +235,7 @@ async function processCardAction(interaction) {
       await Module.db.infraction.remove(flag);
       embed.setColor(0x00FF00)
       .addField("Resolved", `${mod.toString()} cleared the flag.`);
-      embed.fields = embed.fields.filter(f => !f.name.startsWith("Jump"));
+      embed.fields = embed.fields.filter(f => !f.name.startsWith("Jump") && !f.name.startsWith("Viewing"));
 
       deleteOverride(flag.id, interaction.guild.channels.cache.get(infraction.channel));
       await interaction.update({ embeds: [embed], components: [] });
@@ -249,21 +251,32 @@ async function processCardAction(interaction) {
       if (flag instanceof Discord.Message) {
         const channel = interaction.guild.channels.cache.get(infraction.channel);
         const locked = channel.permissionsLocked;
-        if (!channel?.permissionOverwrites?.cache.get(sf.roles.modoverride)?.allow.has('VIEW_CHANNEL')) {
-          await channel?.permissionOverwrites.create(sf.roles.modoverride, {
-            VIEW_CHANNEL: true,
-            SEND_MESSAGES: false
-          });
-        }
-        await interaction.member.roles.add(sf.roles.modoverride);
+        const emField = () => embed.fields.find(f => f.name == 'Viewing Locked Channel');
         if (overrides.get(flag.id)?.mods.has(mod.id)) {
+          // Remove the override and role
           overrides.get(flag.id).mods.delete(mod.id);
           if (!overrides.find(o => o.mods.has(mod.id))) await mod.roles.remove(sf.roles.modoverride);
           if (overrides.get(flag.id).mods.size == 0) deleteOverride(flag.id, channel);
-          return await interaction.editReply({ content: `I took away the <@&${sf.roles.modoverride}> role for this flag. If you're viewing any other unresolved flags, you'll still have the role` });
+
+          // Update embed
+          if (emField()) emField().value = Array.from(overrides.get(flag.id)?.mods ?? []).map(m => `<@${m}>`).join('\n') || 'null';
+          if (emField()?.value == 'null') embed.fields = embed.fields.filter(f => f.name != 'Viewing Locked Channel');
+          await interaction.editReply({ content: `I took away the <@&${sf.roles.modoverride}> role for this flag. If you're viewing any other unresolved flags, you'll still have the role` });
+        } else {
+          if (!channel?.permissionOverwrites?.cache.get(sf.roles.modoverride)?.allow.has('VIEW_CHANNEL')) {
+            await channel?.permissionOverwrites.create(sf.roles.modoverride, {
+              VIEW_CHANNEL: true,
+              SEND_MESSAGES: false
+            });
+          }
+
+          await interaction.member.roles.add(sf.roles.modoverride);
+          await interaction.editReply({ content: `I gave you the <@&${sf.roles.modoverride}> role. It will have access to ${channel} until the flag is resolved.` });
+          overrides.set(flag.id, { id: channel.id, locked, mods: (overrides.get(flag.id)?.mods ?? new Set()).add(mod.id) });
+          if (emField()) emField().value = Array.from(overrides.get(flag.id).mods).map(m => `<@${m}>`).join('\n');
+          else embed.addField("Viewing Locked Channel", mod.toString());
         }
-        await interaction.editReply({ content: `I gave you the <@&${sf.roles.modoverride}> role. It will have access to ${channel} until the flag is resolved.` });
-        overrides.set(flag.id, { id: channel.id, locked, mods: (overrides.get(flag.id)?.mods ?? new Set()).add(mod.id) });
+        await flag.edit({ embeds: [embed] });
       }
     } else {
       await interaction.deferUpdate();
@@ -326,7 +339,7 @@ async function processCardAction(interaction) {
         member.send({ content: response, embeds: [quote] }).catch(() => blocked(member));
       }
 
-      embed.fields = embed.fields.filter(f => !f.name || !f.name.startsWith("Jump"));
+      embed.fields = embed.fields.filter(f => !f.name || !f.name.startsWith("Jump") && !f.name.startsWith("Viewing"));
       embed.fields.find(f => f.name?.startsWith("Infraction")).value = `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`;
 
       await interaction.update({ embeds: [embed], components: [] }).catch(() => {
@@ -339,7 +352,7 @@ async function processCardAction(interaction) {
           if (msg) u.clean(msg, 0);
         } catch (e) { u.noop(); }
       }
-      deleteOverride(flag.id, interaction.guild.channels.cache.get(infraction.channel)?.id);
+      deleteOverride(flag.id, interaction.guild.channels.cache.get(infraction.channel));
     }
 
     processing.delete(flag.id);
