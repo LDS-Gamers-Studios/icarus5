@@ -155,14 +155,20 @@ function processDiscordInvites(msg) {
  * @async
  * @function deleteOverride
  * @param {string} flag The flag message ID
- * @param {Discord.TextBasedChannel} channel The channel with the override to delete
+ * @param {Discord.GuildTextBasedChannel} channel The channel with the override to delete
  */
 async function deleteOverride(flagId, channel) {
+  const getMod = (m) => channel.guild.members.cache.get(m);
   const locked = overrides.find(o => o.id == channel.id && o.locked);
+  const mods = overrides.get(flagId).mods;
   overrides.forEach(o => o.locked == locked ? true : false);
   overrides.delete(flagId);
-
-  if (overrides.find(o => o.id == channel.id)) return null; // keep if there are other flags being investigated
+  for (const mod of mods) {
+    if (!overrides.find(o => o.id == channel.id && o.mods.includes(mod))) {
+      await getMod(mod)?.roles.remove(sf.roles.modoverride);
+    }
+  }
+  if (overrides.find(o => o.id == channel.id)) return;
   const ch = await channel.permissionOverwrites.delete(sf.roles.modoverride);
   if (locked) channel.lockPermissions();
   return ch;
@@ -250,8 +256,14 @@ async function processCardAction(interaction) {
           });
         }
         await interaction.member.roles.add(sf.roles.modoverride);
+        if (overrides.get(flag.id)?.mods.has(mod.id)) {
+          overrides.get(flag.id).mods.delete(mod.id);
+          if (!overrides.find(o => o.mods.has(mod.id))) await mod.roles.remove(sf.roles.modoverride);
+          if (overrides.get(flag.id).mods.size == 0) deleteOverride(flag.id, channel);
+          return await interaction.editReply({ content: `I took away the <@&${sf.roles.modoverride}> role for this flag. If you're viewing any other unresolved flags, you'll still have the role` });
+        }
         await interaction.editReply({ content: `I gave you the <@&${sf.roles.modoverride}> role. It will have access to ${channel} until the flag is resolved.` });
-        overrides.set(flag.id, { id: channel.id, locked });
+        overrides.set(flag.id, { id: channel.id, locked, mods: (overrides.get(flag.id)?.mods ?? new Set()).add(mod.id) });
       }
     } else {
       await interaction.deferUpdate();
