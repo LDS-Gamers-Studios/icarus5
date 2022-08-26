@@ -248,36 +248,34 @@ async function processCardAction(interaction) {
       md.send({ embeds: [embed] }).catch(u.noop);
     } else if (interaction.customId == 'modCardOverride') {
       await interaction.deferReply({ ephemeral: true });
-      if (flag instanceof Discord.Message) {
-        const channel = interaction.guild.channels.cache.get(infraction.channel);
-        const locked = channel.permissionsLocked;
-        const emField = () => embed.fields.find(f => f.name == 'Viewing Locked Channel');
-        if (overrides.get(flag.id)?.mods.has(mod.id)) {
-          // Remove the override and role
-          overrides.get(flag.id).mods.delete(mod.id);
-          if (!overrides.find(o => o.mods.has(mod.id))) await mod.roles.remove(sf.roles.modoverride);
-          if (overrides.get(flag.id).mods.size == 0) deleteOverride(flag.id, channel);
+      const channel = interaction.guild.channels.cache.get(infraction.channel);
+      const locked = channel.permissionsLocked;
+      const emField = () => embed.fields.find(f => f.name == 'Viewing Locked Channel');
+      if (overrides.get(flag.id)?.mods.has(mod.id)) {
+        // Remove the override and role
+        overrides.get(flag.id).mods.delete(mod.id);
+        if (!overrides.find(o => o.mods.has(mod.id))) await mod.roles.remove(sf.roles.modoverride);
+        if (overrides.get(flag.id).mods.size == 0) deleteOverride(flag.id, channel);
 
-          // Update embed
-          if (emField()) emField().value = Array.from(overrides.get(flag.id)?.mods ?? []).map(m => `<@${m}>`).join('\n') || 'null';
-          if (emField()?.value == 'null') embed.fields = embed.fields.filter(f => f.name != 'Viewing Locked Channel');
-          await interaction.editReply({ content: `I took away the <@&${sf.roles.modoverride}> role for this flag. If you're viewing any other unresolved flags, you'll still have the role` });
-        } else {
-          if (!channel?.permissionOverwrites?.cache.get(sf.roles.modoverride)?.allow.has('VIEW_CHANNEL')) {
-            await channel?.permissionOverwrites.create(sf.roles.modoverride, {
-              VIEW_CHANNEL: true,
-              SEND_MESSAGES: false
-            });
-          }
-
-          await interaction.member.roles.add(sf.roles.modoverride);
-          await interaction.editReply({ content: `I gave you the <@&${sf.roles.modoverride}> role. It will have access to ${channel} until the flag is resolved.` });
-          overrides.set(flag.id, { id: channel.id, locked, mods: (overrides.get(flag.id)?.mods ?? new Set()).add(mod.id) });
-          if (emField()) emField().value = Array.from(overrides.get(flag.id).mods).map(m => `<@${m}>`).join('\n');
-          else embed.addField("Viewing Locked Channel", mod.toString());
+        // Update embed
+        if (emField()) emField().value = Array.from(overrides.get(flag.id)?.mods ?? []).map(m => `<@${m}>`).join('\n') || 'null';
+        if (emField()?.value == 'null') embed.fields = embed.fields.filter(f => f.name != 'Viewing Locked Channel');
+        await interaction.editReply({ content: `I took away the <@&${sf.roles.modoverride}> role for this flag. If you're viewing any other unresolved flags, you'll still have the role` });
+      } else {
+        if (!channel?.permissionOverwrites?.cache.get(sf.roles.modoverride)?.allow.has('VIEW_CHANNEL')) {
+          await channel?.permissionOverwrites.create(sf.roles.modoverride, {
+            VIEW_CHANNEL: true,
+            SEND_MESSAGES: false
+          });
         }
-        await flag.edit({ embeds: [embed] });
+
+        await interaction.member.roles.add(sf.roles.modoverride);
+        await interaction.editReply({ content: `I gave you the <@&${sf.roles.modoverride}> role. It will have access to ${channel} until the flag is resolved.` });
+        overrides.set(flag.id, { id: channel.id, locked, mods: (overrides.get(flag.id)?.mods ?? new Set()).add(mod.id) });
+        if (emField()) emField().value = Array.from(overrides.get(flag.id).mods).map(m => `<@${m}>`).join('\n');
+        else embed.addField("Viewing Locked Channel", mod.toString());
       }
+      await flag.edit({ embeds: [embed] });
     } else {
       await interaction.deferUpdate();
       embed.setColor(0x0000FF);
