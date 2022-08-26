@@ -26,7 +26,6 @@ async function slashSponsorsChannel(int) {
       parent: sf.channels.prosponsorparent,
       permissionOverwrites: [
         { id: int.client.user.id, allow: "VIEW_CHANNEL" },
-        { id: sf.roles.modoveride, allow: "VIEW_CHANNEL", deny: "SEND_MESSAGES" },
         { id: sf.ldsg, deny: "VIEW_CHANNEL" },
         { id: sponsor.id, allow: ["VIEW_CHANNEL", "MANAGE_CHANNELS", "MANAGE_MESSAGES", "MANAGE_WEBHOOKS"] },
       ],

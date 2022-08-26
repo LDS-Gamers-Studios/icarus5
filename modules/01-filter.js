@@ -3,7 +3,7 @@ const Augur = require("augurbot"),
   Discord = require("discord.js"),
   profanityFilter = require("profanity-matcher"),
   u = require("../utils/utils"),
-  sf = require("../config/snowflakes"),
+  sf = require("../config/snowflakes.json"),
   c = require("../utils/modCommon");
 
 const bannedWords = new RegExp(banned.words.join("|"), "i"),
@@ -15,6 +15,7 @@ let pf = new profanityFilter();
 
 const grownups = new Map(),
   processing = new Set();
+let overrides = new u.Collection();
 
 /**
  * Give the mods a heads up that someone isn't getting their DMs.
@@ -151,6 +152,23 @@ function processDiscordInvites(msg) {
 }
 
 /**
+ * @async
+ * @function deleteOverride
+ * @param {string} flag The flag message ID
+ * @param {Discord.TextBasedChannel} channel The channel with the override to delete
+ */
+async function deleteOverride(flagId, channel) {
+  const locked = overrides.find(o => o.id == channel.id && o.locked);
+  overrides.forEach(o => o.locked == locked ? true : false);
+  overrides.delete(flagId);
+
+  if (overrides.find(o => o.id == channel.id)) return null; // keep if there are other flags being investigated
+  const ch = await channel.permissionOverwrites.delete(sf.roles.modoverride);
+  if (locked) channel.lockPermissions();
+  return ch;
+}
+
+/**
  * Process the warning card
  * @async
  * @function processCardAction
@@ -211,6 +229,7 @@ async function processCardAction(interaction) {
       .addField("Resolved", `${mod.toString()} cleared the flag.`);
       embed.fields = embed.fields.filter(f => !f.name.startsWith("Jump"));
 
+      deleteOverride(flag.id, interaction.guild.channels.cache.get(infraction.channel));
       await interaction.update({ embeds: [embed], components: [] });
     } else if (interaction.customId == "modCardLink") {
       // LINK TO #MODDISCUSSION
@@ -219,6 +238,21 @@ async function processCardAction(interaction) {
 
       embed.setFooter({ text: `Linked by ${u.escapeText(mod.displayName)}` });
       md.send({ embeds: [embed] }).catch(u.noop);
+    } else if (interaction.customId == 'modCardOverride') {
+      await interaction.deferReply({ ephemeral: true });
+      if (flag instanceof Discord.Message) {
+        const channel = interaction.guild.channels.cache.get(infraction.channel);
+        const locked = channel.permissionsLocked;
+        if (!channel?.permissionOverwrites?.cache.get(sf.roles.modoverride)?.allow.has('VIEW_CHANNEL')) {
+          await channel?.permissionOverwrites.create(sf.roles.modoverride, {
+            VIEW_CHANNEL: true,
+            SEND_MESSAGES: false
+          });
+        }
+        await interaction.member.roles.add(sf.roles.modoverride);
+        await interaction.editReply({ content: `I gave you the <@&${sf.roles.modoverride}> role. It will have access to ${channel} until the flag is resolved.` });
+        overrides.set(flag.id, { id: channel.id, locked });
+      }
     } else {
       await interaction.deferUpdate();
       embed.setColor(0x0000FF);
@@ -293,6 +327,7 @@ async function processCardAction(interaction) {
           if (msg) u.clean(msg, 0);
         } catch (e) { u.noop(); }
       }
+      deleteOverride(flag.id, interaction.guild.channels.cache.get(infraction.channel)?.id);
     }
 
     processing.delete(flag.id);
@@ -312,6 +347,9 @@ const Module = new Augur.Module()
 .addInteractionHandler({ customId: "modCardMute", process: processCardAction })
 .addInteractionHandler({ customId: "modCardInfo", process: processCardAction })
 .addInteractionHandler({ customId: "modCardLink", process: processCardAction })
-.addEvent("filterUpdate", () => pf = new profanityFilter());
+.addInteractionHandler({ customId: "modCardOverride", process: processCardAction })
+.addEvent("filterUpdate", () => pf = new profanityFilter())
+.setInit((data) => overrides = data ?? new u.Collection())
+.setUnload(() => overrides);
 
 module.exports = Module;
