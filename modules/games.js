@@ -230,10 +230,14 @@ async function slashMinecraftSkin(inter) {
   const user = inter.options.getMember('user') ?? inter.user;
   const name = inter.options.getString('username') || await Module.db.ign.find(user?.id, 'minecraft')?.ign;
   if (!name) return inter.reply({ content: `${user} has not saved an IGN for Minecraft`, ephemeral: true });
-  const uuid = (await axios.get(`https://api.mojang.com/users/profiles/minecraft/${name}`))?.data;
-  if (!uuid?.id) return inter.reply({ content: "I couldn't find that player.", ephemeral: true });
-  const skinUrl = `https://visage.surgeplay.com/full/512/${uuid.id}`;
-  inter.reply({ files: [{ attachment: skinUrl, name: `${name}.png` }] });
+  try {
+    const uuid = (await axios.get(`https://api.mojang.com/users/profiles/minecraft/${name}`))?.data;
+    if (!uuid?.id) return inter.reply({ content: `I couldn't find the player \`${name}\`.`, ephemeral: true });
+    const skinUrl = `https://visage.surgeplay.com/full/512/${uuid.id}`;
+    inter.reply({ files: [{ attachment: skinUrl, name: `${name}.png` }] });
+  } catch (error) {
+    return inter.reply({ content: `I couldn't find the player \`${name}\`.`, ephemeral: true });
+  }
 }
 
 /** @param {discord.CommandInteraction} inter */
