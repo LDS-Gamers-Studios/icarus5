@@ -1,6 +1,7 @@
 const Augur = require("augurbot"),
   { GoogleSpreadsheet } = require('google-spreadsheet'),
   eliteAPI = require('../utils/EliteApi'),
+  axios = require('axios'),
   discord = require('discord.js'),
   moment = require('moment'),
   perms = require('../utils/perms'),
@@ -8,13 +9,16 @@ const Augur = require("augurbot"),
   u = require("../utils/utils"),
   config = require('../config/config.json'),
   sf = require('../config/snowflakes.json');
-/** @type {discord.Collection<string, {id: string, game: string}>} */
 
+/** @type {discord.Collection<string, {id: string, game: string}>} */
 let gameDefaults = new u.Collection();
 
 const Module = new Augur.Module();
 
-/** @param {discord.CommandInteraction} inter @param {string} game*/
+/**
+ * @param {discord.CommandInteraction} inter
+ * @param {string} game
+ */
 function currentPlayers(inter, game) {
   const players = inter.guild.members.cache.map(m => {
     if (m.user.bot) return null;
@@ -24,25 +28,8 @@ function currentPlayers(inter, game) {
   return u.embed().setTitle(`${inter.guild.name} members currently playing ${game}`).setDescription(players.length > 0 ? players.join('\n') : `I couldn't find any members playing ${game}`);
 }
 
-async function updateFactionStatus() {
-  const channelID = sf.channels.elitedangerous;
-  const channel = Module.client.channels.cache.get(channelID);
-  try {
-    const starSystem = await eliteAPI.getSystemInfo("LDS 2314").catch(u.noop);
-    if (starSystem) {
-      const faction = starSystem.factions.find(f => f.name === "LDS Enterprises");
-      const influence = Math.round(faction.influence * 10000) / 100;
-
-      // Discord has a topic size limit of 250 characters, but this will never pass that.
-      const topic = `[LDS 2314 / LDS Enterprises]  Influence: ${influence}% - State: ${faction.state} - LDS 2314 Controlling Faction: ${starSystem.information.faction}`;
-
-      channel.setTopic(topic);
-    }
-  } catch (e) { u.errorHandler(e, "Elite Channel Update Error"); }
-}
-
 /** @param {discord.CommandInteraction} inter */
-async function getPlaying(inter) {
+async function slashGetPlaying(inter) {
   const game = inter.options.getString("game") ?? gameDefaults.get(inter.channel.id)?.game;
   if (game) return inter.reply({ embeds: [currentPlayers(inter, game)], ephemeral: true });
   // List *all* games played
@@ -63,12 +50,12 @@ async function getPlaying(inter) {
     .setTitle(`Currently played game${s} in ${inter.guild.name}`)
     .setDescription(`The top ${Math.min(gameList.length, 25)} game${s} currently being played in ${inter.guild.name}:`);
   if (gameList.length > 0) gameList.map((g, i) => i < 25 ? embed.addFields({ name: g.game, value: `${g.players}` }) : null);
-  else embed.setDescription("Well, this is awkward ... I couldn't find any games with more than one member playing.");
+  else embed.setDescription("Well, this is awkward ... Nobody is playing anything.");
   inter.reply({ embeds: [embed], ephemeral: true });
 }
 
 /** @param {discord.CommandInteraction} inter */
-async function chess(inter) {
+async function slashChess(inter) {
   const user = inter.options.getMember('user');
   let name = inter.options.getString('username');
   if (user) name = (await Module.db.ign.find(user.id, 'chess'))?.ign;
@@ -116,117 +103,141 @@ async function chess(inter) {
   }
 }
 
-/** @param {discord.CommandInteraction} inter */
-async function elite(inter) {
-  const starSystem = inter.options.getString('system-name') ? await eliteAPI.getSystemInfo(inter.options.getString('system-name')) : null;
-  const embed = u.embed().setThumbnail("https://i.imgur.com/Ud8MOzY.png").setAuthor({ name: "EDSM", iconURL: "https://i.imgur.com/4NsBfKl.png" });
-  const getStatus = async () => {
-    const status = await eliteAPI.getEliteStatus();
-    return inter.reply({ content: `The Elite: Dangerous servers are ${status.type == 'success' ? "online" : "offline"}`, ephemeral: true });
-  };
-  const getTime = async () => {
-    const d = new Date();
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    return inter.reply(`The current date/time in Elite is ${monthNames[d.getUTCMonth()]} ${d.getUTCDate()}, ${(d.getUTCFullYear() + 1286)}, ${d.getUTCHours()}:${d.getUTCMinutes()}. (UTC + 1286 years)`);
-  };
-  const getSystem = async () => {
-    if (!starSystem) return inter.reply({ content: "I couldn't find a system with that name.", ephemeral: true });
-    embed.setTitle(starSystem.name)
-      .setURL(`https://www.edsm.net/en/system/id/${starSystem.id}/name`)
-      .addField('Permit Required?', starSystem.requirePermit ? "Yes" : "No", true);
-    if (starSystem.primaryStar)embed.addField("Star Scoopable", starSystem.primaryStar.isScoopable ? "Yes" : "No", true);
+async function eliteGetStatus() {
+  const status = await eliteAPI.getEliteStatus();
+  return { content: `The Elite: Dangerous servers are ${status.type == 'success' ? "online" : "offline"}`, ephemeral: true };
+}
 
-    if (starSystem.information) {
-      embed.addField("Controlling Faction", starSystem.information.faction, true)
-        .addField("Government Type", starSystem.information.allegiance + " - " + starSystem.information.government, true);
-    } else {
-      embed.addField("Uninhabited System", "No faction information available.", true);
-    }
-    return inter.reply({ embeds: [embed] });
-  };
-  const getStations = async () => {
-    if (!starSystem) return inter.reply({ content: "I couldn't find a system with that name.", ephemeral: true });
-    if (starSystem.stations.length <= 0) return inter.reply({ content: "I couldn't find any stations in that system.", ephemeral: true });
-    embed.setTitle(starSystem.name).setURL(starSystem.stationsURL);
+function eliteGetTime() {
+  const d = new Date();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return `The current date/time in Elite is ${monthNames[d.getUTCMonth()]} ${d.getUTCDate()}, ${(d.getUTCFullYear() + 1286)}, ${d.getUTCHours()}:${d.getUTCMinutes()}. (UTC + 1286 years)`;
+}
 
-    const stationList = new Map();
-    for (let i = 0; i < Math.min(starSystem.stations.length, 25); i++) {
-      const station = starSystem.stations[i];
-      // Filtering out fleet carriers. There can be over 100 of them (spam) and their names are user-determined (not always clean).
-      if (!["Fleet Carrier", "Unknown"].includes(station.type)) {
-        if (!stationList.has(station.type)) stationList.set(station.type, []);
-        stationList.get(station.type).push(station);
-      }
-    }
+/**
+ * @param {string} system
+ * @param {discord.MessageEmbed} embed
+ */
+async function eliteGetSystem(system, embed) {
+  if (!system) return { content: "I couldn't find a system with that name.", ephemeral: true };
+  embed.setTitle(system.name)
+    .setURL(`https://www.edsm.net/en/system/id/${system.id}/name`)
+    .addField('Permit Required?', system.requirePermit ? "Yes" : "No", true);
+  if (system.primaryStar)embed.addField("Star Scoopable", system.primaryStar.isScoopable ? "Yes" : "No", true);
 
-    for (const [stationType, stations] of stationList) {
-      embed.addField(stationType, "-----------------------------");
-      for (const station of stations) {
-        const stationURL = `https://www.edsm.net/en/system/stations/id/starSystem.id/name/${starSystem.name}/details/idS/${station.id}/`;
-        let faction = "No Faction";
-        const distance = Math.round(station.distanceToArrival * 10) / 10;
-        if (station.controllingFaction) {
-          faction = station.controllingFaction.name;
-        }
-        embed.addField(faction, "[" + station.name + "](" + encodeURI(stationURL) + ")\n" + distance + " ls", true);
-      }
-    }
-
-    // Letting the user know there were more than 25
-    if (stationList.size > 25) embed.setFooter({ text: "Some stations were filtered out because the limit was exceeded.", iconURL: "https://i.imgur.com/vYPj8iX.png" });
-    inter.reply({ embeds: [embed] });
-  };
-  const getFactions = () => {
-    if (!starSystem) return inter.reply({ content: "I couldn't find a system with that name.", ephemeral: true });
-    if (starSystem.factions.length < 1) return inter.reply({ content: "I couldn't find any factions in that system.", ephemeral: true });
-    embed.setTitle(starSystem.name).setURL(starSystem.factionsURL);
-
-    for (const faction of starSystem.factions) {
-      const influence = Math.round(faction.influence * 10000) / 100;
-      const url = encodeURI(`https://www.edsm.net/en/faction/id/${faction.id}/name/`);
-      embed.addField(faction.name + (starSystem.information && (faction.name === starSystem.information.faction) ? " (Controlling)" : "") + " " + influence + "%",
-        "State: " + faction.state + "\nGovernment: " + faction.allegiance + " - " + faction.government + "\n[Link](" + url + ")", true);
-    }
-    return inter.reply({ embeds: [embed] });
-  };
-  const getBodies = () => {
-    if (!starSystem) return inter.reply({ content: "I couldn't find a system with that name.", ephemeral: true });
-    if (starSystem.bodies.length < 1) return inter.reply({ content: "I couldn't find any bodies in that system.", ephemeral: true });
-    embed.setTitle(starSystem.name).setURL(starSystem.bodiesURL);
-
-    for (const body of starSystem.bodies) {
-      const scoopable = body.type === "Star" ? (body.isScoopable ? " (Scoopable)" : " (Not Scoopable)") : "";
-      const distance = Math.round(body.distanceToArrival * 10) / 10;
-      embed.addField(body.name, body.type + scoopable + "\n" + distance + " ls", true);
-    }
-    return inter.reply({ embeds: [embed] });
-  };
-  const info = inter.options.getString('info');
-  switch (info) {
-  case "status": return getStatus();
-  case "time": return getTime();
-  case "bodies": return getBodies();
-  case "factions": return getFactions();
-  case "stations": return getStations();
-  case "system": return getSystem();
+  if (system.information) {
+    embed.addField("Controlling Faction", system.information.faction, true)
+      .addField("Government Type", system.information.allegiance + " - " + system.information.government, true);
+  } else {
+    embed.addField("Uninhabited System", "No faction information available.", true);
   }
+  return { embeds: [embed] };
+}
+
+/**
+ * @param {string} system
+ * @param {discord.MessageEmbed} embed
+ */
+async function eliteGetStations(system, embed) {
+  if (!system) return { content: "I couldn't find a system with that name.", ephemeral: true };
+  if (system.stations.length <= 0) return { content: "I couldn't find any stations in that system.", ephemeral: true };
+  embed.setTitle(system.name).setURL(system.stationsURL);
+
+  const stationList = new Map();
+  for (let i = 0; i < Math.min(system.stations.length, 25); i++) {
+    const station = system.stations[i];
+    // Filtering out fleet carriers. There can be over 100 of them (spam) and their names are user-determined (not always clean).
+    if (!["Fleet Carrier", "Unknown"].includes(station.type)) {
+      if (!stationList.has(station.type)) stationList.set(station.type, []);
+      stationList.get(station.type).push(station);
+    }
+  }
+
+  for (const [stationType, stations] of stationList) {
+    embed.addField(stationType, "-----------------------------");
+    for (const station of stations) {
+      const stationURL = `https://www.edsm.net/en/system/stations/id/starSystem.id/name/${system.name}/details/idS/${station.id}/`;
+      let faction = "No Faction";
+      const distance = Math.round(station.distanceToArrival * 10) / 10;
+      if (station.controllingFaction) {
+        faction = station.controllingFaction.name;
+      }
+      embed.addField(faction, "[" + station.name + "](" + encodeURI(stationURL) + ")\n" + distance + " ls", true);
+    }
+  }
+
+  // Letting the user know there were more than 25
+  if (stationList.size > 25) embed.setFooter({ text: "Some stations were filtered out because the limit was exceeded.", iconURL: "https://i.imgur.com/vYPj8iX.png" });
+  return { embeds: [embed] };
+}
+
+/**
+ * @param {string} system
+ * @param {discord.MessageEmbed} embed
+ */
+async function eliteGetFactions(system, embed) {
+  if (!system) return { content: "I couldn't find a system with that name.", ephemeral: true };
+  if (system.factions.length < 1) return { content: "I couldn't find any factions in that system.", ephemeral: true };
+  embed.setTitle(system.name).setURL(system.factionsURL);
+
+  for (const faction of system.factions) {
+    const influence = Math.round(faction.influence * 10000) / 100;
+    const url = encodeURI(`https://www.edsm.net/en/faction/id/${faction.id}/name/`);
+    embed.addField(faction.name + (system.information && (faction.name === system.information.faction) ? " (Controlling)" : "") + " " + influence + "%",
+      "State: " + faction.state + "\nGovernment: " + faction.allegiance + " - " + faction.government + "\n[Link](" + url + ")", true);
+  }
+  return { embeds: [embed] };
+}
+
+/**
+ * @param {string} system
+ * @param {discord.MessageEmbed} embed
+ */
+async function eliteGetBodies(system, embed) {
+  if (!system) return { content: "I couldn't find a system with that name.", ephemeral: true };
+  if (system.bodies.length < 1) return { content: "I couldn't find any bodies in that system.", ephemeral: true };
+  embed.setTitle(system.name).setURL(system.bodiesURL);
+
+  for (const body of system.bodies) {
+    const scoopable = body.type === "Star" ? (body.isScoopable ? " (Scoopable)" : " (Not Scoopable)") : "";
+    const distance = Math.round(body.distanceToArrival * 10) / 10;
+    embed.addField(body.name, body.type + scoopable + "\n" + distance + " ls", true);
+  }
+  return { embeds: [embed] };
 }
 
 /** @param {discord.CommandInteraction} inter */
-async function minecraftSkin(inter) {
-  const user = inter.options.getMember('user');
-  let name = inter.options.getString('username');
-  if (user) name ??= await Module.db.ign.find(user.id ?? inter.user.id, 'minecraft')?.ign;
-  if (user && !name) return inter.reply({ content: `${user} has not set a Minecraft name in their IGN`, ephemeral: true });
-  if (!name) return inter.reply({ content: "I need a Discord user or Minecraft username to look up.", ephemeral: true });
-  const uuid = await eliteAPI.axiosRequest({ hostname: `https://api.mojang.com/users/profiles/minecraft/${name}` });
-  if (!uuid?.id) return inter.reply({ content: "I couldn't find that player", ephemeral: true });
+async function slashElite(inter) {
+  const starSystem = inter.options.getString('system-name') ? await eliteAPI.getSystemInfo(inter.options.getString('system-name')) : null;
+  const embed = u.embed().setThumbnail("https://i.imgur.com/Ud8MOzY.png").setAuthor({ name: "EDSM", iconURL: "https://i.imgur.com/4NsBfKl.png" });
+  const info = inter.options.getString('info');
+  let reply;
+  if (!['status', 'time'].includes(info) && !inter.options.getString('system-name')) return inter.reply({ content: "You need to give me a system name to look up.", ephemeral: true });
+  switch (info) {
+  case "status": reply = await eliteGetStatus(); break;
+  case "time": reply = eliteGetTime(); break;
+  case "bodies": reply = await eliteGetBodies(starSystem, embed); break;
+  case "factions": reply = await eliteGetFactions(starSystem, embed); break;
+  case "stations": reply = await eliteGetStations(starSystem, embed); break;
+  case "system": reply = await eliteGetSystem(starSystem, embed); break;
+  }
+  return inter.reply(reply);
+
+}
+
+/** @param {discord.CommandInteraction} inter */
+async function slashMinecraftSkin(inter) {
+  const user = inter.options.getMember('user') ?? inter.user;
+  const name = inter.options.getString('username') || await Module.db.ign.find(user?.id, 'minecraft')?.ign;
+  if (!name) return inter.reply({ content: `${user} has not saved an IGN for Minecraft`, ephemeral: true });
+  const uuid = (await axios.get(`https://api.mojang.com/users/profiles/minecraft/${name}`))?.data;
+  if (!uuid?.id) return inter.reply({ content: "I couldn't find that player.", ephemeral: true });
   const skinUrl = `https://visage.surgeplay.com/full/512/${uuid.id}`;
   inter.reply({ files: [{ attachment: skinUrl, name: `${name}.png` }] });
 }
 
 /** @param {discord.CommandInteraction} inter */
-async function destiny(inter) {
+async function slashDestiny(inter) {
   const setClan = async () => {
     if (!perms.isAdmin(inter) && !inter.member.roles.cache.hasAny([sf.roles.destinyclansadmin, sf.roles.destinyclansmanager])) return inter.reply({ content: `Only <@&${sf.roles.destinyclansadmin}> and above can use this command!`, ephemeral: true });
     const user = inter.options.getMember('user');
@@ -287,14 +298,14 @@ async function destiny(inter) {
 }
 
 Module.addInteractionCommand({ name: "game",
-  commandId: sf.commands.slashGames,
+  commandId: sf.commands.slashGame,
   process: async (inter) => {
     switch (inter.options.getSubcommand()) {
-    case "chess": return chess(inter);
-    case "destiny": return destiny(inter);
-    case "elite": return elite(inter);
-    case "minecraft-skin": return minecraftSkin(inter);
-    case "playing": return getPlaying(inter);
+    case "chess": return slashChess(inter);
+    case "destiny": return slashDestiny(inter);
+    case "elite": return slashElite(inter);
+    case "minecraft-skin": return slashMinecraftSkin(inter);
+    case "playing": return slashGetPlaying(inter);
     }
   }
 })
@@ -306,13 +317,6 @@ Module.addInteractionCommand({ name: "game",
     const channels = await doc.sheetsByTitle["Game Channels"].getRows();
     gameDefaults = new u.Collection(channels.map(x => [x["Channel ID"], { id: x["Channel ID"], game: x["Game Name"] }]));
   } catch (e) { u.errorHandler(e, "Load Game Channel Info"); }
-})
-.setClockwork(() => {
-  try {
-    // Every 6 hours seems alright for channel description updates. The rate limit is actually once every 5 minutes, so we're more than clear.
-    return setInterval(updateFactionStatus, 6 * 60 * 60 * 1000);
-  } catch (e) { u.errorHandler(e, "Elite Dangerous Clockwork Error"); }
-})
-.addEvent("ready", updateFactionStatus);
+});
 
 module.exports = Module;
