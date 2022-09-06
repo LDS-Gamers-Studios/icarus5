@@ -44,7 +44,8 @@ async function menu(options, interaction, target) {
         .setPlaceholder('Nothing Selected')
         .addOptions(options),
     );
-  const targetUser = getTargetUser(targetUser);
+
+  const targetUser = getTargetUser(target);
   const e = u.embed({ author: targetUser })
     .setColor("RED");
   let embeds = [ e ];
