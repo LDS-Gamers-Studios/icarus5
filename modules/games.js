@@ -12,6 +12,8 @@ const Augur = require("augurbot"),
 
 let gameDefaults = new u.Collection();
 
+const Module = new Augur.Module();
+
 /** @param {discord.CommandInteraction} int @param {string} game*/
 function currentPlayers(int, game) {
   const players = int.guild.members.cache.map(m => {
@@ -21,7 +23,7 @@ function currentPlayers(int, game) {
   }).filter(p => p != null).sort((a, b) => a.localeCompare(b));
   return u.embed().setTitle(`${int.guild.name} members currently playing ${game}`).setDescription(players.length > 0 ? players.join('\n') : `I couldn't find any members playing ${game}`);
 }
-const Module = new Augur.Module();
+
 async function updateFactionStatus() {
   const channelID = sf.channels.elitedangerous;
   const channel = Module.client.channels.cache.get(channelID);
@@ -38,6 +40,7 @@ async function updateFactionStatus() {
     }
   } catch (e) { u.errorHandler(e, "Elite Channel Update Error"); }
 }
+
 /** @param {discord.CommandInteraction} int */
 async function getPlaying(int) {
   const game = int.options.getString("game") ?? gameDefaults.get(int.channel.id)?.game;
@@ -63,6 +66,7 @@ async function getPlaying(int) {
   else embed.setDescription("Well, this is awkward ... I couldn't find any games with more than one member playing.");
   int.reply({ embeds: [embed], ephemeral: true });
 }
+
 /** @param {discord.CommandInteraction} int */
 async function chess(int) {
   const user = int.options.getMember('user');
@@ -111,6 +115,7 @@ async function chess(int) {
     int.reply({ content: "I couldn't find a saved IGN for them.", ephemeral: true });
   }
 }
+
 /** @param {discord.CommandInteraction} int */
 async function elite(int) {
   const starSystem = int.options.getString('system-name') ? await eliteAPI.getSystemInfo(int.options.getString('system-name')) : null;
@@ -206,6 +211,7 @@ async function elite(int) {
   case "system": return getSystem();
   }
 }
+
 /** @param {discord.CommandInteraction} int */
 async function minecraftSkin(int) {
   const user = int.options.getMember('user');
@@ -218,6 +224,7 @@ async function minecraftSkin(int) {
   const skinUrl = `https://visage.surgeplay.com/full/512/${uuid.id}`;
   int.reply({ files: [{ attachment: skinUrl, name: `${name}.png` }] });
 }
+
 /** @param {discord.CommandInteraction} int */
 async function destiny(int) {
   const setClan = async () => {
@@ -278,6 +285,7 @@ async function destiny(int) {
   case "valiant": return setValiant();
   }
 }
+
 Module.addInteractionCommand({ name: "game",
   commandId: sf.commands.slashGames,
   process: async (int) => {
