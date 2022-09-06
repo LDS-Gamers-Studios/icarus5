@@ -1,6 +1,4 @@
 const https = require("https");
-// none of the "new" api functions work with https
-const axios = require('axios');
 function request({ path, method = "GET", hostname = "www.edsm.net", params = {} }) {
   return new Promise((fulfill, reject) => {
     const options = {
@@ -27,16 +25,6 @@ function request({ path, method = "GET", hostname = "www.edsm.net", params = {} 
     req.end();
   });
 }
-async function axiosRequest({ path, method, hostname = "https://www.edsm.net", params }) {
-  const fetched = await axios({
-    method,
-    url: path,
-    baseURL: hostname,
-    params
-  });
-  if (!params) console.log(fetched?.data);
-  return fetched?.data;
-}
 
 function fetchSystemFactions(systemName) {
   return request({
@@ -53,8 +41,8 @@ function fetchGalnetFeed() {
 }
 async function getSystemInfo(systemName) {
   try {
-    const starSystem = await axiosRequest({
-      path: "api-v1/system",
+    const starSystem = await request({
+      path: "/api-v1/system",
       params: {
         showPrimaryStar: 1,
         showInformation: 1,
@@ -67,8 +55,8 @@ async function getSystemInfo(systemName) {
 
     if (starSystem.information === {}) starSystem.information = null;
 
-    const bodiesResponse = await axiosRequest({
-      path: "api-system-v1/bodies",
+    const bodiesResponse = await request({
+      path: "/api-system-v1/bodies",
       params: {
         systemName: systemName
       }
@@ -76,8 +64,8 @@ async function getSystemInfo(systemName) {
     starSystem.bodies = bodiesResponse.bodies;
     starSystem.bodiesURL = bodiesResponse.url;
 
-    const stationsResponse = await axiosRequest({
-      path: "api-system-v1/stations",
+    const stationsResponse = await request({
+      path: "/api-system-v1/stations",
       params: {
         systemName: systemName
       }
@@ -85,8 +73,8 @@ async function getSystemInfo(systemName) {
     starSystem.stations = stationsResponse.stations;
     starSystem.stationsURL = stationsResponse.url;
 
-    const factionsResponse = await axiosRequest({
-      path: "api-system-v1/factions",
+    const factionsResponse = await request({
+      path: "/api-system-v1/factions",
       params: {
         systemName: systemName
       }
@@ -99,14 +87,13 @@ async function getSystemInfo(systemName) {
 }
 async function getEliteStatus() {
   try {
-    return await axiosRequest({ path: "api-status-v1/elite-server" });
+    return await request({ path: "/api-status-v1/elite-server" });
   } catch (error) {
     throw new Error(error);
   }
 }
 
 module.exports = {
-  axiosRequest,
   fetchGalnetFeed,
   fetchSystemFactions,
   getSystemInfo,
