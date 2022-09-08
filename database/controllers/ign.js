@@ -29,6 +29,15 @@ module.exports = {
     else return await Ign.find({ discordId }).exec();
   },
   /**
+   * Find a list of users
+   * @param {string} ign The IGN to find
+   * @param {string} system Which system IGN to find
+   * @returns {Promise<Array<ign>>}
+   */
+  findUsername: async function(ign, system) {
+    return await Ign.find({ ign, system }).exec();
+  },
+  /**
    * Find a list of IGNs for a given system
    * @function getList
    * @param {string} system Whcih system list to fetch

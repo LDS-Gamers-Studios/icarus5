@@ -7,7 +7,9 @@ const sf = require("../config/snowflakes.json");
 
 /** @type {discord.Collection<string, ign>} */
 let IGNs = new u.Collection();
-const findIGN = (system) => IGNs.find(i => i.system.toLowerCase() == system?.toLowerCase() || i.name.toLowerCase() == system?.toLowerCase() || i.aliases.includes(system));
+let aliases = new u.Collection();
+
+const findSystem = (system) => IGNs.get(system) || IGNs.get(aliases.get(system));
 const categories = [
   "Game Platforms",
   "Streaming",
@@ -35,7 +37,7 @@ function createIgnEmbed(user, igns, systems) {
   if (systems.length == 0) return null;
   if (systems.length > 1) { embed.setTitle('IGNs for ' + u.escapeText(user.displayName)); }
   const hasLink = /(http(s?):\/\/)?(\w+\.)+\w+\//ig;
-  const mapped = systems.map(s => findIGN(s)).filter(s => s != null);
+  const mapped = systems.map(s => findSystem(s)).filter(s => s != null);
   if (mapped.length == 0) return null;
   for (const category of categories) {
     const sys = mapped.filter(s => s.category == category)
@@ -56,7 +58,7 @@ function createIgnEmbed(user, igns, systems) {
 async function slashIgnView(interaction) {
   const user = interaction.options.getMember("target", false) || interaction.member;
   let system = interaction.options.getString("system", false);
-  if (findIGN(system)) system = findIGN(system).system;
+  if (findSystem(system)) system = findSystem(system).system;
   const igns = await Module.db.ign.find(user.id, system);
 
   const embed = createIgnEmbed(user, Array.isArray(igns) ? igns : [igns].filter(i => i != null), system ? [system] : igns.map(i => i.system));
@@ -72,9 +74,9 @@ async function slashIgnView(interaction) {
 async function slashIgnSet(interaction) {
   let system = interaction.options.getString("system").toLowerCase();
   let ign = interaction.options.getString("ign").toLowerCase();
-  const findSystem = findIGN(system);
-  if (findSystem) system = findSystem.system;
-  if (!findSystem) return interaction.reply({ content: `\`${system}\` isn't a recognized system.`, ephemeral: true });
+  const foundSystem = foundSystem(system);
+  if (foundSystem) system = foundSystem.system;
+  if (!foundSystem) return interaction.reply({ content: `\`${system}\` isn't a recognized system.`, ephemeral: true });
   if (system == "birthday") {
     try {
       const bd = new Date(ign);
@@ -96,9 +98,9 @@ async function slashIgnSet(interaction) {
 /** @param {discord.CommandInteraction} interaction */
 async function slashIgnRemove(interaction) {
   let system = interaction.options.getString("system").toLowerCase();
-  const findSystem = findIGN(system);
-  if (findSystem) {
-    system = findSystem.system;
+  const foundSystem = foundSystem(system);
+  if (foundSystem) {
+    system = foundSystem.system;
     const ign = await Module.db.ign.delete(interaction.user.id, system);
     if (ign) return interaction.reply({ content: `Removed your IGN \`${ign.ign}\` for ${ign.system}.`, ephemeral: true });
     return interaction.reply({ content: `It doesn't look like you had an IGN saved for ${system}. Regardless, it's gone now.`, ephemeral: true });
@@ -110,13 +112,13 @@ async function slashIgnRemove(interaction) {
 async function slashIgnWhoplays(interaction) {
   const PAGESIZE = 60; // Entries per message for this module.
   let system = interaction.options.getString("system").toLowerCase();
-  const findSystem = findIGN(system);
-  if (!findSystem) return interaction.reply({ content: `\`${system}\` isn't a valid system.`, ephemeral: true });
-  system = findSystem?.system;
+  const foundSystem = foundSystem(system);
+  if (!foundSystem) return interaction.reply({ content: `\`${system}\` isn't a valid system.`, ephemeral: true });
+  system = foundSystem?.system;
   const users = await Module.db.ign.getList(system);
-  if (users.length == 0) return interaction.reply({ content: `No members have saved an IGN for ${findSystem.name} yet.`, ephemeral: true });
+  if (users.length == 0) return interaction.reply({ content: `No members have saved an IGN for ${foundSystem.name} yet.`, ephemeral: true });
   const guild = interaction.guild;
-  const embed = u.embed().setTitle(`The following members have saved an IGN for ${findSystem.name}`);
+  const embed = u.embed().setTitle(`The following members have saved an IGN for ${foundSystem.name}`);
   const wePlay = users.map(user => guild.members.cache.get(user.discordId))
     .filter(usr => usr != null)
     .sort((a, b) => {
@@ -146,6 +148,36 @@ async function slashIgnWhoplays(interaction) {
   }
 }
 
+/** @param {discord.CommandInteraction} interaction */
+async function slashIgnWhois(interaction) {
+  const PAGESIZE = 60; // Entries per message for this module.
+  let system = interaction.options.getString("system").toLowerCase();
+  const username = interaction.options.getString('ign').toLowerCase();
+  const foundSystem = foundSystem(system);
+  if (!foundSystem) return interaction.reply({ content: `\`${system}\` isn't a valid system.`, ephemeral: true });
+  system = foundSystem?.system;
+  if (system == 'birthday' && new Date(username) == 'Invalid Date') return interaction.reply({ content: "I couldn't understand that date. Please use Month Day format (e.g. April 1 or 4/1)", ephemeral: true });
+  const users = await Module.db.ign.findUsername(username, system);
+  if (users.length == 0) return interaction.reply({ content: `No members have the username ${username} for ${foundSystem.name}.`, ephemeral: true });
+  const guild = interaction.guild;
+  const embed = u.embed().setTitle(`The following members have the IGN ${username} for ${foundSystem.name}`);
+  const wePlay = users.map(user => guild.members.cache.get(user.discordId))
+    .filter(usr => usr != null)
+    .sort((a, b) => a.displayName.toLowerCase().localeCompare(b.displayName.toLowerCase()));
+
+  const listChunks = [];
+  for (let i = 0; i < wePlay.length; i += PAGESIZE) {
+    listChunks.push(wePlay.slice(i, i + PAGESIZE));
+  }
+  embed.setDescription(listChunks[0].join('\n'));
+  interaction.reply({ embeds: [embed] });
+  if (listChunks.length > 1) {
+    listChunks.slice(1).forEach(chunk => {
+      interaction.followUp({ content: chunk.join("\n") });
+    });
+  }
+}
+
 const Module = new Augur.Module()
 .addInteractionCommand({
   name: "ign",
@@ -157,6 +189,7 @@ const Module = new Augur.Module()
     case "set": return slashIgnSet(interaction);
     case "remove": return slashIgnRemove(interaction);
     case "whoplays": return slashIgnWhoplays(interaction);
+    case "whois": return slashIgnWhois(interaction);
     }
   }
 })
@@ -165,9 +198,11 @@ const Module = new Augur.Module()
   try {
     await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
-    const aliases = await doc.sheetsByTitle["IGN Aliases"].getRows();
-    IGNs = new u.Collection(aliases.map(x => [x["System"], { system: x["System"], name: x["Name"], aliases: x["Aliases"].split(','), category: x["Category"] ?? "Game Platforms", link: x["Link"] }]));
-  } catch (e) { u.errorHandler(e, "Load IGN Aliases"); }
+    const sheet = await doc.sheetsByTitle["IGN"].getRows();
+    const aliasSheet = await doc.sheetsByTitle("IGN Aliases");
+    aliases = new u.Collection(aliasSheet.map(x => [x["Alias"], x["System"]])).concat(new u.Collection(sheet.map(x => [x["Name"]?.toLowerCase(), x["System"]])));
+    IGNs = new u.Collection(sheet.map(x => [x["System"], { system: x["System"], name: x["Name"], category: x["Category"] ?? "Game Platforms", link: x["Link"] }]));
+  } catch (e) { u.errorHandler(e, "Load IGN Systems"); }
 })
 .addEvent('interactionCreate', async interaction => {
   if (interaction.type == "APPLICATION_COMMAND_AUTOCOMPLETE" && interaction.commandId == sf.commands.slashIGN) {
