@@ -13,7 +13,8 @@ const modActions = [
   ),
   new MessageActionRow().addComponents(
     new MessageButton().setCustomId("modCardInfo").setEmoji("👤").setLabel("User Info").setStyle("SECONDARY"),
-    new MessageButton().setCustomId("modCardLink").setEmoji("🔗").setLabel("Link to Discuss").setStyle("SECONDARY")
+    new MessageButton().setCustomId("modCardLink").setEmoji("🔗").setLabel("Link to Discuss").setStyle("SECONDARY"),
+    new MessageButton().setCustomId("modCardOverride").setEmoji("👀").setLabel("View Locked Channel").setStyle("SECONDARY")
   )
 ];
 

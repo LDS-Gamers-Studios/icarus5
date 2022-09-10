@@ -3,7 +3,7 @@ const Augur = require("augurbot"),
   Discord = require("discord.js"),
   profanityFilter = require("profanity-matcher"),
   u = require("../utils/utils"),
-  sf = require("../config/snowflakes"),
+  sf = require("../config/snowflakes.json"),
   c = require("../utils/modCommon");
 
 const bannedWords = new RegExp(banned.words.join("|"), "i"),
@@ -15,6 +15,9 @@ let pf = new profanityFilter();
 
 const grownups = new Map(),
   processing = new Set();
+
+/** @type {Discord.Collection<string, {id: string, locked: boolean, mods: Set<string>}} */
+let overrides = new u.Collection();
 
 /**
  * Give the mods a heads up that someone isn't getting their DMs.
@@ -163,6 +166,29 @@ function processDiscordInvites(msg) {
 }
 
 /**
+ * @async
+ * @function deleteOverride
+ * @param {string} flag The flag message ID
+ * @param {Discord.GuildTextBasedChannel} channel The channel with the override to delete
+ */
+async function deleteOverride(flagId, channel) {
+  const getMod = (m) => channel.guild.members.cache.get(m);
+  const locked = overrides.find(o => o.id == channel.id && o.locked);
+  const mods = overrides.get(flagId)?.mods;
+  overrides.forEach(o => o.locked == locked ? true : false);
+  overrides.delete(flagId);
+  for (const mod of mods) {
+    if (!overrides.find(o => o.id == channel.id && o.mods.includes(mod))) {
+      await getMod(mod)?.roles.remove(sf.roles.modoverride);
+    }
+  }
+  if (overrides.find(o => o.id == channel.id)) return;
+  const ch = await channel.permissionOverwrites.delete(sf.roles.modoverride);
+  if (locked) channel.lockPermissions();
+  return ch;
+}
+
+/**
  * Process the warning card
  * @async
  * @function processCardAction
@@ -228,8 +254,9 @@ async function processCardAction(interaction) {
       await Module.db.infraction.remove(flag);
       embed.setColor(0x00FF00)
       .addField("Resolved", `${mod.toString()} cleared the flag.`);
-      embed.fields = embed.fields.filter(f => !f.name.startsWith("Jump"));
+      embed.fields = embed.fields.filter(f => !f.name.startsWith("Jump") && !f.name.startsWith("Viewing"));
 
+      deleteOverride(flag.id, interaction.guild.channels.cache.get(infraction.channel));
       await interaction.update({ embeds: [embed], components: [] });
     } else if (interaction.customId == "modCardLink") {
       // LINK TO #MODDISCUSSION
@@ -238,6 +265,36 @@ async function processCardAction(interaction) {
 
       embed.setFooter({ text: `Linked by ${u.escapeText(mod.displayName)}` });
       md.send({ embeds: [embed] }).catch(u.noop);
+    } else if (interaction.customId == 'modCardOverride') {
+      await interaction.deferReply({ ephemeral: true });
+      const channel = interaction.guild.channels.cache.get(infraction.channel);
+      const locked = channel.permissionsLocked;
+      const emField = () => embed.fields.find(f => f.name == 'Viewing Locked Channel');
+      if (overrides.get(flag.id)?.mods.has(mod.id)) {
+        // Remove the override and role
+        overrides.get(flag.id).mods.delete(mod.id);
+        if (!overrides.find(o => o.mods.has(mod.id))) await mod.roles.remove(sf.roles.modoverride);
+        if (overrides.get(flag.id).mods.size == 0) deleteOverride(flag.id, channel);
+
+        // Update embed
+        if (emField()) emField().value = Array.from(overrides.get(flag.id)?.mods ?? []).map(m => `<@${m}>`).join('\n') || 'null';
+        if (emField()?.value == 'null') embed.fields = embed.fields.filter(f => f.name != 'Viewing Locked Channel');
+        await interaction.editReply({ content: `I took away the <@&${sf.roles.modoverride}> role for this flag. If you're viewing any other unresolved flags, you'll still have the role` });
+      } else {
+        if (!channel?.permissionOverwrites?.cache.get(sf.roles.modoverride)?.allow.has('VIEW_CHANNEL')) {
+          await channel?.permissionOverwrites.create(sf.roles.modoverride, {
+            VIEW_CHANNEL: true,
+            SEND_MESSAGES: false
+          });
+        }
+
+        await interaction.member.roles.add(sf.roles.modoverride);
+        await interaction.editReply({ content: `I gave you the <@&${sf.roles.modoverride}> role. It will have access to ${channel} until the flag is resolved.` });
+        overrides.set(flag.id, { id: channel.id, locked, mods: (overrides.get(flag.id)?.mods ?? new Set()).add(mod.id) });
+        if (emField()) emField().value = Array.from(overrides.get(flag.id).mods).map(m => `<@${m}>`).join('\n');
+        else embed.addField("Viewing Locked Channel", mod.toString());
+      }
+      await flag.edit({ embeds: [embed] });
     } else {
       await interaction.deferUpdate();
       embed.setColor(0x0000FF);
@@ -299,7 +356,7 @@ async function processCardAction(interaction) {
         member.send({ content: response, embeds: [quote] }).catch(() => blocked(member));
       }
 
-      embed.fields = embed.fields.filter(f => !f.name || !f.name.startsWith("Jump"));
+      embed.fields = embed.fields.filter(f => !f.name || !f.name.startsWith("Jump") && !f.name.startsWith("Viewing"));
       embed.fields.find(f => f.name?.startsWith("Infraction")).value = `Infractions: ${infractionSummary.count}\nPoints: ${infractionSummary.points}`;
 
       await interaction.update({ embeds: [embed], components: [] }).catch(() => {
@@ -312,6 +369,7 @@ async function processCardAction(interaction) {
           if (msg) u.clean(msg, 0);
         } catch (e) { u.noop(); }
       }
+      deleteOverride(flag.id, interaction.guild.channels.cache.get(infraction.channel));
     }
 
     processing.delete(flag.id);
@@ -331,6 +389,9 @@ const Module = new Augur.Module()
 .addInteractionHandler({ customId: "modCardMute", process: processCardAction })
 .addInteractionHandler({ customId: "modCardInfo", process: processCardAction })
 .addInteractionHandler({ customId: "modCardLink", process: processCardAction })
-.addEvent("filterUpdate", () => pf = new profanityFilter());
+.addInteractionHandler({ customId: "modCardOverride", process: processCardAction })
+.addEvent("filterUpdate", () => pf = new profanityFilter())
+.setInit((data) => overrides = data ?? new u.Collection())
+.setUnload(() => overrides);
 
 module.exports = Module;
