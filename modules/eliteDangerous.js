@@ -89,7 +89,7 @@ async function updateFactions() {
     if (data) {
       const faction = data.factions.find(f => f.name === "LDS Enterprises");
       const influence = Math.round(faction.influence * 10000) / 100;
-      const topic = `[LDS 2314 / LDS Enterprises]  Influence: ${influence}% - State: ${faction.state} - LDS 2314 Controlling Faction: ${data.information.faction}`;
+      const topic = `[LDS 2314 / LDS Enterprises]  Influence: ${influence}% - State: ${faction.state} - LDS 2314 Controlling Faction: ${data.controllingFaction?.name ?? "None"}`;
       channel.setTopic(topic);
     }
   } catch (e) { u.errorHandler(e, "Elite Channel Update Error"); }

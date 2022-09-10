@@ -228,7 +228,7 @@ async function slashElite(inter) {
 /** @param {discord.CommandInteraction} inter */
 async function slashMinecraftSkin(inter) {
   const user = inter.options.getMember('user') ?? inter.user;
-  const name = inter.options.getString('username') || await Module.db.ign.find(user?.id, 'minecraft')?.ign;
+  const name = inter.options.getString('username') || (await Module.db.ign.find(user?.id, 'minecraft'))?.ign;
   if (!name) return inter.reply({ content: `${user} has not saved an IGN for Minecraft`, ephemeral: true });
   try {
     const uuid = (await axios.get(`https://api.mojang.com/users/profiles/minecraft/${name}`))?.data;
