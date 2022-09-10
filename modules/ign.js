@@ -9,7 +9,7 @@ const sf = require("../config/snowflakes.json");
 let IGNs = new u.Collection();
 let aliases = new u.Collection();
 
-const findSystem = (system) => IGNs.get(system) || IGNs.get(aliases.get(system));
+const findSystem = (system) => IGNs.get(system?.toLowerCase()) || IGNs.get(aliases.get(system?.toLowerCase()));
 const categories = [
   "Game Platforms",
   "Streaming",
@@ -74,7 +74,7 @@ async function slashIgnView(interaction) {
 async function slashIgnSet(interaction) {
   let system = interaction.options.getString("system").toLowerCase();
   let ign = interaction.options.getString("ign").toLowerCase();
-  const foundSystem = foundSystem(system);
+  const foundSystem = findSystem(system);
   if (foundSystem) system = foundSystem.system;
   if (!foundSystem) return interaction.reply({ content: `\`${system}\` isn't a recognized system.`, ephemeral: true });
   if (system == "birthday") {
@@ -98,7 +98,7 @@ async function slashIgnSet(interaction) {
 /** @param {discord.CommandInteraction} interaction */
 async function slashIgnRemove(interaction) {
   let system = interaction.options.getString("system").toLowerCase();
-  const foundSystem = foundSystem(system);
+  const foundSystem = findSystem(system);
   if (foundSystem) {
     system = foundSystem.system;
     const ign = await Module.db.ign.delete(interaction.user.id, system);
@@ -112,7 +112,7 @@ async function slashIgnRemove(interaction) {
 async function slashIgnWhoplays(interaction) {
   const PAGESIZE = 60; // Entries per message for this module.
   let system = interaction.options.getString("system").toLowerCase();
-  const foundSystem = foundSystem(system);
+  const foundSystem = findSystem(system);
   if (!foundSystem) return interaction.reply({ content: `\`${system}\` isn't a valid system.`, ephemeral: true });
   system = foundSystem?.system;
   const users = await Module.db.ign.getList(system);
@@ -152,13 +152,18 @@ async function slashIgnWhoplays(interaction) {
 async function slashIgnWhois(interaction) {
   const PAGESIZE = 60; // Entries per message for this module.
   let system = interaction.options.getString("system").toLowerCase();
-  const username = interaction.options.getString('ign').toLowerCase();
-  const foundSystem = foundSystem(system);
+  let username = interaction.options.getString('ign');
+  const foundSystem = findSystem(system);
   if (!foundSystem) return interaction.reply({ content: `\`${system}\` isn't a valid system.`, ephemeral: true });
   system = foundSystem?.system;
-  if (system == 'birthday' && new Date(username) == 'Invalid Date') return interaction.reply({ content: "I couldn't understand that date. Please use Month Day format (e.g. April 1 or 4/1)", ephemeral: true });
+  if (system == 'birthday') {
+    const bd = new Date(username);
+    if (bd == 'Invalid Date') return interaction.reply({ content: "I couldn't understand that date. Please use Month Day format (e.g. April 1 or 4/1)", ephemeral: true });
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+    username = `${months[bd.getMonth()]} ${bd.getDate()}`;
+  }
   const users = await Module.db.ign.findUsername(username, system);
-  if (users.length == 0) return interaction.reply({ content: `No members have the username ${username} for ${foundSystem.name}.`, ephemeral: true });
+  if (users.length == 0) return interaction.reply({ content: `No members have the IGN ${username} for ${foundSystem.name}.`, ephemeral: true });
   const guild = interaction.guild;
   const embed = u.embed().setTitle(`The following members have the IGN ${username} for ${foundSystem.name}`);
   const wePlay = users.map(user => guild.members.cache.get(user.discordId))
@@ -199,13 +204,13 @@ const Module = new Augur.Module()
     await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
     const sheet = await doc.sheetsByTitle["IGN"].getRows();
-    const aliasSheet = await doc.sheetsByTitle("IGN Aliases");
-    aliases = new u.Collection(aliasSheet.map(x => [x["Alias"], x["System"]])).concat(new u.Collection(sheet.map(x => [x["Name"]?.toLowerCase(), x["System"]])));
-    IGNs = new u.Collection(sheet.map(x => [x["System"], { system: x["System"], name: x["Name"], category: x["Category"] ?? "Game Platforms", link: x["Link"] }]));
+    const aliasSheet = await doc.sheetsByTitle["IGN Aliases"].getRows();
+    aliases = new u.Collection(aliasSheet.map(x => [x["Alias"]?.toLowerCase(), x["System"]?.toLowerCase()])).concat(new u.Collection(sheet.map(x => [x["Name"]?.toLowerCase(), x["System"]?.toLowerCase()])));
+    IGNs = new u.Collection(sheet.map(x => [x["System"]?.toLowerCase(), { system: x["System"]?.toLowerCase(), name: x["Name"], category: x["Category"] ?? "Game Platforms", link: x["Link"] }]));
   } catch (e) { u.errorHandler(e, "Load IGN Systems"); }
 })
 .addEvent('interactionCreate', async interaction => {
-  if (interaction.type == "APPLICATION_COMMAND_AUTOCOMPLETE" && interaction.commandId == sf.commands.slashIGN) {
+  if (interaction.type == "APPLICATION_COMMAND_AUTOCOMPLETE" && interaction.commandId == sf.commands.slashIgn) {
     const focusedValue = interaction.options.getFocused()?.toLowerCase();
     const filtered = IGNs.filter(choice => choice.name.toLowerCase().startsWith(focusedValue));
     await interaction.respond(filtered.map(choice => ({ name: choice.name, value: choice.name })));

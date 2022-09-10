@@ -4,6 +4,13 @@ const Ign = require("../models/Ign.model");
 
 module.exports = {
   /**
+   * @typedef ign
+   * @prop {string} discordId The ID of the user
+   * @prop {string} system The system of the IGN
+   * @prop {string} ign The saved value of the IGN
+   */
+
+  /**
    * Delete an IGN
    * @function delete
    * @param {string|Discord.User|Discord.GuildMember} discordId Which user's IGN to delete
@@ -35,12 +42,12 @@ module.exports = {
    * @returns {Promise<Array<ign>>}
    */
   findUsername: async function(ign, system) {
-    return await Ign.find({ ign, system }).exec();
+    return await Ign.find({ ign: { $regex: new RegExp(`^${ign}$`, 'i') }, system }).exec();
   },
   /**
    * Find a list of IGNs for a given system
    * @function getList
-   * @param {string} system Whcih system list to fetch
+   * @param {string} system Which system list to fetch
    * @returns {Promise<Array<ign>>}
    */
   getList: async function(system) {
