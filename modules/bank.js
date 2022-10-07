@@ -1,8 +1,9 @@
 const Augur = require("augurbot"),
   p = require("../utils/perms"),
   u = require("../utils/utils"),
-  sf = require("../config/snowflakes"),
+  sf = require("../config/snowflakes.json"),
   config = require("../config/config.json"),
+  snipcart = require("../utils/snipcart")(config.api.snipcart),
   gb = "<:gb:493084576470663180>",
   ember = "<:ember:512508452619157504>";
 
@@ -12,6 +13,21 @@ const { GoogleSpreadsheet } = require("google-spreadsheet"),
 const { customAlphabet } = require("nanoid"),
   chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ",
   nanoid = customAlphabet(chars, 8);
+const discounts = new Map([
+  [sf.roles.elitesponsor, 5], // Elite
+  [sf.roles.onyxsponsor, 10], // Onyx
+  [sf.roles.prosponsor, 15], // Pro
+  [sf.roles.legendarysponsor, 15] // Legendary
+]);
+
+function discountLevel(member) {
+  let discount = { rate: 0, role: null };
+
+  for (const [role, rate] of discounts) {
+    if (member.roles.cache.has(role)) discount = { rate, role };
+  }
+  return discount;
+}
 
 let steamGameList;
 
@@ -273,7 +289,6 @@ async function slashBankDiscount(interaction) {
       return;
     }
 
-    const snipcart = require("../utils/snipcart")(Module.config.api.snipcart);
     const discountInfo = {
       name: interaction.user.username + " " + Date().toLocaleString(),
       combinable: false,
@@ -403,6 +418,46 @@ const Module = new Augur.Module()
       break;
     }
   }
+})
+.addEvent("guildMemberUpdate", async (oldMember, newMember) => {
+  try {
+    if ((newMember.guild.id == sf.ldsg) && (oldMember.roles.cache.size != newMember.roles.cache.size)) {
+      const newLevel = discountLevel(newMember);
+      if (discountLevel(oldMember).rate != newLevel.rate) {
+        // Fetch user
+        const user = await Module.db.user.fetchUser(newMember);
+        const role = newMember.roles.cache.get(newLevel.role)?.name;
+        if (user) {
+          // Check if current discount exists.
+          const code = parseInt(user["_id"].toString().substr(16), 16).toString(36).toUpperCase();
+
+          let discount = await snipcart.getDiscountCode(code);
+          if (discount && (newLevel.rate > 0)) {
+            // Discount has changed. Edit.
+            discount.name = `${newMember.user.username} ${role}`;
+            discount.rate = newLevel.rate;
+            discount = await snipcart.editDiscount(discount);
+            newMember.send(`Thanks for joining the ${role} ranks! As a thank you, you get a ${discount.rate}% discount on purchases in the shop by using code \`${discount.code}\`. This discount will apply as long as you keep the ${role} role.\nhttps://ldsgamers.com/shop`).catch(u.noop);
+          } else if (discount && (newLevel.rate == 0)) {
+            // Discount no longer applies. Delete.
+            snipcart.deleteDiscount(discount);
+          } else if (newLevel.rate > 0) {
+            // New discount code
+            discount = {
+              name: `${newMember.user.username} ${role}`,
+              trigger: "Code",
+              code,
+              type: "Rate",
+              rate: newLevel.rate
+            };
+
+            await snipcart.newDiscount(discount);
+            newMember.send(`Thanks for joining the ${role} ranks! As a thank you, you get a ${discount.rate}% discount on purchases in the shop by using code \`${discount.code}\`. This discount will apply as long as you keep the ${role} role.\nhttps://ldsgamers.com/shop`).catch(u.noop);
+          }
+        }
+      }
+    }
+  } catch (e) { u.errorHandler(e, "Sponsor discount error"); }
 })
 .setInit(async function(gl) {
   try {
