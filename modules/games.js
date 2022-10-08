@@ -318,8 +318,8 @@ Module.addInteractionCommand({ name: "game",
   try {
     await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
-    const channels = await doc.sheetsByTitle["Game Channels"].getRows();
-    gameDefaults = new u.Collection(channels.map(x => [x["Channel ID"], { id: x["Channel ID"], game: x["Game Name"] }]));
+    const channels = await doc.sheetsByTitle["WIP Channel Defaults"].getRows();
+    gameDefaults = new u.Collection(channels.map(x => [x["ChannelId"], { id: x["ChannelId"], game: x["Game Name"] }]));
   } catch (e) { u.errorHandler(e, "Load Game Channel Info"); }
 });
 
