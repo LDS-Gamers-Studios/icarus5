@@ -29,7 +29,7 @@ function currentPlayers(inter, game) {
 }
 
 /** @param {discord.CommandInteraction} inter */
-async function slashGetPlaying(inter) {
+async function slashGameGetPlaying(inter) {
   const game = inter.options.getString("game") ?? gameDefaults.get(inter.channel.id)?.game;
   if (game) return inter.reply({ embeds: [currentPlayers(inter, game)], ephemeral: true });
   // List *all* games played
@@ -55,7 +55,7 @@ async function slashGetPlaying(inter) {
 }
 
 /** @param {discord.CommandInteraction} inter */
-async function slashChess(inter) {
+async function slashGameChess(inter) {
   const user = inter.options.getMember('user');
   let name = inter.options.getString('username');
   if (user) name = (await Module.db.ign.find(user.id, 'chess'))?.ign;
@@ -207,7 +207,7 @@ async function eliteGetBodies(system, embed) {
 }
 
 /** @param {discord.CommandInteraction} inter */
-async function slashElite(inter) {
+async function slashGameElite(inter) {
   const starSystem = inter.options.getString('system-name') ? await eliteAPI.getSystemInfo(inter.options.getString('system-name')) : null;
   const embed = u.embed().setThumbnail("https://i.imgur.com/Ud8MOzY.png").setAuthor({ name: "EDSM", iconURL: "https://i.imgur.com/4NsBfKl.png" });
   const info = inter.options.getString('info');
@@ -226,7 +226,7 @@ async function slashElite(inter) {
 }
 
 /** @param {discord.CommandInteraction} inter */
-async function slashMinecraftSkin(inter) {
+async function slashGameMinecraftSkin(inter) {
   const user = inter.options.getMember('user') ?? inter.user;
   const name = inter.options.getString('username') || (await Module.db.ign.find(user?.id, 'minecraft'))?.ign;
   if (!name) return inter.reply({ content: `${user} has not saved an IGN for Minecraft`, ephemeral: true });
@@ -241,7 +241,7 @@ async function slashMinecraftSkin(inter) {
 }
 
 /** @param {discord.CommandInteraction} inter */
-async function slashDestiny(inter) {
+async function slashGameDestiny(inter) {
   const setClan = async () => {
     if (!perms.isAdmin(inter) && !inter.member.roles.cache.hasAny([sf.roles.destinyclansadmin, sf.roles.destinyclansmanager])) return inter.reply({ content: `Only <@&${sf.roles.destinyclansadmin}> and above can use this command!`, ephemeral: true });
     const user = inter.options.getMember('user');
