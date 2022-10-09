@@ -287,13 +287,15 @@ async function processCardAction(interaction) {
       if (member) {
         const quote = u.embed({ author: member })
         .addField("Channel", `#${interaction.guild.channels.cache.get(infraction.channel).name}`)
-        .setDescription(embed.description)
+        .setDescription(embed.description ?? "[No Message Text]")
         .setTimestamp(flag.createdAt);
+
+        if (!embed.description) quote.setFooter({ text: "This message may have had an image." });
 
         const response = (
           (infraction.value == 0) ?
             `The LDSG Mods would like to speak with you about the following post. It may be that they're looking for some additional context or just want to handle things informally.\n\n**${mod.toString()}** will be reaching out to you shortly, if they haven't already.` :
-            `We have received one or more complaints regarding content you posted. We have reviewed the content in question and have determined, in our sole discretion, that it is against our code of conduct (<https://ldsgamers.com/code-of-conduct>). This content was removed on your behalf. As a reminder, if we believe that you are frequently in breach of our code of conduct or are otherwise acting inconsistently with the letter or spirit of the code, we may limit, suspend or terminate your access to the LDSG Discord server.\n\n**${mod.toString()}** has issued this warning.`
+            `We have received one or more complaints regarding content you posted. We have reviewed the content in question and have determined, in our sole discretion, that it is against our code of conduct (<https://ldsgamers.com/code-of-conduct>). This content was removed on your behalf. As a reminder, if we believe that you are frequently in breach of our code of conduct or are otherwise acting inconsistently with the letter or spirit of the code, we may limit, suspend or terminate your access to the LDSG Discord server.\n\n**${mod.toString()}** issued the warning for this message:`
         );
 
         member.send({ content: response, embeds: [quote] }).catch(() => blocked(member));
