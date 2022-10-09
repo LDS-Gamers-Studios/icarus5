@@ -1,6 +1,6 @@
 const Augur = require("augurbot"),
   { fetchGalnetFeed, fetchSystemFactions } = require("../utils/EliteApi"),
-  { ldsg, channels: { elitefactionupdates, elitenews } } = require("../config/snowflakes"),
+  { ldsg, channels: { elitefactionupdates, elitenews, elitedangerous } } = require("../config/snowflakes.json"),
   u = require("../utils/utils");
 
 // Default length to trim articles for embeds
@@ -82,6 +82,17 @@ async function updateFactions() {
   if (updated) {
     Module.client.guilds.cache.get(ldsg).channels.cache.get(elitefactionupdates).send({ embeds: [embed] });
   }
+
+  // Update channel description
+  const channel = Module.client.channels.cache.get(elitedangerous);
+  try {
+    if (data) {
+      const faction = data.factions.find(f => f.name === "LDS Enterprises");
+      const influence = Math.round(faction.influence * 10000) / 100;
+      const topic = `[LDS 2314 / LDS Enterprises]  Influence: ${influence}% - State: ${faction.state} - LDS 2314 Controlling Faction: ${data.controllingFaction?.name ?? "None"}`;
+      channel.setTopic(topic);
+    }
+  } catch (e) { u.errorHandler(e, "Elite Channel Update Error"); }
 }
 
 const Module = new Augur.Module()
