@@ -54,6 +54,7 @@ function createIgnEmbed(user, igns, systems) {
   }
   return embed.fields.length > 0 ? embed : null;
 }
+
 /** @param {discord.CommandInteraction} interaction */
 async function slashIgnView(interaction) {
   const user = interaction.options.getMember("target", false) || interaction.member;
@@ -68,12 +69,12 @@ async function slashIgnView(interaction) {
   } else {
     interaction.reply({ content: `It looks like ${user.displayName} hasn't saved this information with \`/ign add\` yet.`, ephemeral: true });
   }
-
 }
+
 /** @param {discord.CommandInteraction} interaction */
 async function slashIgnSet(interaction) {
   let system = interaction.options.getString("system").toLowerCase();
-  let ign = interaction.options.getString("ign").toLowerCase();
+  let ign = interaction.options.getString("ign");
   const foundSystem = findSystem(system);
   if (foundSystem) system = foundSystem.system;
   if (!foundSystem) return interaction.reply({ content: `\`${system}\` isn't a recognized system.`, ephemeral: true });
@@ -93,8 +94,8 @@ async function slashIgnSet(interaction) {
   const finalIgn = await Module.db.ign.save(interaction.user.id, system, ign);
   const embed = createIgnEmbed(interaction.member, [finalIgn], [system]);
   interaction.reply({ embeds: [embed], ephemeral: true });
-
 }
+
 /** @param {discord.CommandInteraction} interaction */
 async function slashIgnRemove(interaction) {
   let system = interaction.options.getString("system").toLowerCase();
@@ -108,6 +109,7 @@ async function slashIgnRemove(interaction) {
     interaction.reply({ content: "I didn't recognize the system you entered.", ephemeral: true });
   }
 }
+
 /** @param {discord.CommandInteraction} interaction */
 async function slashIgnWhoplays(interaction) {
   const PAGESIZE = 60; // Entries per message for this module.
@@ -206,13 +208,13 @@ const Module = new Augur.Module()
     const sheet = await doc.sheetsByTitle["IGN"].getRows();
     const aliasSheet = await doc.sheetsByTitle["IGN Aliases"].getRows();
     aliases = new u.Collection(aliasSheet.map(x => [x["Alias"]?.toLowerCase(), x["System"]?.toLowerCase()])).concat(new u.Collection(sheet.map(x => [x["Name"]?.toLowerCase(), x["System"]?.toLowerCase()])));
-    IGNs = new u.Collection(sheet.map(x => [x["System"]?.toLowerCase(), { system: x["System"]?.toLowerCase(), name: x["Name"], category: x["Category"] ?? "Game Platforms", link: x["Link"] }]));
+    IGNs = new u.Collection(sheet.map(x => [x["System"]?.toLowerCase(), { system: x["System"]?.toLowerCase(), name: x["Name"], category: x["Category"] || "Game Platforms", link: x["Link"] }]));
   } catch (e) { u.errorHandler(e, "Load IGN Systems"); }
 })
 .addEvent('interactionCreate', async interaction => {
   if (interaction.type == "APPLICATION_COMMAND_AUTOCOMPLETE" && interaction.commandId == sf.commands.slashIgn) {
     const focusedValue = interaction.options.getFocused()?.toLowerCase();
-    const filtered = IGNs.filter(choice => choice.name.toLowerCase().startsWith(focusedValue));
+    const filtered = IGNs.filter(choice => choice.name.toLowerCase().startsWith(focusedValue)).first(25);
     await interaction.respond(filtered.map(choice => ({ name: choice.name, value: choice.name })));
   }
 });
