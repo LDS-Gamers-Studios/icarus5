@@ -16,7 +16,7 @@ const gamesDB = new gamesDBApi(),
   yt = new Youtube(config.google.youtube);
 
 const ldsgYT = 'UCr83QWCwQRUqhSCyQL_kx2Q';
-const extraLife = (new Date().getMonth() == 10),
+const extraLife = () => [9, 10, 11].includes(new Date().getMonth()),
   extraLifeApi = require("../utils/extraLifeAPI").set({ teamId: 56862, participantId: 453772 }),
   applicationCount = 0;
 /**
@@ -150,7 +150,7 @@ function isPartnered(member) {
     sf.roles.prosponsor,
     sf.roles.team
   ];
-  if (extraLife) roles.push(sf.roles.extralifeteam);
+  if (extraLife()) roles.push(sf.roles.extralifeteam);
 
   if (member.id == member.client.user.id) return true;
   return member.roles.cache.hasAny(roles);
@@ -255,7 +255,7 @@ async function processTwitch(igns) {
             if (member && isPartnered(member)) member.roles.add(liveRole).catch(u.noop);
             const embed = notificationEmbed(stream, "twitch");
             // if (stream.gameId && !rating) return;
-            if ((rating != "M - Mature 17+") && extraLife && member?.roles.cache.has(sf.roles.extralife) && stream.title.toLowerCase().replace(/ /g, '').includes("extralife")) {
+            if ((rating != "M - Mature 17+") && extraLife() && member?.roles.cache.has(sf.roles.extralife) && stream.title.toLowerCase().replace(/ /g, '').includes("extralife")) {
               notificationChannel.send(`${ldsg.roles.cache.get(sf.roles.extraliferaiders)}, **${member.displayName}** is live for Extra Life!`, { embeds: [embed] }).catch(u.noop);
             } else if (rating != "M - Mature 17+") {
               notificationChannel.send({ embeds: [embed] }).catch(u.noop);
@@ -328,7 +328,7 @@ async function processYoutube(igns) {
           const member = ldsg.members.cache.get(ign.discordId);
           if (member && isPartnered(member)) member.roles.add(liveRole).catch(u.noop);
           const embed = notificationEmbed(L, "youtube");
-          if (extraLife && member?.roles.cache.has(sf.roles.extralife) && L.snippet.title.toLowerCase().replace(/ /g, '').includes("extralife")) {
+          if (extraLife() && member?.roles.cache.has(sf.roles.extralife) && L.snippet.title.toLowerCase().replace(/ /g, '').includes("extralife")) {
             notificationChannel.send(`${ldsg.roles.cache.get(sf.roles.extraliferaiders)}, **${member.displayName}** is live for Extra Life!`, { embeds: [embed] }).catch(u.noop);
           } else {
             notificationChannel.send({ embeds: [embed] }).catch(u.noop);
@@ -431,7 +431,7 @@ async function approve(int) {
 /** @param {discord.CommandInteraction} int*/
 async function extralifeGoal(int) {
   try {
-    if (!extraLife) int.reply({ content: "Extra Life doesn't start until October!", ephemeral: true });
+    if (!extraLife()) int.reply({ content: "Extra Life doesn't start until October!", ephemeral: true });
     await int.deferReply({ ephemeral: true });
     const team = await fetchExtraLifeTeam();
     if (!team) return int.editReply("the Extra Life API seems to be down. Please try again in a bit.");
@@ -473,7 +473,7 @@ async function extralifeGoal(int) {
 /** @param {discord.CommandInteraction} int*/
 async function extralifeLive(int) {
   try {
-    if (!extraLife) return int.reply({ content: "Extra Life doesn't start until October!", ephemeral: true });
+    if (!extraLife()) return int.reply({ content: "Extra Life doesn't start until October!", ephemeral: true });
     const embeds = await extraLifeEmbed();
     if (embeds) int.reply({ embeds, ephemeral: true });
     else int.reply({ content: "I couldn't find any live LDSG Extra Life Team streams!", ephemeral: true });
@@ -810,7 +810,7 @@ const Module = new Augur.Module()
         processApplications();
 
         // Extra Life check
-        if (extraLife && new Date().getMinutes() < 5) {
+        if (extraLife() && new Date().getMinutes() < 5) {
           const embeds = await extraLifeEmbed();
           if (embeds?.length > 0) Module.client.channels.cache.get(sf.channels.general).send({ embeds });
         }
