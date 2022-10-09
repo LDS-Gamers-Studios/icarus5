@@ -119,7 +119,6 @@ function eliteGetTime() {
  * @param {discord.MessageEmbed} embed
  */
 async function eliteGetSystem(system, embed) {
-  if (!system) return { content: "I couldn't find a system with that name.", ephemeral: true };
   embed.setTitle(system.name)
     .setURL(`https://www.edsm.net/en/system/id/${system.id}/name`)
     .addField('Permit Required?', system.requirePermit ? "Yes" : "No", true);
@@ -139,7 +138,6 @@ async function eliteGetSystem(system, embed) {
  * @param {discord.MessageEmbed} embed
  */
 async function eliteGetStations(system, embed) {
-  if (!system) return { content: "I couldn't find a system with that name.", ephemeral: true };
   if (system.stations.length <= 0) return { content: "I couldn't find any stations in that system.", ephemeral: true };
   embed.setTitle(system.name).setURL(system.stationsURL);
 
@@ -176,7 +174,6 @@ async function eliteGetStations(system, embed) {
  * @param {discord.MessageEmbed} embed
  */
 async function eliteGetFactions(system, embed) {
-  if (!system) return { content: "I couldn't find a system with that name.", ephemeral: true };
   if (system.factions.length < 1) return { content: "I couldn't find any factions in that system.", ephemeral: true };
   embed.setTitle(system.name).setURL(system.factionsURL);
 
@@ -194,7 +191,6 @@ async function eliteGetFactions(system, embed) {
  * @param {discord.MessageEmbed} embed
  */
 async function eliteGetBodies(system, embed) {
-  if (!system) return { content: "I couldn't find a system with that name.", ephemeral: true };
   if (system.bodies.length < 1) return { content: "I couldn't find any bodies in that system.", ephemeral: true };
   embed.setTitle(system.name).setURL(system.bodiesURL);
 
@@ -212,7 +208,12 @@ async function slashGameElite(inter) {
   const embed = u.embed().setThumbnail("https://i.imgur.com/Ud8MOzY.png").setAuthor({ name: "EDSM", iconURL: "https://i.imgur.com/4NsBfKl.png" });
   const info = inter.options.getString('info');
   let reply;
-  if (!['status', 'time'].includes(info) && !inter.options.getString('system-name')) return inter.reply({ content: "You need to give me a system name to look up.", ephemeral: true });
+  if (!['status', 'time'].includes(info) && !starSystem) {
+    if (!inter.options.getString('system-name')) reply = "You need to give me a system name to look up.";
+    else reply = "I couldn't find a system with that name.";
+    return inter.reply({ content: reply, ephemeral: true });
+  }
+
   switch (info) {
   case "status": reply = await eliteGetStatus(); break;
   case "time": reply = eliteGetTime(); break;
