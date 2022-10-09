@@ -305,11 +305,11 @@ Module.addInteractionCommand({ name: "game",
   commandId: sf.commands.slashGame,
   process: async (inter) => {
     switch (inter.options.getSubcommand()) {
-    case "chess": return slashChess(inter);
-    case "destiny": return slashDestiny(inter);
-    case "elite": return slashElite(inter);
-    case "minecraft-skin": return slashMinecraftSkin(inter);
-    case "playing": return slashGetPlaying(inter);
+    case "chess": return slashGameChess(inter);
+    case "destiny": return slashGameDestiny(inter);
+    case "elite": return slashGameElite(inter);
+    case "minecraft-skin": return slashGameMinecraftSkin(inter);
+    case "playing": return slashGameGetPlaying(inter);
     }
   }
 })
