@@ -15,7 +15,7 @@ const Module = new Augur.Module()
     await doc.useServiceAccountAuth(config.google.creds);
     await doc.loadInfo();
     const getBanners = await doc.sheetsByTitle["Banners"].getRows();
-    banners = new u.Collection(getBanners.map(x => [x["Date"], { name: x["Name"], url: x["URL"], date: x["Date"] }]));
+    banners = new u.Collection(getBanners.map(x => [x["Date"], x["URL"]]));
   } catch (e) { u.errorHandler(e, "Load Banners"); }
 })
 .setClockwork(() => {
@@ -25,7 +25,7 @@ const Module = new Augur.Module()
     const banner = banners.get(stringDate);
     if (banner) {
       const ldsg = Module.client.guilds.cache.get(sf.ldsg);
-      ldsg.setBanner(banner.url);
+      ldsg.setBanner(banner);
     }
   }, 1000 * 60 * 60 * 24);
 });
