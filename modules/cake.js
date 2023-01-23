@@ -32,7 +32,7 @@ async function testBirthdays() {
       ":cake: "
     ];
 
-    const birthdays = (await Module.db.ign.getList("birthday")).filter(ign => guild.members.cache.has(ign.discordId));
+    const birthdays = (await u.db.ign.getList("birthday")).filter(ign => guild.members.cache.has(ign.discordId));
     const celebrating = [];
     for (const birthday of birthdays) {
       try {
@@ -65,7 +65,7 @@ async function testCakeDays() {
     const curDate = moment();
 
     const members = await guild.members.fetch();
-    const offsets = await Module.db.user.getUsers({ discordId: { $in: Array.from(members.keys()) }, priorTenure: { $gt: 0 } });
+    const offsets = await u.db.user.getUsers({ discordId: { $in: Array.from(members.keys()) }, priorTenure: { $gt: 0 } });
 
     const tenureIds = Array.from(tenureCache.values());
     const celebrating = new u.Collection();

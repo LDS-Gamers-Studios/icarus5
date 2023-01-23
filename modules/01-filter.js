@@ -181,7 +181,7 @@ async function processCardAction(interaction) {
 
     const mod = interaction.member,
       embed = u.embed(flag.embeds[0]),
-      infraction = await Module.db.infraction.getByFlag(flag);
+      infraction = await u.db.infraction.getByFlag(flag);
 
     if (mod.id == infraction.discordId) {
       await interaction.reply({ content: "You can't handle your own flag!", ephemeral: true });
@@ -200,9 +200,9 @@ async function processCardAction(interaction) {
       let roleString = member.roles.cache.sort((a, b) => b.comparePositionTo(a)).map(role => role.name).join(", ");
       if (roleString.length > 1024) roleString = roleString.substr(0, roleString.indexOf(", ", 1000) + " ...");
 
-      const userDoc = await Module.db.user.fetchUser(member);
+      const userDoc = await u.db.user.fetchUser(member);
 
-      const infractionSummary = await Module.db.infraction.getSummary(member.id);
+      const infractionSummary = await u.db.infraction.getSummary(member.id);
       let infractionDescription = [`**${member.toString()}** has had **${infractionSummary.count}** infraction(s) in the last **${infractionSummary.time}** days, totaling **${infractionSummary.points}** points.`];
       for (const record of infractionSummary.detail) {
         const recordMod = await interaction.guild.members.fetch(record.mod);
@@ -225,7 +225,7 @@ async function processCardAction(interaction) {
     } else if (interaction.customId == "modCardClear") {
       // IGNORE FLAG
 
-      await Module.db.infraction.remove(flag);
+      await u.db.infraction.remove(flag);
       embed.setColor(0x00FF00)
       .addField("Resolved", `${mod.toString()} cleared the flag.`);
       embed.fields = embed.fields.filter(f => !f.name.startsWith("Jump"));
@@ -270,8 +270,8 @@ async function processCardAction(interaction) {
             }).catch(u.noop);
           } catch (error) { u.errorHandler(error, "Mute user via card"); }
         } else if (!member) {
-          const roles = (await Module.db.user.fetchUser(infraction.discordId)).roles.concat(sf.roles.muted, sf.roles.untrusted);
-          await Module.db.user.updateRoles({
+          const roles = (await u.db.user.fetchUser(infraction.discordId)).roles.concat(sf.roles.muted, sf.roles.untrusted);
+          await u.db.user.updateRoles({
             id: infraction.discordId,
             roles: {
               cache: new u.Collection(roles.map(r => ([r, r])))
@@ -281,8 +281,8 @@ async function processCardAction(interaction) {
         embed.addField("Resolved", `${mod.toString()} muted the member.`);
         break;
       }
-      await Module.db.infraction.update(infraction);
-      const infractionSummary = await Module.db.infraction.getSummary(infraction.discordId);
+      await u.db.infraction.update(infraction);
+      const infractionSummary = await u.db.infraction.getSummary(infraction.discordId);
 
       if (member) {
         const quote = u.embed({ author: member })

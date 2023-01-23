@@ -71,7 +71,7 @@ async function slashBankGive(interaction) {
     }
     value = value > MAX ? MAX : (value < -MAX ? -MAX : value);
 
-    const account = await Module.db.bank.getBalance(giver.id, currency);
+    const account = await u.db.bank.getBalance(giver.id, currency);
     if (value > account.balance) {
       interaction.reply({ content: `You don't have enough ${coin} to give! You can give up to ${coin}${account.balance}`, ephemeral: true });
       return;
@@ -85,9 +85,9 @@ async function slashBankGive(interaction) {
         value,
         giver: giver.id
       };
-      const receipt = await Module.db.bank.addCurrency(deposit);
-      const gbBalance = await Module.db.bank.getBalance(recipient.id, "gb");
-      const emBalance = await Module.db.bank.getBalance(recipient.id, "em");
+      const receipt = await u.db.bank.addCurrency(deposit);
+      const gbBalance = await u.db.bank.getBalance(recipient.id, "gb");
+      const emBalance = await u.db.bank.getBalance(recipient.id, "em");
       const embed = u.embed({ author: interaction.client.user })
       .addField("Reason", reason)
       .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
@@ -104,9 +104,9 @@ async function slashBankGive(interaction) {
       value: -value,
       giver: giver.id
     };
-    const receipt = await Module.db.bank.addCurrency(withdrawal);
-    const gbBalance = await Module.db.bank.getBalance(giver.id, "gb");
-    const emBalance = await Module.db.bank.getBalance(giver.id, "em");
+    const receipt = await u.db.bank.addCurrency(withdrawal);
+    const gbBalance = await u.db.bank.getBalance(giver.id, "gb");
+    const emBalance = await u.db.bank.getBalance(giver.id, "em");
     const embed = u.embed({ author: interaction.client.user })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
@@ -126,8 +126,8 @@ async function slashBankGive(interaction) {
 async function slashBankBalance(interaction) {
   try {
     const member = interaction.member;
-    const gbBalance = await Module.db.bank.getBalance(member, "gb");
-    const emBalance = await Module.db.bank.getBalance(member, "em");
+    const gbBalance = await u.db.bank.getBalance(member, "gb");
+    const emBalance = await u.db.bank.getBalance(member, "em");
     const embed = u.embed({ author: member })
       .setDescription(`${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`);
     interaction.reply({ embeds: [embed] });
@@ -215,7 +215,7 @@ async function slashBankGameRedeem(interaction) {
       }
     };
 
-    const balance = await Module.db.bank.getBalance(interaction.user.id, "gb");
+    const balance = await u.db.bank.getBalance(interaction.user.id, "gb");
     if (balance.balance < game.Cost) {
       interaction.editReply(`You don't currently have enough Ghost Bucks. Sorry! ${gb}`);
       return;
@@ -224,7 +224,7 @@ async function slashBankGameRedeem(interaction) {
     // Reply so there's no "interaction failed" error message.
     interaction.editReply("Watch your DMs for the game you redeemed!");
 
-    await Module.db.bank.addCurrency({
+    await u.db.bank.addCurrency({
       currency: "gb",
       discordId: interaction.user.id,
       description: `${game["Game Title"]} (${game.System}) Game Key`,
@@ -267,7 +267,7 @@ async function slashBankDiscount(interaction) {
   try {
     await interaction.deferReply({ ephemeral: true });
     const amount = interaction.options.getInteger("amount", true);
-    const balance = await Module.db.bank.getBalance(interaction.user.id, "gb");
+    const balance = await u.db.bank.getBalance(interaction.user.id, "gb");
     if ((amount > balance.balance) || (amount < 0) || (amount > 1000)) {
       interaction.editReply(`That amount (${gb}${amount}) is invalid. You can currently redeem up to ${gb}${Math.max(balance.balance, 1000)}.`);
       return;
@@ -294,7 +294,7 @@ async function slashBankDiscount(interaction) {
         value: -amount,
         giver: interaction.user.id
       };
-      const withdraw = await Module.db.bank.addCurrency(withdrawal);
+      const withdraw = await u.db.bank.addCurrency(withdrawal);
 
       await interaction.editReply("Watch your DMs for the code you just redeemed!");
       interaction.user.send(`You have redeemed ${gb}${withdraw.value} for a $${discount.amount} discount code in the LDS Gamers Store! <http://ldsgamers.com/shop>\n\nUse code __**${discount.code}**__ at checkout to apply the discount. This code will be good for ${discount.maxNumberOfUsages} use. (Note that means that if you redeem a code and don't use its full value, the remaining value is lost.)\n\nYou now have ${gb}${balance.balance + withdraw.value}.`)
@@ -347,9 +347,9 @@ async function slashBankAward(interaction) {
       giver: giver.id,
       hp: true
     };
-    const receipt = await Module.db.bank.addCurrency(award);
-    const gbBalance = await Module.db.bank.getBalance(recipient.id, "gb");
-    const emBalance = await Module.db.bank.getBalance(recipient.id, "em");
+    const receipt = await u.db.bank.addCurrency(award);
+    const gbBalance = await u.db.bank.getBalance(recipient.id, "gb");
+    const emBalance = await u.db.bank.getBalance(recipient.id, "em");
     let embed = u.embed({ author: interaction.client.user })
     .addField("Reason", reason)
     .addField("Your New Balance", `${gb}${gbBalance.balance}\n${ember}${emBalance.balance}`)
