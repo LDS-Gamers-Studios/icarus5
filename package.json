@@ -18,14 +18,17 @@
   },
   "homepage": "https://github.com/LaughLax/icarus5#readme",
   "dependencies": {
+    "@klenty/imap": "^1.1.5",
     "augurbot": "github:gaiwecoor/augurbot#dev",
     "axios": "^0.21.1",
     "discord.js": "^13.8.0",
     "forever": "^4.0.1",
     "google-spreadsheet": "^3.1.15",
+    "mailparser": "^3.5.0",
     "moment": "^2.29.1",
     "mongoose": "^5.13.7",
     "nanoid": "^3.1.25",
+    "node-schedule": "^2.1.0",
     "profanity-matcher": "^1.0.1",
     "rss-parser": "^3.12.0",
     "steamapi": "^2.1.3"

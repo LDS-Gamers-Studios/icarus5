@@ -1,0 +1,85 @@
+{
+  "name": "missionary",
+  "description": "Add or remove someone to the missionary list",
+  "options": [
+    {
+      "type": 1,
+      "name": "add",
+      "description": "Add someone to the missionary list",
+      "options": [
+        {
+          "type": 6,
+          "name": "missionary",
+          "description": "The user going on a mission",
+          "required": true
+        },
+        {
+          "type": 3,
+          "name": "privacy",
+          "description": "What the user wants to be removed from their emails",
+          "choices": [
+            {
+              "name": "Anything extremely personal",
+              "value": "0"
+            },
+            {
+              "name": "Name",
+              "value": "1"
+            },
+            {
+              "name": "Face",
+              "value": "2"
+            },
+            {
+              "name": "Name + Face",
+              "value": "3"
+            },
+            {
+              "name": "Images",
+              "value": "4"
+            },
+            {
+              "name": "Images + Name",
+              "value": 5
+            }
+          ],
+          "required": true
+        },
+        {
+          "type": 3,
+          "name": "email",
+          "description": "The primary email that will be sending out the emails",
+          "required": true
+        },
+        {
+          "type": 3,
+          "name": "email2",
+          "description": "An optional second email that could send out the emails"
+        },
+        {
+          "type": 3,
+          "name": "email3",
+          "description": "An optional third email that could send out the emails"
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "remove",
+      "description": "Remove someone from the missionary list",
+      "options": [
+        {
+          "type": 6,
+          "name": "missionary",
+          "description": "The missionary to remove from the missionary list",
+          "required": true
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "list",
+      "description": "Get a list of all current missionaries"
+    }
+  ]
+}
